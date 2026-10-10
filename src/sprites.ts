@@ -22,7 +22,7 @@ function fan(x: number, y: number, color = C.cyan) {
   return `<g transform="translate(${x} ${y})">${path('M-9 -13H9V-9H13V9H9V13H-9V9H-13V-9H-9Z', '#080d1b')}${path('M-8 -11H8V-8H11V8H8V11H-8V8H-11V-8H-8Z', C.edge)}${path('M-6 -9H6V-6H9V6H6V9H-6V6H-9V-6H-6Z', '#0a1523')}<g class="fan-spin">${path('M-2 -8H3V-3H8V2H3V7H-2V2H-7V-3H-2Z', color)}${rect(-3, -3, 6, 6, C.metal)}</g>${rect(-1,-1,2,2,'#b4ecff')}</g>`;
 }
 function gpu() {
-  return `${rect(3, 16, 73, 35, '#071320')}${rect(6, 13, 68, 37, '#35475e')}${rect(8, 16, 64, 30, '#0d1829')}${rect(8, 18, 3, 25, C.cyan)}${rect(73, 19, 5, 33, C.edge)}${rect(75, 23, 2, 12, '#071320')}${rect(13, 49, 45, 5, '#151c29')}${Array.from({length:10},(_,i)=>rect(15+i*4,51,2,5,'#d7bd5a')).join('')}${fan(28, 31)}${fan(56, 31)}${rect(11, 43, 55, 2, C.cyan)}${rect(61, 12, 9, 2, C.cyan)}${rect(8, 16, 2, 2, '#c5f2ff')}${rect(69, 43, 2, 2, '#c5f2ff')}`;
+  return `${rect(3, 16, 73, 35, '#071320')}${rect(6, 13, 68, 37, '#35475e')}${rect(8, 16, 64, 30, '#0d1829')}${rect(8, 18, 3, 25, C.cyan)}${rect(73, 19, 5, 33, C.edge)}${rect(75, 23, 2, 12, '#071320')}${rect(13, 49, 45, 5, '#151c29')}${Array.from({length:10},(_,i)=>rect(15+i*4,51,2,5,'#d7bd5a')).join('')}${fan(28, 31)}${fan(56, 31)}${rect(11, 43, 55, 2, C.cyan)}${rect(61, 12, 9, 2, C.cyan, 'class="gpu-led"')}${rect(8, 16, 2, 2, '#c5f2ff')}${rect(69, 43, 2, 2, '#c5f2ff')}`;
 }
 const bolt = () => `${path('M43 1L16 35H32L25 63L64 23H45L56 1Z', C.magenta)}${path('M44 3L21 32H37L30 55L58 26H41L51 3Z', C.yellow)}${rect(8,15,3,3,C.yellow)}${rect(66,41,3,3,C.cyan)}${rect(59,54,3,3,C.yellow)}`;
 function pack() {

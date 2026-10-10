@@ -89,7 +89,9 @@ try {
     await page.setViewportSize({width,height:width<600?844:1000});
     await assertNoOverflow(`${width}px`);
     if(width===390) {
-      const rect=await page.locator('.hero-actions .primary').boundingBox();assert.ok(rect&&rect.y+rect.height<844,'Primary action must be visible on the first screen');
+      for(const selector of ['#open-pack-art','#open-pack']) {
+        const rect=await page.locator(selector).boundingBox();assert.ok(rect&&rect.y>=0&&rect.y+rect.height<844,'Playable pack controls must be visible on the first screen');
+      }
       await page.screenshot({path:'artifacts/mobile-390.png',fullPage:true});
       await page.screenshot({path:'artifacts/mobile-first-screen.png'});
       await page.locator('#packs').scrollIntoViewIfNeeded();await page.screenshot({path:'artifacts/mobile-pack.png'});
@@ -98,7 +100,7 @@ try {
     if(width===768)await page.screenshot({path:'artifacts/tablet-768.png',fullPage:true});
     mobileChecks.push(width);
   }
-  check(`No horizontal document overflow at ${mobileChecks.join(', ')} CSS pixels; 390px first-screen CTA visible`);
+  check(`No horizontal document overflow at ${mobileChecks.join(', ')} CSS pixels; 390px first-screen playable pack visible`);
   await page.setViewportSize({width:390,height:844});
   await page.evaluate(()=>document.documentElement.style.fontSize='200%');await assertNoOverflow('200% text enlargement at 390px');
   await page.screenshot({path:'artifacts/text-200.png',fullPage:true});await page.evaluate(()=>document.documentElement.style.fontSize='');

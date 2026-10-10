@@ -29,9 +29,10 @@ Dependencies are development-only. Do not submit `node_modules`, package-manager
 ```sh
 npx playwright install chromium
 npm run test:smoke
+npm run test:revision
 ```
 
-The Playwright smoke script starts and closes its own foreground HTTP preview under `/preview/`. It uses a browser clock to exercise the actual 45-second scheduler without a real-time wait. Screenshots and machine-readable results are written under `artifacts/`.
+Both Playwright scripts start and close their own foreground HTTP preview under `/preview/`. The main smoke suite uses a browser clock to exercise the actual 45-second scheduler without a real-time wait. Screenshots and machine-readable results are written under `artifacts/`.
 
 After changing hero art or social copy:
 
@@ -55,7 +56,7 @@ npm run publish
 
 Publish the **contents of `dist/`**, not the source directory. The publisher serves this export and does not rebuild. `artifacts/publication.md` records the actual publishing outcome and URL. Rebuild before every new publication; check the complete submission size against 8,388,608 bytes. The export includes every runtime font and image.
 
-The actual attempt was refused with **`503 member_sites_closed`** (“this plane names no member sites”). No live URL was returned. The export is ready to retry once that service permits member-site publishing.
+The revision’s publishing attempt bundled the current export into **278,820 bytes**, then was refused with **`503 member_sites_closed`** (“this plane names no member sites”). No live URL was returned. The export is ready to retry once that service permits member-site publishing.
 
 For submission hygiene, `node scripts/check-delivery.mjs` checks required output files, relative entry-point assets, OG dimensions and byte accounting. Run it after removing local dependency/cache folders from the submission tree; it deliberately rejects those generated folders. Its final report is `artifacts/bundle-budget.json`.
 
@@ -67,7 +68,7 @@ The assignment explicitly protects `.git/`; the worker does not stage, commit, c
 
 `openPack`, `reveal`, `getFarm`, `place`, `unplace`, `claim`, `repair`, `overclock`, `merge`, `lobby`, `getGridEvents`, `getLetters`, plus `payElectricity` and `reset`.
 
-`src/game/adapter.ts` is the composition point. The UI imports only that adapter, normalized types and shared display/math rules; it never imports `DemoAdapter` or accesses demo localStorage. A future Robinhood Chain adapter can implement the same operations and normalize contract state into the same farm/pack/event model, retaining the UI interactions and layout. Actual contract ABIs, wallet authorization, confirmations, reorg handling and production economic rules belong to that future implementation. They are not simulated as real chain functionality here.
+`src/game/adapter.ts` is the composition point. The UI imports that adapter, normalized types, shared display/math rules and `presentationFor(game.mode)`; it never imports `DemoAdapter` or accesses demo localStorage. A future Robinhood Chain adapter can implement the same operations and normalize contract state into the same farm/pack/event model, retaining the UI interactions and layout. Mode-specific status, local-storage/value disclosures, action labels, spending units and feedback now come from `src/presentation.ts`. Demo-only odds and reset controls are hidden for chain mode, and reset is also guarded in the handler. The regression suite switches only the public adapter mode in the served JavaScript to verify that the same components render chain copy, including after pack and farm actions. It is a presentation stub, not a ChainAdapter or a transaction test. Actual contract ABIs, wallet authorization, confirmations, reorg handling and production economic rules belong to that future implementation. They are not simulated as real chain functionality here.
 
 `src/config.ts` holds the launch date, X URL, site label, chain ID **4663**, and empty `token`, `packs`, `farm`, `grid` address fields. Keep those fields empty until the real contracts exist. Set `launchDate` to an ISO timestamp with a timezone to activate the countdown; the shipped empty value displays **Date TBA**. The site continues to describe itself honestly as a pre-launch demo.
 
@@ -89,7 +90,8 @@ The assignment explicitly protects `.git/`; the worker does not stage, commit, c
 - Vitest: **26 tests passed**, including 100,000 rolls, hashrate/cooling/slot math, spending, persistence, partial-pack recovery, event timing/effects, lobbying and offline limits.
 - 100,000-roll result: Common 69,950; Rare 21,998; Epic 7,042; Legendary 1,010. Types: GPU 60,135; Cooling 19,977; PSU 11,936; Room 7,952. All are within the specified test tolerance of 0.5 percentage points.
 - Playwright on the real `/preview/` production export: **19 grouped checks passed**. Pack/reveal, tap and drag placement, live mining, claim, upkeep, overclock, lobby/event letter, persistence, reset confirmation, keyboard focus, merge, cooling, slot expansion, room unlock, Legendary dialog, reduced motion, settings and loaded offline interaction were exercised.
-- Rendered widths 320, 390, 768, 1024 and 1440px: no horizontal document overflow. The first action is visible at 390×844. Text enlargement to 200% at 390px also reflows without horizontal document overflow.
+- Targeted revision Playwright suite: **5 grouped checks passed**, covering normal/reduced-motion phone arrival and reveal, keyboard focus, LED opacity/pause, four rarity glow levels, functional copy, and chain-mode presentation. All six reviewer findings reproduced on the original export and were fixed; `.imd-responses.json` contains each response.
+- Rendered widths 320, 390, 768, 1024 and 1440px: no horizontal document overflow. The playable pack sprite and opening button are visible at 390×844 with fresh storage and scrollY=0; the opening button is at y=779–827. The original smoke assertion was strengthened to check both playable controls rather than the hero anchor. Text enlargement to 200% at 390px also reflows without horizontal document overflow.
 - Axe-core: zero reported WCAG A/AA violations on the tested page and Legendary modal. The page had 26 passing rule checks; contrast on illustration/gradient/scanline backgrounds remains partially inconclusive. This is not a claim of full accessibility conformance.
 - No console errors, page errors, failed requests or HTTP error responses in the smoke run. The browser MCP was also used to inspect the actual export and exercise pack/lobby controls.
 
@@ -100,9 +102,10 @@ Worker commands used the external dependency installation, for example:
 BLACKOUT_TOOLCHAIN=/tmp/blackout-toolchain /tmp/blackout-toolchain/node_modules/.bin/vitest run
 /tmp/blackout-toolchain/node_modules/.bin/vite build
 BLACKOUT_TOOLCHAIN=/tmp/blackout-toolchain PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-playwright node scripts/smoke.mjs
+BLACKOUT_TOOLCHAIN=/tmp/blackout-toolchain PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-playwright node scripts/revision-smoke.mjs
 ```
 
-See `artifacts/validation.md`, `artifacts/smoke-results.json`, `artifacts/accessibility.json`, and the screenshots for exact coverage and limitations. These are worker observations, not independent certification. Native screen readers, physical devices, native browser 200% zoom, Safari/Firefox, localization and X crawler previews were not tested. X returned HTTP 403 when the reference profile was requested, so the code-drawn art follows the supplied detailed visual brief; an exact comparison to the profile art could not be made.
+See `artifacts/validation.md`, `artifacts/revision-before.json`, `artifacts/revision-results.json`, `artifacts/smoke-results.json`, `artifacts/accessibility.json`, and the screenshots for exact coverage and limitations. These are worker observations, not independent certification. Native screen readers, physical devices, native browser 200% zoom, Safari/Firefox, localization and X crawler previews were not tested. WebKit was attempted in this revision but could not launch because system libraries (including GTK 4 and GStreamer) are unavailable. The prior accepted run recorded HTTP 403 when requesting the X reference profile; that external comparison was not repeated, so the code-drawn art follows the supplied detailed visual brief; an exact comparison to the profile art could not be made.
 
 ## Design and attribution
 

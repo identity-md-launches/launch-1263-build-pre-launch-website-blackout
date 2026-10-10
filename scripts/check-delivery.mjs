@@ -38,7 +38,7 @@ for(let i=0;i<5;i++) {
   const total=entries.reduce((sum,f)=>sum+f.bytes,0);
   if(total>=8_388_608)throw new Error(`Submission files exceed 8 MiB: ${total}`);
   const distFiles=entries.filter(f=>f.path.startsWith('dist/'));
-  report={limitBytes:8_388_608,deliverableFileCount:entries.length,deliverableBytes:total,headroomBytes:8_388_608-total,distFileCount:distFiles.length,distBytes:distFiles.reduce((sum,f)=>sum+f.bytes,0),publisherBundleBytes:278308,excluded:['Protected Git/configuration paths','Pinned .imd inputs','test/scratch','Temporary .playwright-mcp browser files'],notes:'Raw source, export, documentation and evidence bytes, including this report. No Git metadata was touched. This is not a measurement of a worker-created Git bundle.',exportHashes:await Promise.all(distFiles.map(async f=>({path:f.path,sha256:createHash('sha256').update(await readFile(f.path)).digest('hex')})))};
+  report={limitBytes:8_388_608,deliverableFileCount:entries.length,deliverableBytes:total,headroomBytes:8_388_608-total,distFileCount:distFiles.length,distBytes:distFiles.reduce((sum,f)=>sum+f.bytes,0),excluded:['Protected Git/configuration paths','Pinned .imd inputs','test/scratch','Temporary .playwright-mcp browser files'],notes:'Raw source, export, documentation and evidence bytes, including this report. No Git metadata was touched. This is not a measurement of a worker-created Git bundle.',exportHashes:await Promise.all(distFiles.map(async f=>({path:f.path,sha256:createHash('sha256').update(await readFile(f.path)).digest('hex')})))};
   await writeFile(reportPath,JSON.stringify(report,null,2)+'\n');
 }
 console.log(JSON.stringify(report,null,2));
