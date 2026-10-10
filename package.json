@@ -1,0 +1,24 @@
+{
+  "name": "blackout-demo",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "vitest run",
+    "test:smoke": "node scripts/smoke.mjs",
+    "og": "node scripts/render-og.mjs",
+    "check:delivery": "node scripts/check-delivery.mjs",
+    "publish": "imd site publish dist --name blackout"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.10.2",
+    "@playwright/test": "1.56.1",
+    "typescript": "5.9.3",
+    "vite": "7.1.7",
+    "vitest": "3.2.4"
+  }
+}
