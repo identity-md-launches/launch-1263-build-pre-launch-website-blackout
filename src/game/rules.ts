@@ -13,7 +13,7 @@ export const EVENT_PROTECTIONS = {
   surge: 'Clean Power: Surge Protector + Power Supply prevents item burn.',
   fire: 'Cold Power: Power Supply + Liquid Cooling is fire immune. Airflow: Fan + Server Rack halves fire damage.',
   theft: 'Locked Rack: Router + Server Rack prevents cable theft.',
-  audit: `Only the top ${percent(config.events.auditTopFraction)} of farms by hashrate qualify. An audit sends ${percent(config.events.auditTax)} of that epoch’s mining to the reward pool, never player balances. Lobbying lowers bad-event odds.`,
+  audit: `Only farms above ${config.events.auditHashThreshold} H/s qualify. An audit sends ${percent(config.events.auditTax)} of that epoch’s mining to the reward pool, never player balances. Lobbying lowers bad-event odds.`,
   green: `All active equipment in the affected district mines ${percent(config.events.greenHashBonus)} more.`,
   cheap: 'The affected district pays half its usual electricity tariff.',
   calm: 'No protection needed. This epoch has no additional disruption.',
@@ -85,13 +85,38 @@ export function roomHashrate(state: GameState, room: Room): number {
   return rate;
 }
 export const totalHashrate = (state: GameState) => state.rooms.reduce((sum, room) => sum + roomHashrate(state, room), 0);
-/** Citywide rank at settlement. Round the demo decile up; stable IDs break ties. */
+/** The strict threshold is a beta parameter, independent of balances and rivals. */
 export function auditEligibility(state: GameState) {
   const hashrate = totalHashrate(state);
-  const ranking = [{ id: 0, hashrate }, ...state.season.rivalFarms].sort((a, b) => b.hashrate - a.hashrate || a.id - b.id);
-  const rank = ranking.findIndex(farm => farm.id === 0) + 1;
-  const cutoff = Math.ceil(ranking.length * config.events.auditTopFraction);
-  return { rank, cutoff, farmCount: ranking.length, eligible: hashrate > 0 && rank <= cutoff };
+  return { hashrate, threshold: config.events.auditHashThreshold, eligible: hashrate > config.events.auditHashThreshold };
+}
+export const epochsToSync = (state: GameState) => Math.max(0, state.epoch - state.lastSyncedEpoch);
+export const isIdle = (state: GameState) => epochsToSync(state) >= config.sync.idleDays * epochsPerDay();
+export const claimable = (state: GameState) => state.unclaimed + state.pendingMining;
+/** Greatest capped total T satisfying sum(min(walletScore, 10% * T)) = T.
+ * With fewer than ten active wallets there is no positive solution. Demo districts
+ * contain twelve wallets; small districts wait for ten active wallets to qualify.
+ */
+export function cappedDistrict(scores: number[]) {
+  const active = scores.filter(s => s > 0).sort((a, b) => a - b);
+  const share = config.season.walletShareCap;
+  if (active.length < Math.ceil(1 / share)) return { score: 0, total: 0, cap: 0, active: active.length };
+  let total = active.reduce((a, b) => a + b, 0), prefix = 0;
+  for (let k = 1; k <= active.length; k++) {
+    prefix += active[k - 1];
+    const denominator = 1 - (active.length - k) * share;
+    if (denominator <= 0) continue;
+    const candidate = prefix / denominator, cap = candidate * share;
+    if (cap + 1e-9 >= active[k - 1] && (k === active.length || cap <= active[k] + 1e-9)) { total = candidate; break; }
+  }
+  return { score: total / active.length, total, cap: total * share, active: active.length };
+}
+export function districtStandings(state: GameState) {
+  return DISTRICTS.map((name, id) => {
+    const scores = state.season.rivalFarms.filter(f => f.district === id).map(f => f.score);
+    if (state.season.scoringDistrict === id && state.season.submittedScore > 0) scores.push(state.season.submittedScore);
+    return { id, name, ...cappedDistrict(scores) };
+  }).sort((a, b) => b.score - a.score || a.id - b.id);
 }
 export const electricityReduction = (state: GameState, room: Room) => (hasCombo(state, room, 'cold') ? config.combos.coldPowerElectricity : 0) + (hasCombo(state, room, 'offgrid') ? config.combos.offGridElectricity : 0);
 export function electricityTariff(state: GameState, room: Room) {
@@ -100,7 +125,11 @@ export function electricityTariff(state: GameState, room: Room) {
 }
 export const overclockCost = (room: Room) => COSTS.overclock * (room.overclock + 1);
 export const actualSpend = (nominal: number) => nominal / (1 + config.economy.spendBonus);
-export const levelFromXp = (xp: number): number => config.xp.levels.filter(threshold => xp >= threshold).length;
+export const levelFromXp = (xp: number, gameDays = Number.POSITIVE_INFINITY): number => {
+  const earned = config.xp.levels.filter(threshold => xp >= threshold).length;
+  const gate = Object.entries(config.xp.dayGates).find(([, day]) => gameDays < day);
+  return Math.min(earned, gate ? Number(gate[0]) - 1 : config.xp.levels.length);
+};
 export const epochsPerDay = () => config.epoch.dayHours / config.epoch.hours;
 export const seasonEpochs = () => config.season.days * epochsPerDay();
 export const roomUnlocks = (state: GameState): RoomUnlock[] => [

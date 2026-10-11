@@ -1,6 +1,20 @@
 # Changelog
 
-## Game design corrections
+## Simpler first-play update
+
+All gameplay numbers are **beta values, may change**.
+
+- Split Farm, Packs, City, Season, Wallet and Docs into focused tabs; added the shared claim/status bar and mobile bottom navigation.
+- Added skippable, replayable four-step onboarding, item-local menus, room combo chips and actionable mining warnings. Kept practice controls inside Demo tools.
+- Added explicit farm sync, automatic sync on actions, a three-day idle pause that preserves earned rewards, and the weekly sync deadline.
+- Corrected audits to a configurable hash threshold; set pack/lobby/sell revenue to 88/10/2; added swap fee and launch allocation wording. Removed merging throughout the current game.
+- Added day-gated levels, a shared 400/day purchase XP cap, and average district scoring with a strict 10% wallet cap. Retained corrected rarity, Triple Core, overclock and tariff rules.
+- Updated both guides, design documentation, production interaction checks and the complete relative-URL `dist/` export. Preserved old saves and the future ChainAdapter boundary.
+
+Current evidence: [tabs validation](reports/tabs-validation.md), [browser results](reports/tabs-results.json). Publication is handed to the job plane with `blackout` preferred and the existing automatic label as fallback.
+
+
+## Previous release: game design corrections
 
 All gameplay numbers are **beta values, may change**.
 
@@ -11,7 +25,7 @@ All gameplay numbers are **beta values, may change**.
 - Set overclock to +10% hash per level, up to 5, with increasing costs and a confirmation showing wear, power and tariff changes.
 - Removed electricity reserves/refills; retained the 15% base mining tariff and its modifiers. Preserved existing demo saves, updated both guides and rebuilt `dist/`.
 
-Validation: typecheck/build, 62 unit/documentation tests and 46 production-browser checks passed. Current results and limitations: [rules validation](reports/rules-validation.md).
+Validation: typecheck/build, 62 unit/documentation tests and 46 production-browser checks passed. Historical results and limitations: [rules validation](reports/rules-validation.md).
 
 ## Earlier delivery
 

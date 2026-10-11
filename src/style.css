@@ -614,3 +614,155 @@ meter,progress{border:1px solid CanvasText}
 .inventory-item.selected{outline:2px solid Highlight}
 .mode-label i{background:CanvasText}
 }
+
+/* Focused game tabs: reuse BLACKOUT's pixel palette and six-step type scale. */
+.site-header{gap:20px}
+.site-header nav{gap:18px;line-height:1.5}
+.nav-symbol{display:none}
+.game-hud{padding-top:24px;font-variant-numeric:tabular-nums}
+.game-topbar{display:grid;grid-template-columns:1fr 1fr minmax(150px,1.15fr) 1.2fr 1.5fr;align-items:center;gap:24px;padding:20px 24px;background:var(--surface);border:1px solid var(--border)}
+.hud-stat{display:grid;gap:4px;min-width:0}
+.hud-stat>span{font-size:var(--font-small);color:var(--muted)}
+.hud-stat>strong{font-size:var(--font-title);font-weight:600;overflow-wrap:anywhere}
+.hud-stat:first-child>strong{color:var(--accent)}
+.hud-stat small{font-size:var(--font-small);font-weight:400;color:var(--muted)}
+.claim-button{display:flex;flex-direction:column;gap:0;min-height:66px}
+.claim-button strong{font-size:var(--font-title)}
+.game-topbar .epoch-box{display:grid;gap:2px}
+.game-topbar .epoch-box strong{font-size:var(--font-body)}
+.game-topbar .epoch-box small{color:var(--muted)}
+.game-topbar .level-box{display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
+.game-topbar .level-box progress{width:100%}
+.game-topbar .level-box>span{grid-column:1/-1}
+.sync-line{display:flex;justify-content:space-between;align-items:center;gap:16px;font-size:var(--font-small);color:var(--muted);min-height:44px}
+.sync-line>span{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sync-line strong{font-weight:400;color:var(--text)}
+.sync-dot{width:5px;height:5px;background:var(--accent)}
+.sync-line .text-button{color:var(--accent);padding-inline:16px}
+.game-hud+.inner-page,.game-hud~.inner-page{padding-top:24px}
+.mining-warnings{display:grid;gap:8px;margin-block:8px 16px}
+.mining-warning{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:12px 16px;background:#211d13;border-inline-start:3px solid var(--highlight);font-size:var(--font-label);color:var(--highlight)}
+.mining-warning p{max-width:80ch}
+.mining-warning .button{flex-shrink:0;max-width:100%}
+.onboarding{background:var(--surface-raised);border:1px solid var(--accent);padding:20px 24px;margin-block:12px 8px}
+.guide-progress{display:flex;gap:6px;width:112px;margin-bottom:12px}
+.guide-progress span{height:3px;flex:1;background:var(--border)}
+.guide-progress .complete{background:var(--accent)}
+.guide-copy{display:flex;align-items:flex-start;gap:16px}
+.guide-copy>div{flex:1;min-width:0}
+.guide-copy h2{font-family:Mono,monospace;font-size:var(--font-body);font-weight:600;line-height:1.5}
+.guide-copy p{color:var(--muted);font-size:var(--font-label);margin-top:4px;max-width:75ch}
+.guide-step{font-size:var(--font-label);color:var(--accent);padding-top:2px;white-space:nowrap}
+.guide-copy>.text-button{padding:0 8px;flex-shrink:0}
+.guide-actions{display:flex;gap:24px;align-items:center;margin-top:16px}
+.guide-highlight{outline:2px solid var(--accent);outline-offset:5px;scroll-margin:24px}
+.item-menu{display:block;padding:0;align-self:start;min-height:0;margin:0}
+.item-menu summary{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;padding:12px 6px;min-height:156px;margin:0;text-align:center;list-style:none;color:var(--text);font-size:var(--font-small)}
+.item-menu summary::-webkit-details-marker{display:none}
+.item-menu summary:after{content:none}
+.item-menu summary>span{color:var(--rarity)}
+.item-menu summary small{color:var(--muted)}
+.item-menu summary .sprite{width:82px;max-width:90%}
+.item-menu summary:hover{background:var(--hover)}
+.item-menu[open]{grid-column:span 2;border-color:var(--accent)}
+.item-menu[open]>summary{min-height:128px}
+.item-actions{display:grid;gap:8px;padding:12px;border-top:1px solid var(--border);background:var(--surface);text-align:start}
+.item-actions .button{width:100%;box-shadow:none}
+.item-actions .text-button{padding:8px;text-align:center}
+.item-actions label{font-size:var(--font-small)}
+.item-actions select{width:100%;font-size:var(--font-body)}
+.farm-slot small{overflow-wrap:anywhere}
+.room-slots{align-items:stretch}
+.combo-chips{display:flex;gap:8px;flex-wrap:wrap;padding-block:4px 12px}
+.combo-chip{font-size:var(--font-small);color:var(--accent);background:#102632;border:1px solid #31566a;padding:4px 8px}
+.room-combos details{margin:0}
+.room-combos summary{font-size:var(--font-small)}
+.room-combos .room-controls{padding:16px 0;gap:12px}
+.room-tariff{margin-top:12px}
+.locked-rooms{display:block}
+#room-unlocks>summary{font-size:var(--font-label)}
+#inventory-space{margin-top:16px}
+.inventory{grid-template-columns:repeat(3,minmax(0,1fr));align-items:start}
+.city-section{margin-top:0}
+.season-layout,.wallet-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start}
+.season-prizes{display:grid;gap:24px}
+.leaderboard li{display:list-item;padding:12px 4px;border-bottom:1px solid var(--border)}
+.leaderboard li>span{display:inline-block;max-width:76%}
+.leaderboard small{display:block;color:var(--muted)}
+.leaderboard li>strong{color:var(--text)}
+.season-prizes h2,.wallet-layout h2{font-size:var(--font-body)}
+.deadline{color:var(--highlight);font-size:var(--font-label);border-inline-start:2px solid var(--highlight);padding-inline-start:12px}
+.prize-list{display:grid;gap:16px;margin-block:24px}
+.prize-list dt{font-weight:600;font-size:var(--font-label)}
+.prize-list dd{margin:4px 0 0;color:var(--muted);font-size:var(--font-label)}
+.season-prizes .mini-stats>div{display:flex;flex-direction:column}
+.season-prizes .mini-stats>div>span{font-size:var(--font-small);color:var(--muted)}
+.season-prizes .mini-stats>div>strong{font-weight:400;color:var(--accent)}
+.wallet-layout .withdraw-panel{margin:0}
+.withdraw-panel>h2{margin-top:32px}
+.demo-tools{padding:16px 0;border-top:1px solid var(--border);margin-block:0 32px}
+.demo-tools summary{color:var(--muted);font-size:var(--font-label)}
+.demo-tools .actions{margin-top:16px}
+#replay-guide{margin-block:12px}
+@media(max-width:1120px){
+ .site-header{gap:16px}.site-header nav{gap:16px}.mode-label{margin-inline-start:auto}
+ .game-topbar{grid-template-columns:1fr 1fr 1.1fr;gap:16px}.game-topbar .epoch-box{grid-column:1}.game-topbar .level-box{grid-column:2/-1;grid-template-columns:auto minmax(40px,180px) 1fr}.game-topbar .level-box>span{grid-column:auto}
+}
+@media(max-width:820px){
+ .site-header{min-height:76px;justify-content:space-between}.site-header nav{order:3;width:100%;justify-content:space-between;margin:0}
+ .inventory{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .season-layout,.wallet-layout{grid-template-columns:1fr}
+ .season-prizes{grid-row:1}
+ .mining-warning{align-items:flex-start;flex-direction:column;gap:12px}
+}
+@media(max-width:600px){
+ body:not([data-page="home"]){padding-bottom:calc(70px + env(safe-area-inset-bottom))}
+ .site-header{min-height:64px;gap:8px;padding-block:8px}
+ .site-header .brand{font-size:var(--font-small)}
+ .site-header .brand .sprite{width:32px}
+ .site-header nav.game-nav{position:fixed;inset:auto 0 0;z-index:40;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0;width:100%;background:var(--surface);border-top:1px solid var(--border);padding:6px max(4px,env(safe-area-inset-left)) calc(6px + env(safe-area-inset-bottom));margin:0}
+ .site-header nav.game-nav a{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;padding:3px 0;min-height:48px;border-bottom:0;font-size:var(--font-small);text-transform:capitalize;line-height:1.5}
+ .site-header nav.game-nav a[aria-current]{background:var(--surface-raised);box-shadow:inset 0 -2px var(--accent)}
+ .nav-symbol{display:block;font-size:var(--font-title);line-height:1}
+ body[data-page="home"] .site-header nav.game-nav{display:none}
+ .demo-strip .wrap{display:block;font-size:var(--font-small);padding-block:6px}.demo-strip span{display:block;margin-top:2px}
+ .game-hud{padding-top:16px}
+ .game-topbar{padding:12px;gap:16px 8px;grid-template-columns:1fr 1fr 1.15fr}
+ .hud-stat>strong{font-size:var(--font-body)}
+ .hud-stat small{display:block}.claim-button{padding:8px;min-height:66px;box-shadow:2px 2px #6a561e;font-size:var(--font-small)}
+ .claim-button strong{font-size:var(--font-body)}
+ .game-topbar .level-box{display:grid;grid-template-columns:auto 1fr;gap:4px 8px;grid-column:2/-1}.game-topbar .level-box>span{grid-column:1/-1}.game-topbar .level-box strong{font-size:var(--font-small)}
+ .game-topbar .epoch-box>span{display:grid;gap:0}.game-topbar .epoch-box{gap:0}.game-topbar .epoch-box small{font-size:var(--font-small)}
+ .sync-help{display:none}.sync-line{gap:8px}
+ .onboarding{padding:16px}.guide-copy{gap:12px;flex-wrap:wrap}.guide-copy>div{flex-basis:calc(100% - 60px)}.guide-copy>.text-button{order:3;min-height:44px;padding:0}.guide-copy p{font-size:var(--font-small)}
+ .guide-actions{margin-top:8px;justify-content:space-between;gap:12px}.guide-step{font-size:var(--font-small)}
+ .page-heading{gap:12px;margin-bottom:24px}.page-heading p{font-size:var(--font-label)}.inner-page{padding-block:24px 40px}
+ .page-heading .button{font-size:var(--font-small);min-height:44px;padding:10px 12px}
+ .room-scene{padding:24px 8px 16px}.room-slots{gap:8px}.farm-slot{min-height:148px}.farm-slot strong{font-size:var(--font-small)}
+ .item-menu{min-height:0}.item-menu summary{padding:10px 4px;min-height:148px}.item-menu summary .sprite{width:68px}
+ .item-menu summary small{font-size:var(--font-small)}
+ .inventory-panel{padding:16px}.inventory{gap:8px;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .inventory .item-menu[open]{grid-column:span 2}
+ .season-timer{flex-wrap:wrap;gap:8px}.season-timer>span{font-size:var(--font-display)}
+ .leaderboard{font-size:var(--font-small);padding-inline-start:24px}.leaderboard li>span{max-width:74%}
+ .wallet-layout .copy-row{flex-wrap:wrap}.wallet-layout .copy-row .button{width:100%}.wallet-layout .copy-row input{font-size:var(--font-body)}
+ .mining-warning{font-size:var(--font-small)}
+ .notice{bottom:calc(82px + env(safe-area-inset-bottom))}
+ .filter-label select{font-size:var(--font-body)}
+}
+/* Keep the guide and the main action in the first mobile viewport. */
+@media(max-width:600px){
+ .guide-copy{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px}
+ .guide-copy>.text-button{order:0;min-height:44px;padding:0 4px}
+ .guide-copy h2{font-size:var(--font-label)}
+ .guide-step{margin-inline-end:4px}
+ .game-topbar .epoch-box>span{white-space:nowrap}
+ .game-topbar .epoch-box{gap:4px}
+}
+.leaderboard{counter-reset:district-rank;list-style:none;padding-inline-start:0}
+.leaderboard li{counter-increment:district-rank;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;padding-inline-start:28px;position:relative}
+.leaderboard li::before{content:counter(district-rank) '.';position:absolute;inset-inline-start:0;inset-block-start:12px;color:var(--muted)}
+.leaderboard li>span{max-width:none}
+.leaderboard li>strong{float:none;font-variant-numeric:tabular-nums}
+.inventory>.item-menu:not([open]){align-self:stretch}
+.inventory>.item-menu:not([open]) summary{height:100%}

@@ -16,7 +16,7 @@ async function walk(directory) {
   }
 }
 await walk(root);
-for(const required of ['dist/index.html','dist/og.png','dist/favicon.svg','package.json','package-lock.json','DESIGN.md','README.md','reports/validation.md', 'docs.md', 'CHANGELOG.md', 'reports/publication.md']) {
+for(const required of ['dist/index.html','dist/og.png','dist/favicon.svg','package.json','package-lock.json','DESIGN.md','README.md','reports/validation.md', 'reports/tabs-validation.md', 'reports/tabs-results.json', 'docs.md', 'CHANGELOG.md', 'reports/publication.md']) {
   if(!files.includes(required))throw new Error(`Missing required deliverable: ${required}`);
 }
 const html=await readFile('dist/index.html','utf8');

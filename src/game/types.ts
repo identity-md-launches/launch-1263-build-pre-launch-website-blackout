@@ -17,12 +17,14 @@ export interface RoomUnlock { id: number; unlocked: boolean; requirement: string
 export interface ReferralState { code: string; referredBy: string; invitees: number; inviteeMining: number; earned: number }
 export interface RivalFarm { id: number; district: number; score: number; hashrate: number }
 export interface SeasonState {
-  number: number; endsAtEpoch: number; districtScores: number[]; farmScore: number; rivalFarms: RivalFarm[];
+  number: number; endsAtEpoch: number; scoringDistrict: number; submittedScore: number; districtScores: number[]; farmScore: number; rivalFarms: RivalFarm[];
   pendingFreePacks: number; pendingTokens: number; lastResult: string;
 }
 export interface GameState {
   version: 3; rng: number; nextId: number; updatedAt: number; createdAt: number; nextEventAt: number;
   tokens: number; unclaimed: number; ethBalance: number;
+  lastSyncedEpoch: number; pendingMining: number; purchaseXp: { day: number; earned: number };
+  revenue: { teamTokens: number; heartbeatTokens: number; rewardPoolEth: number; teamEth: number; heartbeatEth: number };
   inventory: Item[]; inventoryCapacity: number; rooms: Room[];
   district: number; lobbied: boolean; pendingPack: Pack | null;
   events: GridEvent[]; letters: Letter[]; totalPacks: number; storageWarning: string;
@@ -43,7 +45,8 @@ export interface GameAdapter {
   withdraw(amount: number): Promise<void>;
   repair(roomId: number): Promise<void>;
   overclock(roomId: number): Promise<void>;
-  merge(itemIds: string[]): Promise<Item>;
+  sync(): Promise<void>;
+  repairItem(itemId: string): Promise<void>;
   scrap(itemId: string): Promise<void>;
   expandInventory(): Promise<void>;
   lobby(): Promise<void>;

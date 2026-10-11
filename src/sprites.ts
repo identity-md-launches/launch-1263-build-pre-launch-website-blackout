@@ -1,5 +1,5 @@
 /** Every illustrated object resolves here. Drop same-named artwork into /assets. */
-type SpriteName = 'gpu' | 'cooling' | 'psu' | 'room' | 'pack' | 'mascot' | 'city' | 'tower' | 'bolt' | 'coin' | 'merge' | 'district';
+type SpriteName = 'gpu' | 'cooling' | 'psu' | 'room' | 'pack' | 'mascot' | 'city' | 'tower' | 'bolt' | 'coin' | 'district';
 const C = { ink: '#05060F', navy: '#030C39', cyan: '#39E6FF', yellow: '#FFE600', magenta: '#FF3DF2', metal: '#23334a', edge: '#526579' };
 const rect = (x: number, y: number, w: number, h: number, fill: string, extra = '') => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}" ${extra}/>`;
 const path = (d: string, fill: string, extra = '') => `<path d="${d}" fill="${fill}" ${extra}/>`;
@@ -99,7 +99,6 @@ const registry: Record<SpriteName, { width: number; height: number; draw: () => 
   gpu: {width:80,height:64,draw:gpu}, cooling:{width:80,height:64,draw:cooling}, psu:{width:80,height:64,draw:psu}, room:{width:80,height:64,draw:roomArt},
   pack:{width:100,height:120,draw:pack}, mascot:{width:80,height:64,draw:()=>gpu()+bolt()}, city:{width:960,height:360,draw:city}, tower:{width:80,height:64,draw:tower}, bolt:{width:80,height:64,draw:bolt},
   coin:{width:80,height:64,draw:()=>path('M26 8H54V14H62V50H54V56H26V50H18V14H26Z','#967e25')+path('M29 12H51V18H57V46H51V52H29V46H23V18H29Z',C.yellow)+path('M39 18H46L36 32H44L33 47L36 35H30Z','#554627')},
-  merge:{width:80,height:64,draw:()=>rect(9,18,16,16,C.cyan)+rect(54,18,16,16,C.magenta)+path('M27 35H34V42H45V35H52L40 54Z',C.yellow)}
 };
 const overrides = import.meta.glob<string>('../assets/*.{svg,png,webp}', {eager:true,query:'?url',import:'default'});
 const cache = new Map<SpriteName,string>();
