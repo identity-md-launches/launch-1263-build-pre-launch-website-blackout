@@ -482,7 +482,6 @@ body[data-page="home"] .site-header nav{display:none}
 .mode-label{font-size:var(--font-small)}
 .brand .sprite{width:34px}
 .demo-strip .wrap{flex-direction:column;gap:0;font-size:var(--font-small);padding-block:6px}
-.demo-strip span{display:none}
 .hero-copy{padding-block:32px 194px}
 .hero-copy h1{font-size:var(--font-display);line-height:1.5}
 .tagline{font-size:var(--font-body);line-height:1.75;margin-top:16px}
@@ -571,7 +570,7 @@ body[data-page="home"] .site-header nav{display:none}
 .reveal-area>.section-heading h2{font-size:var(--font-body)}
 .reveal-area>p{font-size:var(--font-small)}
 .cards{gap:8px;margin-block:20px}
-.item-card{min-height:224px;padding:10px 6px}
+.item-card{min-height:288px;padding:10px 6px}
 .item-card h3{font-size:var(--font-small);overflow-wrap:anywhere}
 .card-rarity{font-size:var(--font-small)}
 .card-rarity>span:last-child{display:none}

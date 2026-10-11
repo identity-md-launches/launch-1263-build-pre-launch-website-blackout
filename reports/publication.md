@@ -1,5 +1,7 @@
 # Publication handoff
 
+Revision: the reviewed source and complete `dist/` export have been rebuilt for the same job-submission publication handoff. No member-site publication command was rerun; a new live CID/URL is not verified locally.
+
 Requested label: **blackout**. An automatic label is acceptable if member names are closed. No exact-name blocker is raised.
 
 The finished, self-contained static export is `dist/`. This job does not use the contributor’s separate member-site publication service. The IdentityMD plane pins and publishes the job export after submission.

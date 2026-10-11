@@ -1,6 +1,10 @@
-# BLACKOUT implementation and validation
+# BLACKOUT validation
 
-Worker review on 2026-10-11, against the final source and production export. The assignment uses the `none` check profile: these are recorded local observations, not independent certification. No game contract or token was deployed.
+The current revision is documented in [revision-validation.md](revision-validation.md): all six findings reproduced and fixed; strict typecheck/build, 47 engine tests, 14 full browser checks and 18 focused revision checks pass. [revision-results.json](revision-results.json) and [screenshots/revision/](screenshots/revision/) describe the rebuilt export. The review below is retained as earlier-round evidence; its source line numbers, screenshots and first-screen measurements may be historical.
+
+# Earlier BLACKOUT implementation and validation
+
+Previous-round worker review on 2026-10-11, against that round’s source and production export. The assignment uses the `none` check profile: these are recorded local observations, not independent certification. No game contract or token was deployed.
 
 ## Delivered scope
 

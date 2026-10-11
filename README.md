@@ -52,6 +52,7 @@ No dependency directories, registries, caches or package archives belong in the 
 npm test
 npx playwright install chromium
 npm run test:smoke
+node scripts/review-regressions.mjs
 npm run check:delivery
 ```
 
@@ -63,12 +64,13 @@ External-toolchain commands used here:
 BLACKOUT_TOOLCHAIN=/tmp/blackout-deps /tmp/blackout-deps/node_modules/.bin/vitest run
 PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browser /tmp/blackout-deps/node_modules/.bin/playwright install chromium
 BLACKOUT_TOOLCHAIN=/tmp/blackout-deps PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browser node scripts/smoke.mjs
+BLACKOUT_TOOLCHAIN=/tmp/blackout-deps PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browser node scripts/review-regressions.mjs
 node scripts/check-delivery.mjs
 ```
 
-Actual results: strict TypeScript and production build passed; **47 engine tests passed**; **14 production interaction checks passed** with zero failures, console errors or resource failures. Automated checks cover all four pages at 320, 390, 768 and 1440 CSS pixels, plus Docs at 200% text size. Play Demo is fully visible in the 390×844 first screen. Five axe page/dialog states have zero reported violations; incomplete checks remain identified in the JSON report.
+Actual results: strict TypeScript and production build passed; **47 engine tests passed**; **14 production interaction checks passed**, and **18 focused review regression checks passed** with zero failures, console errors or resource failures. The latter covers all six reproduced reviewer findings, including 120 item/rarity/viewport reveal cases. Automated checks cover all four pages at 320, 390, 768 and 1440 CSS pixels, plus Docs at 200% text size. Play Demo is fully visible in the 390×844 first screen. Five axe page/dialog states have zero reported violations; incomplete checks remain identified in the JSON report.
 
-See [reports/validation.md](reports/validation.md) for the six-domain Better Interface review, fixes, measured checks and limitations; [reports/interaction-results.json](reports/interaction-results.json) for browser results; and [reports/bundle-budget.json](reports/bundle-budget.json) for byte accounting and export hashes. These are worker checks, not independent certification. Physical devices, actual screen readers and browser-native zoom were not tested. The unchanged development dependencies have audit findings recorded in validation.
+See [reports/revision-validation.md](reports/revision-validation.md) for the current six-domain Better Interface review, fixes, screenshots and limitations, and [reports/validation.md](reports/validation.md) for retained earlier evidence; [reports/interaction-results.json](reports/interaction-results.json) for browser results; and [reports/bundle-budget.json](reports/bundle-budget.json) for byte accounting and export hashes. These are worker checks, not independent certification. Physical devices, actual screen readers and browser-native zoom were not tested. The unchanged development dependencies have audit findings recorded in validation.
 
 ## Publish
 

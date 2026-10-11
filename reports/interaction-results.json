@@ -1,5 +1,5 @@
 {
-  "runAt": "2026-10-11T07:53:12.145Z",
+  "runAt": "2026-10-11T08:23:26.931Z",
   "export": "dist/",
   "hostingPath": "/preview/",
   "checks": [
@@ -24,19 +24,19 @@
   "firstScreen": {
     "#hero-title": {
       "x": 16,
-      "y": 154.375,
+      "y": 173.5625,
       "width": 358,
       "height": 48
     },
     ".hero-description": {
       "x": 16,
-      "y": 282.375,
+      "y": 301.5625,
       "width": 358,
       "height": 19.1875
     },
     ".hero-actions .primary": {
       "x": 16,
-      "y": 321.5625,
+      "y": 340.75,
       "width": 358,
       "height": 48
     }

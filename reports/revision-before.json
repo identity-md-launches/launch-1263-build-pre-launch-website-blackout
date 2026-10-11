@@ -1,0 +1,193 @@
+{
+  "beta-320-farm": {
+    "display": "none",
+    "text": "Beta values, may change",
+    "rect": {
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    },
+    "bodyBeta": null
+  },
+  "beta-320-packs": {
+    "display": "none",
+    "text": "Beta values, may change",
+    "rect": {
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    },
+    "bodyBeta": null
+  },
+  "beta-390-farm": {
+    "display": "none",
+    "text": "Beta values, may change",
+    "rect": {
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    },
+    "bodyBeta": null
+  },
+  "beta-390-packs": {
+    "display": "none",
+    "text": "Beta values, may change",
+    "rect": {
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    },
+    "bodyBeta": null
+  },
+  "beta-1440-farm": {
+    "display": "block",
+    "text": "Beta values, may change",
+    "rect": {
+      "x": 1159,
+      "y": 97,
+      "width": 161,
+      "height": 19.1875,
+      "top": 97,
+      "right": 1320,
+      "bottom": 116.1875,
+      "left": 1159
+    },
+    "bodyBeta": [
+      "Beta values, may change"
+    ]
+  },
+  "beta-1440-packs": {
+    "display": "block",
+    "text": "Beta values, may change",
+    "rect": {
+      "x": 1159,
+      "y": 97,
+      "width": 161,
+      "height": 19.1875,
+      "top": 97,
+      "right": 1320,
+      "bottom": 116.1875,
+      "left": 1159
+    },
+    "bodyBeta": [
+      "Beta values, may change"
+    ]
+  },
+  "docs": {
+    "before": {
+      "hash": "#/docs",
+      "scrollY": 17693,
+      "contentsY": -17221.6875,
+      "focus": ""
+    },
+    "after": {
+      "hash": "#/docs",
+      "scrollY": 17693,
+      "contentsY": -17221.6875,
+      "focus": ""
+    }
+  },
+  "currency": {
+    "afterRight": {
+      "tag": "BODY",
+      "id": "",
+      "checked": "tokens"
+    },
+    "afterLeft": {
+      "tag": "BODY",
+      "id": "",
+      "checked": "tokens"
+    }
+  },
+  "headings": {
+    "farmDescription": "Keep the rigs running. Give the grid a reason to stay on.",
+    "descriptionBox": {
+      "x": 16,
+      "y": 224.75,
+      "width": 358,
+      "height": 44.78125
+    },
+    "city": "The city never sleeps.",
+    "lobby": "Give your district a voice.",
+    "referrals": "Bring your neighbors.",
+    "packPrice": "A living price."
+  },
+  "inventory": {
+    "selected": {
+      "x": 33,
+      "y": 545.953125,
+      "width": 102.65625,
+      "height": 153
+    },
+    "grid": {
+      "x": 33,
+      "y": 545.953125,
+      "width": 324,
+      "height": 489
+    },
+    "actions": {
+      "x": 33,
+      "y": 1050.953125,
+      "width": 324,
+      "height": 242.5625
+    },
+    "install": {
+      "x": 243,
+      "y": 1139.140625,
+      "width": 114,
+      "height": 44
+    },
+    "scrollY": 1902
+  },
+  "reveal": {
+    "before": {
+      "cards": {
+        "x": 29,
+        "y": 322.203125,
+        "width": 332,
+        "height": 224
+      },
+      "revealAll": {
+        "x": 29,
+        "y": 597.390625,
+        "width": 332,
+        "height": 44
+      }
+    },
+    "after": {
+      "cards": {
+        "x": 29,
+        "y": 322.203125,
+        "width": 332,
+        "height": 263.9375
+      },
+      "revealAll": {
+        "x": 29,
+        "y": 637.328125,
+        "width": 332,
+        "height": 44
+      }
+    },
+    "item": "Common\nRouter\n\n6 hash · network\n\nAdded to inventory"
+  }
+}

@@ -1,0 +1,2251 @@
+{
+  "runAt": "2026-10-11T08:24:14.727Z",
+  "export": "dist/",
+  "hostingPath": "/preview/",
+  "checks": [
+    "Beta qualification visible on Farm and Packs at 320px",
+    "Beta qualification visible on Farm and Packs at 390px",
+    "Beta qualification visible on Farm and Packs at 580px",
+    "Beta qualification visible on Farm and Packs at 768px",
+    "Beta qualification visible on Farm and Packs at 1440px",
+    "Docs returns after ordinary scrolling, deep links and keyboard activation at 320px",
+    "Docs returns after ordinary scrolling, deep links and keyboard activation at 390px",
+    "Docs returns after ordinary scrolling, deep links and keyboard activation at 1440px",
+    "Currency radio arrows retain focus including free credit at 320px",
+    "Currency radio arrows retain focus including free credit at 390px",
+    "Currency radio arrows retain focus including free credit at 1440px",
+    "Spare selection exposes actions and installs hardware at 320px",
+    "Spare selection exposes actions and installs hardware at 390px",
+    "Spare selection exposes actions and installs hardware at 768px",
+    "Task panel names and omitted Farm description",
+    "Card footprint stays stable for all names and equip locks at 320px",
+    "Card footprint stays stable for all names and equip locks at 390px",
+    "Rendered opaque beta/action/focus color pairs"
+  ],
+  "failures": [],
+  "errors": [],
+  "beta": [
+    {
+      "width": 320,
+      "route": "farm",
+      "display": "block",
+      "text": "Beta values, may change",
+      "box": {
+        "x": 16,
+        "y": 148.75,
+        "width": 288,
+        "height": 19.1875,
+        "top": 148.75,
+        "right": 304,
+        "bottom": 167.9375,
+        "left": 16
+      }
+    },
+    {
+      "width": 320,
+      "route": "packs",
+      "display": "block",
+      "text": "Beta values, may change",
+      "box": {
+        "x": 16,
+        "y": 148.75,
+        "width": 288,
+        "height": 19.1875,
+        "top": 148.75,
+        "right": 304,
+        "bottom": 167.9375,
+        "left": 16
+      }
+    },
+    {
+      "width": 390,
+      "route": "farm",
+      "display": "block",
+      "text": "Beta values, may change",
+      "box": {
+        "x": 16,
+        "y": 148.75,
+        "width": 358,
+        "height": 19.1875,
+        "top": 148.75,
+        "right": 374,
+        "bottom": 167.9375,
+        "left": 16
+      }
+    },
+    {
+      "width": 390,
+      "route": "packs",
+      "display": "block",
+      "text": "Beta values, may change",
+      "box": {
+        "x": 16,
+        "y": 148.75,
+        "width": 358,
+        "height": 19.1875,
+        "top": 148.75,
+        "right": 374,
+        "bottom": 167.9375,
+        "left": 16
+      }
+    },
+    {
+      "width": 580,
+      "route": "farm",
+      "display": "block",
+      "text": "Beta values, may change",
+      "box": {
+        "x": 16,
+        "y": 129.5625,
+        "width": 548,
+        "height": 19.1875,
+        "top": 129.5625,
+        "right": 564,
+        "bottom": 148.75,
+        "left": 16
+      }
+    },
+    {
+      "width": 580,
+      "route": "packs",
+      "display": "block",
+      "text": "Beta values, may change",
+      "box": {
+        "x": 16,
+        "y": 129.5625,
+        "width": 548,
+        "height": 19.1875,
+        "top": 129.5625,
+        "right": 564,
+        "bottom": 148.75,
+        "left": 16
+      }
+    },
+    {
+      "width": 768,
+      "route": "farm",
+      "display": "block",
+      "text": "Beta values, may change",
+      "box": {
+        "x": 587,
+        "y": 97,
+        "width": 161,
+        "height": 19.1875,
+        "top": 97,
+        "right": 748,
+        "bottom": 116.1875,
+        "left": 587
+      }
+    },
+    {
+      "width": 768,
+      "route": "packs",
+      "display": "block",
+      "text": "Beta values, may change",
+      "box": {
+        "x": 587,
+        "y": 97,
+        "width": 161,
+        "height": 19.1875,
+        "top": 97,
+        "right": 748,
+        "bottom": 116.1875,
+        "left": 587
+      }
+    },
+    {
+      "width": 1440,
+      "route": "farm",
+      "display": "block",
+      "text": "Beta values, may change",
+      "box": {
+        "x": 1159,
+        "y": 97,
+        "width": 161,
+        "height": 19.1875,
+        "top": 97,
+        "right": 1320,
+        "bottom": 116.1875,
+        "left": 1159
+      }
+    },
+    {
+      "width": 1440,
+      "route": "packs",
+      "display": "block",
+      "text": "Beta values, may change",
+      "box": {
+        "x": 1159,
+        "y": 97,
+        "width": 161,
+        "height": 19.1875,
+        "top": 97,
+        "right": 1320,
+        "bottom": 116.1875,
+        "left": 1159
+      }
+    }
+  ],
+  "docs": [
+    {
+      "width": 320,
+      "index": 0,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 1468
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 489,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 320,
+      "index": 1,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 2239
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 489,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 320,
+      "index": 2,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 3411
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 489,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 320,
+      "index": 3,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 5066
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 489,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 320,
+      "index": 4,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 7148
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 489,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 320,
+      "index": 5,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 8317
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 489,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 320,
+      "index": 6,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 9267
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 489,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 320,
+      "index": 7,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 10484
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 489,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 320,
+      "index": 8,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 11802
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 489,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 320,
+      "index": 9,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 13525
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 489,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 320,
+      "index": 10,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 14598
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 489,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 320,
+      "index": 11,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 15151
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 489,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 320,
+      "index": 12,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 16050
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 489,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 320,
+      "index": 13,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 16742
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 489,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 320,
+      "index": 14,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 17211
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 489,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 320,
+      "index": 15,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 17736
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 489,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 320,
+      "index": 16,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 18587
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 489,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 320,
+      "index": 17,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 19719
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 489,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 320,
+      "index": 18,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 20493
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 489,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 390,
+      "index": 0,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 1362
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 467,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 390,
+      "index": 1,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 2053
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 467,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 390,
+      "index": 2,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 3025
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 467,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 390,
+      "index": 3,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 4567
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 467,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 390,
+      "index": 4,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 6500
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 467,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 390,
+      "index": 5,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 7473
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 467,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 390,
+      "index": 6,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 8279
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 467,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 390,
+      "index": 7,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 9301
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 467,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 390,
+      "index": 8,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 10397
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 467,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 390,
+      "index": 9,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 12035
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 467,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 390,
+      "index": 10,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 12941
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 467,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 390,
+      "index": 11,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 13438
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 467,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 390,
+      "index": 12,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 14206
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 467,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 390,
+      "index": 13,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 14759
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 467,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 390,
+      "index": 14,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 15200
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 467,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 390,
+      "index": 15,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 15668
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 467,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 390,
+      "index": 16,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 16406
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 467,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 390,
+      "index": 17,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 17334
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 467,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 390,
+      "index": 18,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 17996
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 467,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 1440,
+      "index": 0,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 0
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 338,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 1440,
+      "index": 1,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 338
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 338,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 1440,
+      "index": 2,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 1408
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 1408,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 1440,
+      "index": 3,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 2531
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 2531,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 1440,
+      "index": 4,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 3955
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 3955,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 1440,
+      "index": 5,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 4662
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 4662,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 1440,
+      "index": 6,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 5344
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 5344,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 1440,
+      "index": 7,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 6028
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 6028,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 1440,
+      "index": 8,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 6731
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 6731,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 1440,
+      "index": 9,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 7817
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 7817,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 1440,
+      "index": 10,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 8345
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 8345,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 1440,
+      "index": 11,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 8345
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 8345,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 1440,
+      "index": 12,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 9302
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 9302,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 1440,
+      "index": 13,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 9314
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 9314,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 1440,
+      "index": 14,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 10018
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 10018,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 1440,
+      "index": 15,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 10018
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 10018,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 1440,
+      "index": 16,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 10971
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 10971,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 1440,
+      "index": 17,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 11633
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 11633,
+        "focus": "docs-contents-title"
+      }
+    },
+    {
+      "width": 1440,
+      "index": 18,
+      "before": {
+        "hash": "#/docs",
+        "scrollY": 12029
+      },
+      "after": {
+        "hash": "#/docs",
+        "scrollY": 11916,
+        "focus": "docs-contents-title"
+      }
+    }
+  ],
+  "currency": [
+    {
+      "width": 320,
+      "key": "ArrowRight",
+      "expected": "tokens",
+      "focus": "currency-tokens"
+    },
+    {
+      "width": 320,
+      "key": "ArrowLeft",
+      "expected": "eth",
+      "focus": "currency-eth"
+    },
+    {
+      "width": 390,
+      "key": "ArrowRight",
+      "expected": "tokens",
+      "focus": "currency-tokens"
+    },
+    {
+      "width": 390,
+      "key": "ArrowLeft",
+      "expected": "eth",
+      "focus": "currency-eth"
+    },
+    {
+      "width": 1440,
+      "key": "ArrowRight",
+      "expected": "tokens",
+      "focus": "currency-tokens"
+    },
+    {
+      "width": 1440,
+      "key": "ArrowLeft",
+      "expected": "eth",
+      "focus": "currency-eth"
+    }
+  ],
+  "inventory": [
+    {
+      "width": 320,
+      "selection": {
+        "x": 33,
+        "y": 23.6875,
+        "width": 254,
+        "height": 261.75
+      },
+      "grid": {
+        "x": 33,
+        "y": 285.4375,
+        "width": 254,
+        "height": 504.859375
+      },
+      "install": {
+        "x": 173,
+        "y": 131.0625,
+        "width": 114,
+        "height": 44
+      },
+      "selected": {
+        "x": 33,
+        "y": 285.4375,
+        "width": 79.328125,
+        "height": 168.859375
+      }
+    },
+    {
+      "width": 390,
+      "selection": {
+        "x": 33,
+        "y": 24.359375,
+        "width": 324,
+        "height": 242.5625
+      },
+      "grid": {
+        "x": 33,
+        "y": 266.921875,
+        "width": 324,
+        "height": 489
+      },
+      "install": {
+        "x": 243,
+        "y": 112.546875,
+        "width": 114,
+        "height": 44
+      },
+      "selected": {
+        "x": 33,
+        "y": 266.921875,
+        "width": 102.65625,
+        "height": 153
+      }
+    },
+    {
+      "width": 768,
+      "selection": {
+        "x": 45,
+        "y": 23.96875,
+        "width": 678,
+        "height": 223.375
+      },
+      "grid": {
+        "x": 45,
+        "y": 247.34375,
+        "width": 678,
+        "height": 300
+      },
+      "install": {
+        "x": 609,
+        "y": 112.15625,
+        "width": 114,
+        "height": 44
+      },
+      "selected": {
+        "x": 45,
+        "y": 247.34375,
+        "width": 129.1875,
+        "height": 140
+      }
+    }
+  ],
+  "cards": [
+    {
+      "width": 320,
+      "type": "GPU",
+      "rarity": "Common",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "ASIC",
+      "rarity": "Common",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "FPGA",
+      "rarity": "Common",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Power Supply",
+      "rarity": "Common",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Battery",
+      "rarity": "Common",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Solar Panel",
+      "rarity": "Common",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Fan",
+      "rarity": "Common",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Liquid Cooling",
+      "rarity": "Common",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Router",
+      "rarity": "Common",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Motherboard",
+      "rarity": "Common",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Server Rack",
+      "rarity": "Common",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Surge Protector",
+      "rarity": "Common",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "GPU",
+      "rarity": "Rare",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "ASIC",
+      "rarity": "Rare",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "FPGA",
+      "rarity": "Rare",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Power Supply",
+      "rarity": "Rare",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Battery",
+      "rarity": "Rare",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Solar Panel",
+      "rarity": "Rare",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Fan",
+      "rarity": "Rare",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Liquid Cooling",
+      "rarity": "Rare",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Router",
+      "rarity": "Rare",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Motherboard",
+      "rarity": "Rare",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Server Rack",
+      "rarity": "Rare",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Surge Protector",
+      "rarity": "Rare",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "GPU",
+      "rarity": "Epic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "ASIC",
+      "rarity": "Epic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "FPGA",
+      "rarity": "Epic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Power Supply",
+      "rarity": "Epic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Battery",
+      "rarity": "Epic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Solar Panel",
+      "rarity": "Epic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Fan",
+      "rarity": "Epic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Liquid Cooling",
+      "rarity": "Epic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Router",
+      "rarity": "Epic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Motherboard",
+      "rarity": "Epic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Server Rack",
+      "rarity": "Epic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Surge Protector",
+      "rarity": "Epic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "GPU",
+      "rarity": "Legendary",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "ASIC",
+      "rarity": "Legendary",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "FPGA",
+      "rarity": "Legendary",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Power Supply",
+      "rarity": "Legendary",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Battery",
+      "rarity": "Legendary",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Solar Panel",
+      "rarity": "Legendary",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Fan",
+      "rarity": "Legendary",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Liquid Cooling",
+      "rarity": "Legendary",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Router",
+      "rarity": "Legendary",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Motherboard",
+      "rarity": "Legendary",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Server Rack",
+      "rarity": "Legendary",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Surge Protector",
+      "rarity": "Legendary",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "GPU",
+      "rarity": "Mythic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "ASIC",
+      "rarity": "Mythic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "FPGA",
+      "rarity": "Mythic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Power Supply",
+      "rarity": "Mythic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Battery",
+      "rarity": "Mythic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Solar Panel",
+      "rarity": "Mythic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Fan",
+      "rarity": "Mythic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Liquid Cooling",
+      "rarity": "Mythic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Router",
+      "rarity": "Mythic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Motherboard",
+      "rarity": "Mythic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Server Rack",
+      "rarity": "Mythic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 320,
+      "type": "Surge Protector",
+      "rarity": "Mythic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "GPU",
+      "rarity": "Common",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "ASIC",
+      "rarity": "Common",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "FPGA",
+      "rarity": "Common",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Power Supply",
+      "rarity": "Common",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Battery",
+      "rarity": "Common",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Solar Panel",
+      "rarity": "Common",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Fan",
+      "rarity": "Common",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Liquid Cooling",
+      "rarity": "Common",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Router",
+      "rarity": "Common",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Motherboard",
+      "rarity": "Common",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Server Rack",
+      "rarity": "Common",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Surge Protector",
+      "rarity": "Common",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "GPU",
+      "rarity": "Rare",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "ASIC",
+      "rarity": "Rare",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "FPGA",
+      "rarity": "Rare",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Power Supply",
+      "rarity": "Rare",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Battery",
+      "rarity": "Rare",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Solar Panel",
+      "rarity": "Rare",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Fan",
+      "rarity": "Rare",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Liquid Cooling",
+      "rarity": "Rare",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Router",
+      "rarity": "Rare",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Motherboard",
+      "rarity": "Rare",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Server Rack",
+      "rarity": "Rare",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Surge Protector",
+      "rarity": "Rare",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "GPU",
+      "rarity": "Epic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "ASIC",
+      "rarity": "Epic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "FPGA",
+      "rarity": "Epic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Power Supply",
+      "rarity": "Epic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Battery",
+      "rarity": "Epic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Solar Panel",
+      "rarity": "Epic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Fan",
+      "rarity": "Epic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Liquid Cooling",
+      "rarity": "Epic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Router",
+      "rarity": "Epic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Motherboard",
+      "rarity": "Epic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Server Rack",
+      "rarity": "Epic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Surge Protector",
+      "rarity": "Epic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "GPU",
+      "rarity": "Legendary",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "ASIC",
+      "rarity": "Legendary",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "FPGA",
+      "rarity": "Legendary",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Power Supply",
+      "rarity": "Legendary",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Battery",
+      "rarity": "Legendary",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Solar Panel",
+      "rarity": "Legendary",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Fan",
+      "rarity": "Legendary",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Liquid Cooling",
+      "rarity": "Legendary",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Router",
+      "rarity": "Legendary",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Motherboard",
+      "rarity": "Legendary",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Server Rack",
+      "rarity": "Legendary",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Surge Protector",
+      "rarity": "Legendary",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "GPU",
+      "rarity": "Mythic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "ASIC",
+      "rarity": "Mythic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "FPGA",
+      "rarity": "Mythic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Power Supply",
+      "rarity": "Mythic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Battery",
+      "rarity": "Mythic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Solar Panel",
+      "rarity": "Mythic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Fan",
+      "rarity": "Mythic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Liquid Cooling",
+      "rarity": "Mythic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Router",
+      "rarity": "Mythic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Motherboard",
+      "rarity": "Mythic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Server Rack",
+      "rarity": "Mythic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    },
+    {
+      "width": 390,
+      "type": "Surge Protector",
+      "rarity": "Mythic",
+      "heightBefore": 288,
+      "heightAfter": 288,
+      "controlShift": 0,
+      "clipping": []
+    }
+  ],
+  "contrast": [
+    {
+      "selector": ".demo-strip span",
+      "foreground": "rgb(255, 230, 0)",
+      "background": "rgb(9, 14, 29)",
+      "surrounding": "rgb(9, 14, 29)",
+      "outline": "#ffe600",
+      "textRatio": 15.1722640715626,
+      "focusRatio": 15.1722640715626
+    },
+    {
+      "selector": "#install",
+      "foreground": "rgb(17, 19, 35)",
+      "background": "rgb(255, 230, 0)",
+      "surrounding": "rgb(9, 14, 29)",
+      "outline": "#ffe600",
+      "textRatio": 14.519766313190352,
+      "focusRatio": 15.1722640715626
+    },
+    {
+      "selector": "#inventory-filter",
+      "foreground": "rgb(237, 242, 255)",
+      "background": "rgb(8, 14, 30)",
+      "surrounding": "rgb(9, 14, 29)",
+      "outline": "#ffe600",
+      "textRatio": 17.16821371639531,
+      "focusRatio": 15.1722640715626
+    }
+  ],
+  "freshReveal": [
+    {
+      "width": 320,
+      "before": {
+        "cards": {
+          "x": 29,
+          "y": 289.53125,
+          "width": 262,
+          "height": 288
+        },
+        "control": {
+          "x": 29,
+          "y": 647.90625,
+          "width": 262,
+          "height": 44
+        },
+        "scrollY": 811
+      },
+      "after": {
+        "cards": {
+          "x": 29,
+          "y": 289.53125,
+          "width": 262,
+          "height": 288
+        },
+        "control": {
+          "x": 29,
+          "y": 647.90625,
+          "width": 262,
+          "height": 44
+        },
+        "scrollY": 811
+      }
+    },
+    {
+      "width": 390,
+      "before": {
+        "cards": {
+          "x": 29,
+          "y": 290.390625,
+          "width": 332,
+          "height": 288
+        },
+        "control": {
+          "x": 29,
+          "y": 629.578125,
+          "width": 332,
+          "height": 44
+        },
+        "scrollY": 699
+      },
+      "after": {
+        "cards": {
+          "x": 29,
+          "y": 290.390625,
+          "width": 332,
+          "height": 288
+        },
+        "control": {
+          "x": 29,
+          "y": 629.578125,
+          "width": 332,
+          "height": 44
+        },
+        "scrollY": 699
+      }
+    }
+  ],
+  "screenshots": [
+    "reports/screenshots/revision/docs-return-390.png",
+    "reports/screenshots/revision/currency-focus-390.png",
+    "reports/screenshots/revision/inventory-actions-390.png",
+    "reports/screenshots/revision/farm-top-390.png",
+    "reports/screenshots/revision/city-grid-390.png",
+    "reports/screenshots/revision/referrals-390.png",
+    "reports/screenshots/revision/pack-pricing-390.png",
+    "reports/screenshots/revision/ordinary-reveal-320.png",
+    "reports/screenshots/revision/locked-cards-320.png",
+    "reports/screenshots/revision/ordinary-reveal-390.png",
+    "reports/screenshots/revision/locked-cards-390.png"
+  ],
+  "limitations": [
+    "Chromium emulation; no physical devices, screen reader, Safari/Firefox or native browser zoom.",
+    "Browser clock paused and valid localStorage fixtures used for the 60 item/rarity combinations; these are demo data, not chain transactions.",
+    "Contrast checks below cover named opaque pairs only; gradients, illustrations and all possible states remain unverified."
+  ],
+  "status": "passed"
+}

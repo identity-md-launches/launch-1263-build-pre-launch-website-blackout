@@ -119,6 +119,6 @@ export const docsSections: DocsSection[] = [
 export function renderDocs(): string {
   return `<header class="page-heading docs-heading"><div><h1>Player guide</h1><p>Build your farm. Learn the grid.</p></div><a class="button primary" href="#/farm">Play demo <span aria-hidden="true">→</span></a></header>
     <p class="docs-beta"><strong>Beta values, may change.</strong> Playable demo now; launch rules below describe the intended game.</p>
-    <div class="docs-layout"><aside class="docs-contents" aria-labelledby="docs-contents-title"><h2 id="docs-contents-title">In this guide</h2><ol>${docsSections.map(section => `<li><a href="#/docs/${section.id}">${section.title}</a></li>`).join('')}</ol></aside>
+    <div class="docs-layout"><aside class="docs-contents" aria-labelledby="docs-contents-title"><h2 id="docs-contents-title" tabindex="-1">In this guide</h2><ol>${docsSections.map(section => `<li><a href="#/docs/${section.id}">${section.title}</a></li>`).join('')}</ol></aside>
     <div class="docs-body">${docsSections.map(section => `<section id="docs-${section.id}" class="docs-section" aria-labelledby="docs-heading-${section.id}" tabindex="-1"><h2 id="docs-heading-${section.id}">${section.title}</h2>${section.body}<a class="docs-back" href="#/docs">Back to guide contents <span aria-hidden="true">↑</span></a></section>`).join('')}</div></div>`;
 }
