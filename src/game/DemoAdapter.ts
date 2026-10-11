@@ -1,5 +1,5 @@
 import { config } from '../config';
-import { actualSpend, auditEligibility, districtStandings, COSTS, electricityTariff, equippedIds, epochsPerDay, EVENT_LABELS, EVENT_PROTECTIONS, findItem, hasCombo, inventoryUsed, levelFromXp, nextRandom, overclockCost, packPrice, rollRarity, rollType, roomHashrate, roomItems, roomUnlocks, seasonEpochs, tokenPackPrice, withdrawPreview } from './rules';
+import { actualSpend, auditEligibility, districtStandings, COSTS, electricityTariff, equippedIds, epochsPerDay, EVENT_LABELS, EVENT_PROTECTIONS, findItem, hasCombo, inventoryUsed, levelFromXp, nextRandom, overclockCost, packPrice, rollRarity, rollType, roomHashrate, roomItems, durabilityOutput, repairCost, roomRepairCost, seasonEpochs, tokenPackPrice, withdrawPreview } from './rules';
 import { ITEM_TYPES, RARITIES } from './types';
 import type { EventType, GameAdapter, GameState, GridEvent, Item, Letter, Pack, PackCurrency, RivalFarm, Room } from './types';
 
@@ -38,7 +38,7 @@ export function validState(s: GameState): boolean {
     if (!s || s.version !== config.demo.stateVersion || !integer(s.rng) || !s.rng || !integer(s.nextId) || !s.nextId) return false;
     const numbers = [s.updatedAt, s.createdAt, s.nextEventAt, s.tokens, s.unclaimed, s.ethBalance, s.totalPacks, s.xp, s.epoch, s.gameDays, s.withdrawn, s.totalMined, s.totalSpent, s.rewardPoolTokens, s.freePacks, s.lastEpochReward, s.pendingMining, s.lastSyncedEpoch];
     if (!numbers.every(nonnegative) || s.nextEventAt < s.updatedAt || !integer(s.epoch) || s.gameDays !== s.epoch / epochsPerDay() || s.level !== levelFromXp(s.xp, s.gameDays)) return false;
-    if (!integer(s.lastSyncedEpoch) || s.lastSyncedEpoch > s.epoch || !s.purchaseXp || !integer(s.purchaseXp.day) || !nonnegative(s.purchaseXp.earned) || s.purchaseXp.earned > config.xp.dailyPurchaseCap || s.purchaseXp.day > Math.floor(s.gameDays) || !s.revenue || ![s.revenue.teamTokens,s.revenue.heartbeatTokens,s.revenue.rewardPoolEth,s.revenue.teamEth,s.revenue.heartbeatEth].every(nonnegative)) return false;
+    if (!integer(s.lastSyncedEpoch) || s.lastSyncedEpoch > s.epoch || !s.purchaseXp || !integer(s.purchaseXp.day) || !nonnegative(s.purchaseXp.earned) || s.purchaseXp.earned > config.xp.dailyPurchaseCap || s.purchaseXp.day > Math.floor(s.gameDays) || !s.revenue || ![s.revenue.heartbeatTokens,s.revenue.rewardPoolEth,s.revenue.teamEth,s.revenue.heartbeatEth].every(nonnegative)) return false;
     if (!integer(s.inventoryCapacity) || s.inventoryCapacity < config.inventory.initialSlots || (s.inventoryCapacity - config.inventory.initialSlots) % config.inventory.expansionSlots) return false;
     if (!Array.isArray(s.inventory) || s.inventory.length > s.inventoryCapacity + config.rooms.maximum * config.rooms.slots || !s.inventory.every(validItem)) return false;
     if (new Set(s.inventory.map(i => i.id)).size !== s.inventory.length || s.inventory.some(i => Number(i.id.slice(5)) >= s.nextId)) return false;
@@ -46,7 +46,7 @@ export function validState(s: GameState): boolean {
     if (!Array.isArray(s.rooms) || s.rooms.length < 1 || s.rooms.length > config.rooms.maximum || new Set(s.rooms.map(r => r.id)).size !== s.rooms.length) return false;
     const ids: string[] = [];
     for (const r of s.rooms) {
-      if (!integer(r.id) || r.id >= config.rooms.maximum || !roomUnlocks(s).find(u => u.id === r.id)?.unlocked || !integer(r.overclock) || r.overclock > config.overclock.maximum || !Array.isArray(r.slots) || r.slots.length !== config.rooms.slots) return false;
+      if (!integer(r.id) || r.id >= config.rooms.maximum || !integer(r.overclock) || r.overclock > config.overclock.maximum || !Array.isArray(r.slots) || r.slots.length !== config.rooms.slots) return false;
       const types: string[] = [];
       for (const id of r.slots) {
         if (id === null) continue;
@@ -65,9 +65,13 @@ export function validState(s: GameState): boolean {
     if (inventoryUsed(s) > s.inventoryCapacity) return false;
     if (!s.market || ![s.market.lastPriceEth, s.market.lastDemandAt, s.market.packsThisEpoch].every(nonnegative) || s.market.lastPriceEth < config.packs.floorEth || s.market.lastPriceEth > config.packs.ceilingEth) return false;
     if (!s.referral || !/^[a-zA-Z0-9-]{1,32}$/.test(s.referral.code) || (s.referral.referredBy !== '' && !/^[a-zA-Z0-9-]{1,32}$/.test(s.referral.referredBy)) || ![s.referral.invitees, s.referral.inviteeMining, s.referral.earned].every(nonnegative)) return false;
-    if (!s.season || ![s.season.number, s.season.endsAtEpoch, s.season.farmScore, s.season.pendingFreePacks, s.season.pendingTokens, s.season.submittedScore].every(nonnegative) || s.season.endsAtEpoch <= s.epoch || !Array.isArray(s.season.districtScores) || s.season.districtScores.length !== config.city.districts.length || !s.season.districtScores.every(nonnegative) || !safeText(s.season.lastResult)) return false;
+    if (!s.season || ![s.season.number, s.season.endsAtEpoch, s.season.farmScore, s.season.pendingFreePacks,  s.season.submittedScore].every(nonnegative) || s.season.endsAtEpoch <= s.epoch || !Array.isArray(s.season.districtScores) || s.season.districtScores.length !== config.city.districts.length || !s.season.districtScores.every(nonnegative) || !safeText(s.season.lastResult)) return false;
     if (!integer(s.season.scoringDistrict) || s.season.scoringDistrict >= config.city.districts.length || s.season.submittedScore > s.season.farmScore) return false;
     if (!Array.isArray(s.season.rivalFarms) || s.season.rivalFarms.length !== config.season.demoFarmCount - 1 || !s.season.rivalFarms.every(farm => farm && integer(farm.id) && farm.id > 0 && farm.id < config.season.demoFarmCount && integer(farm.district) && farm.district < config.city.districts.length && nonnegative(farm.score) && nonnegative(farm.hashrate)) || new Set(s.season.rivalFarms.map(farm => farm.id)).size !== s.season.rivalFarms.length) return false;
+    const prizes = s.season.pendingItems;
+    if (!Array.isArray(prizes) || !prizes.every(i => validItem(i) && ['Epic', 'Legendary'].includes(i.rarity))) return false;
+    const pendingIds = prizes.map(i => i.id);
+    if (new Set(pendingIds).size !== pendingIds.length || prizes.some(i => Number(i.id.slice(5)) >= s.nextId || s.inventory.some(v => v.id === i.id) || s.pendingPack?.cards.some(v => v.id === i.id))) return false;
     return true;
   } catch { return false; }
 }
@@ -105,7 +109,7 @@ export class DemoAdapter implements GameAdapter {
     return {
       version: config.demo.stateVersion, rng: this.seed, nextId: 4, createdAt: at, updatedAt: at, nextEventAt: at + this.interval,
       lastSyncedEpoch: 0, pendingMining: 0, purchaseXp: { day: 0, earned: 0 },
-      revenue: { teamTokens: 0, heartbeatTokens: 0, rewardPoolEth: 0, teamEth: 0, heartbeatEth: 0 },
+      revenue: { heartbeatTokens: 0, rewardPoolEth: 0, teamEth: 0, heartbeatEth: 0 },
       tokens: config.demo.startingTokens, ethBalance: config.demo.startingEth, unclaimed: 0,
       inventory: [
         { id: 'item-1', type: 'GPU', rarity: 'Common', durability: config.mining.maximumDurability },
@@ -117,7 +121,7 @@ export class DemoAdapter implements GameAdapter {
       xp: 0, level: 1, epoch: 0, gameDays: 0, withdrawn: 0, totalMined: 0, totalSpent: 0, rewardPoolTokens: 0,
       freePacks: 0, nftStarterClaimed: false, lastEpochReward: 0,
       referral: { code: this.localReferralCode, referredBy: '', invitees: 0, inviteeMining: 0, earned: 0 },
-      season: { number: 1, scoringDistrict: config.city.startingDistrict, submittedScore: 0, endsAtEpoch: seasonEpochs(), districtScores: config.city.districts.map(() => 0), farmScore: 0, rivalFarms: createRivals(config.city.startingDistrict), pendingFreePacks: 0, pendingTokens: 0, lastResult: '' },
+      season: { number: 1, scoringDistrict: config.city.startingDistrict, submittedScore: 0, endsAtEpoch: seasonEpochs(), districtScores: config.city.districts.map(() => 0), farmScore: 0, rivalFarms: createRivals(config.city.startingDistrict), pendingFreePacks: 0, pendingItems: [], lastResult: '' },
       market: { lastPriceEth: config.packs.startEth, lastDemandAt: at, packsThisEpoch: 0 },
       letters: [{ id: 0, title: 'Connection established', body: `Resident 04. Your starter GPU is installed. Two spare components await assignment. The next meter reading arrives in ${this.interval / 1000} seconds. Nothing in this demo has real value. — IMD Grid Dispatch`, at }],
     };
@@ -135,7 +139,7 @@ export class DemoAdapter implements GameAdapter {
         if (parsed?.version === 3 && !Object.hasOwn(parsed, 'lastSyncedEpoch')) {
           parsed.lastSyncedEpoch = parsed.epoch; parsed.pendingMining = 0;
           parsed.purchaseXp = { day: Math.floor(parsed.gameDays), earned: 0 };
-          parsed.revenue = { teamTokens: 0, heartbeatTokens: 0, rewardPoolEth: 0, teamEth: 0, heartbeatEth: 0 };
+          parsed.revenue = { heartbeatTokens: 0, rewardPoolEth: 0, teamEth: 0, heartbeatEth: 0 };
           parsed.season.scoringDistrict = parsed.district; parsed.season.submittedScore = parsed.season.farmScore;
           const previous = parsed.season.rivalFarms;
           parsed.season.rivalFarms = createRivals(parsed.district).map(r => previous.find(p => p.id === r.id) ?? r);
@@ -159,6 +163,21 @@ export class DemoAdapter implements GameAdapter {
         if (Array.isArray(parsed?.letters)) for (const letter of parsed.letters) {
           if (letter?.title === 'Tax audit') letter.body = `Earlier demo audit. Current rule: ${EVENT_PROTECTIONS.audit} — IMD Grid Dispatch`;
         }
+        // Migrate the previous demo's practice rewards without losing earned balances.
+        // Legacy token prizes are credited once; all new lotteries award hardware.
+        const oldSeason = parsed.season as GameState['season'] & { pendingTokens?: number };
+        if (oldSeason && !Object.hasOwn(oldSeason, 'pendingItems')) {
+          oldSeason.pendingItems = [];
+          if (nonnegative(oldSeason.pendingTokens)) parsed.tokens += oldSeason.pendingTokens;
+          delete oldSeason.pendingTokens;
+          oldSeason.lastResult = '';
+          parsed.letters = parsed.letters.filter(letter => letter.title !== 'Weekly season settled');
+        }
+        const oldRevenue = parsed.revenue as GameState['revenue'] & { teamTokens?: number };
+        if (oldRevenue && nonnegative(oldRevenue.teamTokens)) {
+          oldRevenue.teamEth += oldRevenue.teamTokens / config.packs.tokensPerEth;
+          delete oldRevenue.teamTokens;
+        }
         if (validState(parsed)) this.state = { ...parsed, storageWarning: '' };
         else { this.state = this.initial(); this.state.storageWarning = 'Your saved demo could not be read. A fresh demo is ready.'; }
       } catch { this.state = this.initial(); this.state.storageWarning = 'Your saved demo could not be read. A fresh demo is ready.'; }
@@ -172,8 +191,6 @@ export class DemoAdapter implements GameAdapter {
   private random() { if (this.randomOverride) return Math.max(0, Math.min(1 - Number.EPSILON, this.randomOverride())); const [value, next] = nextRandom(this.state.rng); this.state.rng = next; return value; }
   private levelUp() {
     this.state.level = levelFromXp(this.state.xp, this.state.gameDays);
-    for (const unlock of roomUnlocks(this.state)) if (unlock.unlocked && !this.state.rooms.some(r => r.id === unlock.id)) this.state.rooms.push(room(unlock.id));
-    this.state.rooms.sort((a, b) => a.id - b.id);
   }
   private purchaseExperience(amount: number) {
     const day = Math.floor(this.state.gameDays);
@@ -185,14 +202,14 @@ export class DemoAdapter implements GameAdapter {
     const a = config.allocations, r = this.state.revenue;
     if (currency === 'tokens') {
       this.state.rewardPoolTokens += amount * a.packRewardPool;
-      r.teamTokens += amount * a.packTeam; r.heartbeatTokens += amount * a.packHeartbeat;
+      r.teamEth += amount * a.packTeam / config.packs.tokensPerEth; r.heartbeatTokens += amount * a.packHeartbeat;
     } else {
       r.rewardPoolEth += amount * a.packRewardPool; r.teamEth += amount * a.packTeam; r.heartbeatEth += amount * a.packHeartbeat;
     }
   }
   private spend(nominal: number, split = false) {
     const amount = actualSpend(nominal);
-    if (this.state.tokens < amount) throw new Error(`You need ${amount.toFixed(2)} DEMO tokens after the 5% spending bonus. Claim mining or refill demo funds.`);
+    if (this.state.tokens < amount) throw new Error(`You need ${amount.toFixed(2)} demo tokens after the 5% spending bonus. Claim mining or refill demo funds.`);
     this.state.tokens -= amount;
     this.state.totalSpent += amount;
     if (split) this.allocate(amount); else this.state.rewardPoolTokens += amount;
@@ -201,7 +218,7 @@ export class DemoAdapter implements GameAdapter {
   }
   private getRoom(id: number) {
     const found = this.state.rooms.find(r => r.id === id);
-    if (!found) throw new Error('This room is locked. Check its game-day or account-level requirement.');
+    if (!found) throw new Error('Buy this room with demo tokens on Farm before using it.');
     return found;
   }
   private addLetter(title: string, body: string, at = this.state.updatedAt) {
@@ -257,7 +274,7 @@ export class DemoAdapter implements GameAdapter {
       green: `Renewable surplus authorized. The affected district receives ${config.events.greenHashBonus * 100}% more mining this epoch.`,
       cheap: 'Off-peak capacity released. The affected district’s electricity tariff is halved this epoch.',
       calm: 'All readings within tolerance. No intervention required. Do not mistake this for a promise.',
-      supply: `Pack orders crossed the supply threshold. Every district receives ${config.events.supplyDropTokens} DEMO tokens to claim.`,
+      supply: `Pack orders crossed the supply threshold. Every district receives ${config.events.supplyDropTokens} demo tokens to claim.`,
     };
     const address = type === 'supply' ? 'Citywide notice.' : `District ${String(district + 1).padStart(2, '0')}: ${config.city.districts[district]}.`;
     this.addLetter(EVENT_LABELS[type], `${address} ${bodies[type]} ${event.protection}${event.lobbied ? ' Your lobby request reduced bad-event targeting odds for this dispatch; protection is not guaranteed.' : ''}`, at);
@@ -267,7 +284,7 @@ export class DemoAdapter implements GameAdapter {
     if (type === 'supply' && earning) this.state.pendingMining += config.events.supplyDropTokens;
     if (district !== this.state.district || !earning) return;
     for (const r of this.state.rooms) {
-      const items = roomItems(this.state, r).filter(i => i.durability > 0);
+      const items = roomItems(this.state, r).filter(i => durabilityOutput(i.durability) > 0);
       if (type === 'surge' && !hasCombo(this.state, r, 'clean') && items.length && this.random() < config.events.surgeBurnChance) {
         items[Math.floor(this.random() * items.length)].durability = 0;
       }
@@ -285,9 +302,9 @@ export class DemoAdapter implements GameAdapter {
     const audit = event.type === 'audit' && event.district === this.state.district;
     const eligibility = audit ? auditEligibility(this.state) : null;
     const earning = this.state.epoch - this.state.lastSyncedEpoch <= config.sync.idleDays * epochsPerDay();
-    const active = earning && this.state.rooms.some(r => roomItems(this.state, r).some(i => i.durability > 0));
+    const active = earning && this.state.rooms.some(r => roomItems(this.state, r).some(i => durabilityOutput(i.durability) > 0));
     for (const r of earning ? this.state.rooms : []) {
-      const items = roomItems(this.state, r).filter(i => i.durability > 0);
+      const items = roomItems(this.state, r).filter(i => durabilityOutput(i.durability) > 0);
       const gross = roomHashrate(this.state, r) * config.mining.tokensPerHashPerEpoch;
       const tariff = gross * electricityTariff(this.state, r);
       const levy = eligibility?.eligible ? gross * config.events.auditTax : 0;
@@ -296,7 +313,7 @@ export class DemoAdapter implements GameAdapter {
       if (active) for (const item of items) item.durability = Math.max(0, item.durability - config.mining.durabilityPerEpoch * (1 + r.overclock * config.overclock.extraWearPerLevel));
     }
     if (eligibility) {
-      const outcome = eligibility.eligible ? `${auditLevy.toFixed(4)} DEMO tokens withheld from this epoch’s mining for the reward pool.` : 'At or below the hash threshold; no audit contribution.';
+      const outcome = eligibility.eligible ? `${auditLevy.toFixed(4)} demo tokens withheld from this epoch’s mining for the reward pool.` : 'At or below the hash threshold; no audit contribution.';
       this.state.letters[0].body += ` Audit threshold: above ${eligibility.threshold} H/s. Your hash: ${eligibility.hashrate.toFixed(2)} H/s. ${outcome} Beta values, may change.`;
     }
     this.state.pendingMining += mined; this.state.totalMined += mined; this.state.lastEpochReward = mined;
@@ -314,7 +331,6 @@ export class DemoAdapter implements GameAdapter {
     const s = this.state.season;
     const winner = s.districtScores.indexOf(Math.max(...s.districtScores));
     const eligible = s.submittedScore > 0;
-    const winningFarm = eligible && s.submittedScore >= Math.max(...s.rivalFarms.map(farm => farm.score));
     const lottery = new Set<number>();
     const availableFarms = [...(eligible ? [0] : []), ...s.rivalFarms.filter(f => f.score > 0).map(f => f.id)];
     for (let n = 0; n < config.season.lotteryFarms && availableFarms.length; n++) {
@@ -322,16 +338,20 @@ export class DemoAdapter implements GameAdapter {
       lottery.add(availableFarms.splice(index, 1)[0]);
     }
     const districtPacks = eligible && winner === s.scoringDistrict ? config.season.districtFreePacks : 0;
-    const prize = (winningFarm ? config.season.bestFarmTokens : 0) + (lottery.has(0) ? config.season.lotteryTokens : 0);
-    s.pendingFreePacks += districtPacks; s.pendingTokens += prize;
-    s.lastResult = `Season ${s.number}: ${config.city.districts[winner]} won the district race. Your farm earned ${districtPacks} free pack(s) and ${prize} DEMO tokens.${winningFarm ? ' Best farm prize awarded.' : ''}${lottery.has(0) ? ' Three-farm lottery winner.' : ''} ${eligible ? 'Your synced score entered.' : 'No synced mining score entered before the deadline. Earned mining is still yours.'} Rival farms and prizes are simulated.`;
+    s.pendingFreePacks += districtPacks;
+    let prize: Item | undefined;
+    if (lottery.has(0)) {
+      prize = { id: `item-${this.state.nextId++}`, type: rollType(this.random()), rarity: this.random() < 0.5 ? 'Epic' : 'Legendary', durability: config.mining.maximumDurability };
+      s.pendingItems.push(prize);
+    }
+    s.lastResult = `Season ${s.number}: ${config.city.districts[winner]} won the district race. ${districtPacks ? 'Your farm earned a free pack.' : 'No district pack earned.'}${prize ? ` Lottery winner: ${prize.rarity} ${prize.type}.` : 'Your farm did not win the lottery.'} ${eligible ? 'Your synced score entered.' : 'No synced mining score entered before the deadline. Earned mining is still yours.'} Rival farms and prizes are simulated.`;
     this.addLetter('Weekly season settled', s.lastResult);
     s.number++; s.endsAtEpoch += seasonEpochs(); s.districtScores = config.city.districts.map(() => 0); s.farmScore = 0; s.submittedScore = 0; s.scoringDistrict = this.state.district; s.rivalFarms = createRivals(this.state.district);
   }
   async getFarm() { this.advance(); this.save(); return copy(this.state); }
   async getGridEvents(): Promise<GridEvent[]> { this.advance(); this.save(); return copy(this.state.events); }
   async getLetters(): Promise<Letter[]> { this.advance(); this.save(); return copy(this.state.letters); }
-  async openPack(currency: PackCurrency = 'eth'): Promise<Pack> {
+  async openPack(currency: PackCurrency = 'tokens'): Promise<Pack> {
     this.synchronize();
     if (this.state.pendingPack && !this.state.pendingPack.revealed.every(Boolean)) return copy(this.state.pendingPack);
     if (inventoryUsed(this.state) + config.packs.items > this.state.inventoryCapacity) throw new Error(`You need ${config.packs.items} free inventory slots. Install, scrap or expand before opening a pack.`);
@@ -345,7 +365,7 @@ export class DemoAdapter implements GameAdapter {
       if (this.state.ethBalance < price) throw new Error('Not enough simulated ETH. Refill demo funds to keep experimenting.');
       this.state.ethBalance -= price; this.allocate(price, 'eth');
     } else if (currency === 'tokens') price = this.spend(tokenPackPrice(this.state), true);
-    else throw new Error('Choose simulated ETH, DEMO tokens or an available free pack.');
+    else throw new Error('Choose simulated ETH, demo tokens or an available free pack.');
     // Drop eligibility is evaluated before the XP awarded by this purchase.
     const level = this.state.level;
     const cards = Array.from({ length: config.packs.items }, (): Item => ({ id: `item-${this.state.nextId++}`, rarity: rollRarity(this.random(), level), type: rollType(this.random()), durability: config.mining.maximumDurability }));
@@ -386,7 +406,7 @@ export class DemoAdapter implements GameAdapter {
   async withdraw(amount: number) {
     this.synchronize();
     if (!finite(amount) || amount <= 0) throw new Error('Enter a withdrawal amount greater than zero.');
-    if (amount > this.state.tokens) throw new Error('This withdrawal exceeds your available DEMO balance.');
+    if (amount > this.state.tokens) throw new Error('This withdrawal exceeds your available demo balance.');
     const preview = withdrawPreview(this.state, amount);
     this.state.tokens -= amount; this.state.withdrawn += preview.net; this.allocate(preview.tax);
     this.save();
@@ -394,19 +414,27 @@ export class DemoAdapter implements GameAdapter {
   async repair(roomId: number) {
     this.synchronize(); const items = roomItems(this.state, this.getRoom(roomId));
     if (!items.some(i => i.durability < config.mining.maximumDurability)) throw new Error('No repair needed. This room’s items have full durability.');
-    this.spend(COSTS.repair); items.forEach(i => { i.durability = config.mining.maximumDurability; }); this.save();
+    this.spend(roomRepairCost(this.state, this.getRoom(roomId))); items.forEach(i => { i.durability = config.mining.maximumDurability; }); this.save();
   }
   async overclock(roomId: number) {
     this.synchronize(); const r = this.getRoom(roomId);
     if (r.overclock >= config.overclock.maximum) throw new Error(`This room is already at overclock level ${config.overclock.maximum}.`);
-    if (!roomItems(this.state, r).some(i => i.durability > 0)) throw new Error('Install a working item before overclocking this room.');
+    if (!roomItems(this.state, r).some(i => durabilityOutput(i.durability) > 0)) throw new Error('Install a working item before overclocking this room.');
     this.spend(overclockCost(r)); r.overclock++; this.save();
   }
   async repairItem(itemId: string) {
     this.synchronize(); const item = findItem(this.state, itemId);
     if (!item) throw new Error('Choose an item to repair.');
     if (item.durability >= config.mining.maximumDurability) throw new Error('This item is already at full durability.');
-    this.spend(COSTS.repair); item.durability = config.mining.maximumDurability; this.save();
+    this.spend(repairCost(item)); item.durability = config.mining.maximumDurability; this.save();
+  }
+  async buyRoom(roomId: number) {
+    this.synchronize();
+    if (!integer(roomId) || roomId < 1 || roomId >= config.rooms.maximum) throw new Error('Choose room 2, 3 or 4 on Farm.');
+    if (this.state.rooms.some(room => room.id === roomId)) throw new Error('You already own this room.');
+    if (!this.state.rooms.some(room => room.id === roomId - 1)) throw new Error('Buy the previous room first.');
+    this.spend(config.rooms.prices[roomId]);
+    this.state.rooms.push(room(roomId)); this.state.rooms.sort((a, b) => a.id - b.id); this.save();
   }
   async scrap(itemId: string) {
     this.synchronize(); const item = findItem(this.state, itemId);
@@ -443,8 +471,9 @@ export class DemoAdapter implements GameAdapter {
   }
   async claimSeasonRewards() {
     this.synchronize(); const s = this.state.season;
-    if (s.pendingTokens <= 0 && s.pendingFreePacks <= 0) throw new Error('No season rewards are waiting. Keep mining until the season settles.');
-    this.state.tokens += s.pendingTokens; this.state.freePacks += s.pendingFreePacks; s.pendingTokens = 0; s.pendingFreePacks = 0; this.save();
+    if (!s.pendingItems.length && s.pendingFreePacks <= 0) throw new Error('No season rewards are waiting. Keep mining until the season settles.');
+    if (inventoryUsed(this.state) + s.pendingItems.length > this.state.inventoryCapacity) throw new Error(`Make ${s.pendingItems.length} inventory slot(s) free to collect your season items. Install, scrap or expand on Farm. Your rewards stay saved.`);
+    this.state.inventory.push(...s.pendingItems); this.state.freePacks += s.pendingFreePacks; s.pendingItems = []; s.pendingFreePacks = 0; this.save();
   }
   async captureReferral(code: string) {
     this.synchronize();
@@ -458,6 +487,13 @@ export class DemoAdapter implements GameAdapter {
     if (r.invitees === 0) r.invitees = 1;
     const mining = config.referral.demoInviteeMiningPerEpoch; const reward = mining * config.referral.miningShare;
     r.inviteeMining += mining; r.earned += reward; this.state.unclaimed += reward; this.save();
+  }
+  async previewWear() {
+    this.synchronize();
+    const installed = this.state.inventory.filter(i => equippedIds(this.state).has(i.id));
+    if (!installed.length) throw new Error('Install an item on Farm to preview wear.');
+    for (const item of installed) item.durability = item.durability >= 80 ? 79 : item.durability >= 60 ? 59 : item.durability >= 40 ? 39 : 19;
+    this.save();
   }
   async refillDemoFunds() { this.synchronize(); this.state.tokens += config.demo.startingTokens; this.state.ethBalance += config.demo.startingEth; this.save(); }
   async reset() { this.state = this.initial(); this.save(); }

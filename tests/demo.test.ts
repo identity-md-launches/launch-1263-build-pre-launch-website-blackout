@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DemoAdapter, validState } from '../src/game/DemoAdapter';
 import { config } from '../src/config';
-import { actualSpend, auditEligibility, cappedDistrict, claimable, districtStandings, epochsToSync, isIdle, comboBonus, electricityTariff, equippedIds, epochsPerDay, hasCombo, inventoryUsed, itemHash, levelFromXp, nextRandom, overclockCost, packPrice, rollRarity, rollType, roomCombos, roomHashrate, seasonEpochs, totalHashrate, withdrawPreview, withdrawTax } from '../src/game/rules';
+import { actualSpend, auditEligibility, cappedDistrict, claimable, districtStandings, epochsToSync, isIdle, comboBonus, electricityTariff, equippedIds, epochsPerDay, hasCombo, inventoryUsed, itemHash, levelFromXp, nextRandom, overclockCost, packPrice, rollRarity, rollType, roomCombos, roomHashrate, seasonEpochs, totalHashrate, repairCost, roomRepairCost, durabilityOutput, withdrawPreview, withdrawTax } from '../src/game/rules';
 import { ITEM_TYPES, RARITIES } from '../src/game/types';
 import type { EventType, GameState, Item, ItemType, Rarity } from '../src/game/types';
 
@@ -85,14 +85,20 @@ describe('inventory, rooms and combinations', () => {
     await s.game.place('item-2', 0); expect(inventoryUsed(await s.game.getFarm())).toBe(3);
     await s.game.unplace(0, 1); expect(inventoryUsed(await s.game.getFarm())).toBe(4);
   });
-  it('unlocks room 2 at three game days, room 3 at level 7 and room 4 at level 10', async () => {
-    const s = session(); await s.game.advanceDay(); await s.game.advanceDay();
-    expect((await s.game.getFarm()).rooms.some(r => r.id === 1)).toBe(false);
-    await s.game.advanceDay(); expect((await s.game.getFarm()).rooms.some(r => r.id === 1)).toBe(true);
-    await s.fixture(f => { f.xp = config.xp.levels[6]; }); await s.game.nextEpoch();
-    expect((await s.game.getFarm()).rooms.some(r => r.id === 2)).toBe(true);
-    await s.fixture(f => { f.xp = config.xp.levels[9]; f.epoch = 20; f.lastSyncedEpoch = 20; }); await s.game.nextEpoch();
-    expect((await s.game.getFarm()).rooms).toHaveLength(4);
+  it('buys rooms with tokens in order, never automatically, and preserves ownership on reload', async () => {
+    const s = session();
+    await s.fixture(f => { f.xp = config.xp.levels[9]; f.epoch = 20; f.lastSyncedEpoch = 20; });
+    await s.game.nextEpoch(); expect((await s.game.getFarm()).rooms).toHaveLength(1);
+    await expect(s.game.buyRoom(2)).rejects.toThrow('previous room');
+    const before = await s.game.getFarm(); await s.game.buyRoom(1);
+    expect((await s.game.getFarm()).tokens).toBeCloseTo(before.tokens - 150/1.05);
+    await expect(s.game.buyRoom(1)).rejects.toThrow('already own');
+    await expect(s.game.buyRoom(2)).rejects.toThrow('need');
+    expect((await s.game.getFarm()).rooms).toHaveLength(2);
+    await s.game.refillDemoFunds(); await s.game.refillDemoFunds(); await s.game.refillDemoFunds();
+    await s.game.buyRoom(2); await s.game.buyRoom(3);
+    expect((await s.reload().getFarm()).rooms.map(r=>r.id)).toEqual([0,1,2,3]);
+    for (const id of [-1, 0, 4, 1.5, NaN]) await expect(s.game.buyRoom(id)).rejects.toThrow('Choose room');
   });
   it('replaces Compute Duo with Triple Core and caps total room hash bonuses at 40%', async () => {
     const s = session(); await equipment(s, ['GPU', 'ASIC', 'FPGA', 'Fan', 'Router', 'Server Rack'], 'Legendary');
@@ -160,17 +166,17 @@ describe('packs and monetary controls', () => {
   it('token packs receive the 10% discount and 5% purchasing bonus without withdrawal tax', async () => {
     const s = session(); const before = await s.game.getFarm(); const p = await s.game.openPack('tokens'); const after = await s.game.getFarm();
     expect(p.price).toBeCloseTo(100 * .9 / 1.05); expect(before.tokens - after.tokens).toBeCloseTo(p.price);
-    expect(after.rewardPoolTokens).toBeCloseTo(p.price * .88); expect(after.revenue.teamTokens).toBeCloseTo(p.price * .10); expect(after.revenue.heartbeatTokens).toBeCloseTo(p.price * .02); expect(after.xp).toBeCloseTo(20 + p.price * .5);
+    expect(after.rewardPoolTokens).toBeCloseTo(p.price * .88); expect(after.revenue.teamEth).toBeCloseTo(p.price * .10 / config.packs.tokensPerEth, 10); expect(after.revenue.heartbeatTokens).toBeCloseTo(p.price * .02); expect(after.xp).toBeCloseTo(20 + p.price * .5);
   });
   it('allows replenishing simulated funds, and never charges for an already pending pack', async () => {
     const s = session(); await s.fixture(f => { f.ethBalance = 0; f.tokens = 0; });
-    await expect(s.game.openPack()).rejects.toThrow('simulated ETH');
+    await expect(s.game.openPack()).rejects.toThrow('tokens');
     await s.game.refillDemoFunds(); const p = await s.game.openPack(); const balance = (await s.game.getFarm()).ethBalance;
     expect(await s.game.openPack()).toEqual(p); expect((await s.game.getFarm()).ethBalance).toBe(balance);
   });
   it('previews and applies withdrawal tax declining from 20% to 5% over seven days', async () => {
     const s = session(); let f = await s.game.getFarm(); expect(withdrawTax(f)).toBeCloseTo(.2); expect(withdrawPreview(f, 100).net).toBe(80);
-    await s.game.withdraw(100); f = await s.game.getFarm(); expect(f.tokens).toBe(250); expect(f.withdrawn).toBe(80); expect(f.rewardPoolTokens).toBe(17.6); expect(f.revenue.teamTokens).toBe(2); expect(f.revenue.heartbeatTokens).toBe(.4);
+    await s.game.withdraw(100); f = await s.game.getFarm(); expect(f.tokens).toBe(250); expect(f.withdrawn).toBe(80); expect(f.rewardPoolTokens).toBe(17.6); expect(f.revenue.teamEth).toBeCloseTo(2 / config.packs.tokensPerEth, 10); expect(f.revenue.heartbeatTokens).toBe(.4);
     for (let n = 0; n < 7; n++) await s.game.advanceDay();
     expect(withdrawTax(await s.game.getFarm())).toBeCloseTo(.05);
     await expect(s.game.withdraw(NaN)).rejects.toThrow('greater'); await expect(s.game.withdraw(-1)).rejects.toThrow('greater'); await expect(s.game.withdraw(1e8)).rejects.toThrow('exceeds');
@@ -178,8 +184,8 @@ describe('packs and monetary controls', () => {
   it('repairs every installed type, spends with bonus, and bounds overclock', async () => {
     const s = eventSession('calm'); await s.game.place('item-2', 0); await s.game.nextEpoch();
     let f = await s.game.getFarm(); expect(f.inventory.filter(i => equippedIds(f).has(i.id)).every(i => i.durability === 99.5)).toBe(true);
-    const start = f.tokens; await s.game.repair(0); await s.game.overclock(0);
-    f = await s.game.getFarm(); expect(f.tokens).toBeCloseTo(start - actualSpend(12 + 25)); expect(f.rooms[0].overclock).toBe(1);
+    const start = f.tokens; const quote = roomRepairCost(f, f.rooms[0]); await s.game.repair(0); await s.game.overclock(0);
+    f = await s.game.getFarm(); expect(f.tokens).toBeCloseTo(start - actualSpend(quote + 25)); expect(f.rooms[0].overclock).toBe(1);
     expect(f.inventory.find(i => i.id === 'item-2')?.durability).toBe(100);
     await s.game.refillDemoFunds();
     for (let level = 2; level <= 5; level++) await s.game.overclock(0);
@@ -277,14 +283,14 @@ describe('season, referral and NFT demo flows', () => {
     await s.fixture(f => { f.season.farmScore = 1e6; });
     await s.game.sync();
     for (let n = 0; n < seasonEpochs(); n++) await s.game.nextEpoch();
-    let f = await s.game.getFarm(); expect(f.season.number).toBe(2); expect(f.season.lastResult).toContain('Best farm prize'); expect(f.season.pendingTokens).toBeGreaterThanOrEqual(50);
+    let f = await s.game.getFarm(); expect(f.season.number).toBe(2); expect(f.season.lastResult).toContain('won the district race'); expect(f.season.pendingFreePacks).toBe(1);
     const earned = claimable(f);
-    await s.game.claimSeasonRewards(); f = await s.game.getFarm(); expect(f.season.pendingTokens).toBe(0); expect(claimable(f)).toBe(earned);
+    await s.game.claimSeasonRewards(); f = await s.game.getFarm(); expect(f.season.pendingItems).toHaveLength(0); expect(claimable(f)).toBe(earned);
     await expect(s.game.claimSeasonRewards()).rejects.toThrow('No season');
     const late = session(123, () => .9);
     await late.fixture(f => { f.season.farmScore = 1e6; f.season.endsAtEpoch = 1; });
     await late.game.nextEpoch(); await late.game.sync();
-    const missed = await late.game.getFarm(); expect(missed.season.pendingTokens).toBe(0); expect(missed.season.pendingFreePacks).toBe(0);
+    const missed = await late.game.getFarm(); expect(missed.season.pendingItems).toHaveLength(0); expect(missed.season.pendingFreePacks).toBe(0);
     expect(missed.season.lastResult).toContain('No synced mining score'); expect(claimable(missed)).toBeGreaterThan(0);
   });
   it('ranks districts by capped average per active farm with no wallet above 10% of final score', async () => {
@@ -301,12 +307,20 @@ describe('season, referral and NFT demo flows', () => {
     expect(f.season.rivalFarms).toHaveLength(95);
     for (const row of rows) { expect(row.active).toBe(12); expect(f.season.districtScores[row.id]).toBeCloseTo(row.score); }
   });
-  it.each([false, true])('awards best farm using submitted scores (winner=%s)', async shouldWin => {
-    const s = session(123, () => .9);
-    await s.fixture(f => { f.season.endsAtEpoch = 1; f.season.farmScore = shouldWin ? 1200 : 600; f.season.rivalFarms[0].score = 1000; });
-    await s.game.sync(); await s.game.nextEpoch(); const f = await s.game.getFarm();
-    expect(f.season.lastResult.includes('Best farm prize awarded')).toBe(shouldWin);
-    expect(f.season.pendingTokens).toBe(shouldWin ? config.season.bestFarmTokens : 0);
+  it.each(['Epic', 'Legendary'] as const)('awards a %s lottery item, persists it and claims it exactly once', async rarity => {
+    let rolls: number[] = [];
+    const s = session(123, () => rolls.length ? rolls.shift()! : .9);
+    await s.fixture(f => { f.season.endsAtEpoch = 1; f.season.farmScore = 10; });
+    await s.game.sync();
+    // Calm, district, 95 rivals, three distinct lottery draws, item type, rarity.
+    rolls = [.9, .9, ...Array(95).fill(.9), 0, 0, 0, .1, rarity === 'Epic' ? .1 : .9];
+    await s.game.nextEpoch(); let f = await s.reload().getFarm();
+    expect(f.season.pendingItems).toHaveLength(1); expect(f.season.pendingItems[0].rarity).toBe(rarity);
+    const prize = f.season.pendingItems[0]; const balance = f.tokens;
+    expect(f.inventory.some(i=>i.id===prize.id)).toBe(false);
+    await s.game.claimSeasonRewards(); f = await s.game.getFarm();
+    expect(f.inventory.filter(i=>i.id===prize.id)).toEqual([prize]); expect(f.tokens).toBe(balance);
+    await expect(s.game.claimSeasonRewards()).rejects.toThrow('No season');
     expect(f.season.rivalFarms.every(rival => rival.score === 0)).toBe(true);
   });
   it('settles a season with a constant injected random source without an unbounded lottery loop', async () => {
@@ -442,9 +456,9 @@ describe('game-design corrections', () => {
   it('audits strictly above the configured hash threshold, independent of balances and rival ranks', async () => {
     const s = session();
     await equipment(s, ['GPU']);
-    await s.fixture(f => { f.season.farmScore = 999999; f.tokens = 999999; f.inventory[0].rarity = 'Legendary'; f.inventory[0].durability = 40; });
+    await s.fixture(f => { f.season.farmScore = 999999; f.tokens = 999999; f.inventory[0].rarity = 'Legendary'; f.inventory[0].durability = 20; });
     expect(auditEligibility(await s.game.getFarm())).toMatchObject({ hashrate: 100, threshold: 100, eligible: false });
-    await s.fixture(f => { f.inventory[0].durability = 40.01; });
+    await s.fixture(f => { f.inventory[0].durability = 40; });
     expect(auditEligibility(await s.game.getFarm()).eligible).toBe(true);
     await s.game.unplace(0,0); expect(auditEligibility(await s.game.getFarm()).eligible).toBe(false);
   });
@@ -489,14 +503,14 @@ describe('sync, progression and allocations', () => {
     const s = session(); await s.fixture(f=>{ f.xp=9999; });
     expect((await s.reload().getFarm()).level).toBe(4);
     for(let n=0;n<5;n++) await s.game.advanceDay();
-    const f=await s.reload().getFarm(); expect(f.level).toBe(10); expect(f.rooms).toHaveLength(4);
+    const f=await s.reload().getFarm(); expect(f.level).toBe(10); expect(f.rooms).toHaveLength(1);
   });
   it('splits ETH packs, lobbying and sell surcharge 88/10/2 without burns', async () => {
     const s = session(); await s.game.openPack('eth'); await s.game.lobby(); await s.game.withdraw(100);
     const f=await s.game.getFarm(); const fees=actualSpend(config.costs.lobby)+20;
-    expect(f.revenue.rewardPoolEth).toBeCloseTo(.0088); expect(f.revenue.teamEth).toBeCloseTo(.001); expect(f.revenue.heartbeatEth).toBeCloseTo(.0002);
-    expect(f.rewardPoolTokens).toBeCloseTo(fees*.88); expect(f.revenue.teamTokens).toBeCloseTo(fees*.10); expect(f.revenue.heartbeatTokens).toBeCloseTo(fees*.02);
-    expect(f.rewardPoolTokens+f.revenue.teamTokens+f.revenue.heartbeatTokens).toBeCloseTo(fees);
+    expect(f.revenue.rewardPoolEth).toBeCloseTo(.0088); expect(f.revenue.teamEth).toBeCloseTo(.001 + fees*.10/config.packs.tokensPerEth, 10); expect(f.revenue.heartbeatEth).toBeCloseTo(.0002);
+    expect(f.rewardPoolTokens).toBeCloseTo(fees*.88); expect(f.revenue).not.toHaveProperty('teamTokens'); expect(f.revenue.heartbeatTokens).toBeCloseTo(fees*.02);
+    expect(f.rewardPoolTokens+(f.revenue.teamEth-.001)*config.packs.tokensPerEth+f.revenue.heartbeatTokens).toBeCloseTo(fees);
   });
   it('repairs exactly the selected item and supports repair of spares', async () => {
     const s = session(); await s.fixture(f=>{f.inventory[0].durability=0; f.inventory[1].durability=30;});
@@ -510,5 +524,63 @@ describe('sync, progression and allocations', () => {
     delete legacy.season.submittedScore; delete legacy.season.scoringDistrict; legacy.season.rivalFarms=legacy.season.rivalFarms.slice(0,23);
     s.storage.setItem(config.demo.storageKey,JSON.stringify(legacy)); const after=await s.reload().getFarm();
     expect(after.storageWarning).toBe(''); expect(after.tokens).toBe(before.tokens); expect(after.inventory).toEqual(before.inventory); expect(after.rooms).toEqual(before.rooms); expect(after.season.rivalFarms).toHaveLength(95); expect(epochsToSync(after)).toBe(0);
+  });
+});
+
+
+describe('launch economy regressions', () => {
+  it.each([[100,1],[80,1],[79.99,.85],[60,.85],[59.99,.65],[40,.65],[39.99,.4],[20,.4],[19.99,0],[0,0]])('at %s durability uses %s output and settles that tier', async (durability, output) => {
+    const s = eventSession('calm'); await s.fixture(f=>{f.inventory[0].durability=durability;});
+    expect(durabilityOutput(durability)).toBe(output);
+    expect(totalHashrate(await s.game.getFarm())).toBeCloseTo(10*output);
+    await s.game.nextEpoch(); const f = await s.game.getFarm();
+    expect(f.lastEpochReward).toBeCloseTo(output*.85);
+    if (!output) expect(f.xp).toBe(0);
+  });
+  it('excludes overheated items from combos and restores output with a scaled repair', async () => {
+    const s = session(); await equipment(s, ['GPU','ASIC']);
+    await s.fixture(f=>{f.inventory[1].durability=19;});
+    let f=await s.game.getFarm(); expect(hasCombo(f,f.rooms[0],'duo')).toBe(false);
+    const amount=repairCost(f.inventory[1])/1.05, balance=f.tokens;
+    await s.game.repairItem(f.inventory[1].id); f=await s.game.getFarm();
+    expect(f.tokens).toBeCloseTo(balance-amount); expect(hasCombo(f,f.rooms[0],'duo')).toBe(true);
+  });
+  it('charges more for stronger items and heavier wear, without charging full items', async () => {
+    const common=item(1,'GPU','Common',50), epic=item(2,'GPU','Epic',50);
+    expect(repairCost(epic)/repairCost(common)).toBe(8);
+    expect(repairCost({...common,durability:0})).toBe(repairCost(common)*2);
+    expect(repairCost({...common,durability:100})).toBe(0);
+    const s=session(); await expect(s.game.repairItem('item-1')).rejects.toThrow('full durability');
+    await s.fixture(f=>{f.inventory[0].durability=19;f.tokens=0;});
+    await expect(s.game.repairItem('item-1')).rejects.toThrow('need');
+    expect((await s.game.getFarm()).inventory[0].durability).toBe(19);
+  });
+  it('makes every output tier reachable with demo tools, without charging practice funds', async () => {
+    const s=session(); const balance=(await s.game.getFarm()).tokens;
+    for(const expected of [79,59,39,19,19]) {await s.game.previewWear();expect((await s.game.getFarm()).inventory[0].durability).toBe(expected);}
+    expect((await s.game.getFarm()).tokens).toBe(balance);
+    await s.game.unplace(0,0);await expect(s.game.previewWear()).rejects.toThrow('Install an item');
+  });
+  it('uses tokens by default and ETH as a single-action alternative',async()=>{
+    const s=session();const before=await s.game.getFarm();const pack=await s.game.openPack();
+    expect(pack.currency).toBe('tokens');expect((await s.game.getFarm()).ethBalance).toBe(before.ethBalance);
+    await revealAll(s.game);const mid=await s.game.getFarm();await s.game.openPack('eth');const after=await s.game.getFarm();
+    expect(after.tokens).toBe(mid.tokens);expect(after.ethBalance).toBeLessThan(mid.ethBalance);
+  });
+  it('keeps season items safe when inventory is full, including reserved pack slots',async()=>{
+    const s=session();await s.fixture(f=>{f.season.pendingItems=[item(100,'GPU','Epic')];f.nextId=101;f.inventory.push(...Array.from({length:10},(_,i)=>item(i+10,'Battery')));});
+    await s.game.openPack();const before=await s.game.getFarm();
+    await expect(s.game.claimSeasonRewards()).rejects.toThrow('inventory slot');
+    expect((await s.reload().getFarm()).season.pendingItems).toEqual(before.season.pendingItems);
+    await s.game.expandInventory();await s.game.claimSeasonRewards();expect((await s.game.getFarm()).inventory.some(i=>i.id==='item-100')).toBe(true);
+  });
+  it('migrates legacy prizes, team accounting and owned rooms once without resetting a farm',async()=>{
+    const s=session();const f=await s.game.getFarm();const legacy=JSON.parse(JSON.stringify(f));
+    delete legacy.season.pendingItems;legacy.season.pendingTokens=70;legacy.revenue.teamTokens=10;
+    legacy.rooms.push({id:1,slots:Array(6).fill(null),overclock:0});
+    s.storage.setItem(config.demo.storageKey,JSON.stringify(legacy));let restored=await s.reload().getFarm();
+    expect(restored.storageWarning).toBe('');expect(restored.tokens).toBe(f.tokens+70);expect(restored.rooms).toHaveLength(2);
+    expect(restored.season.pendingItems).toEqual([]);expect(restored.revenue.teamEth).toBeCloseTo(.001,10);
+    restored=await s.reload().getFarm();expect(restored.tokens).toBe(f.tokens+70);expect(restored.season).not.toHaveProperty('pendingTokens');
   });
 });

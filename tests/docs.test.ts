@@ -29,8 +29,12 @@ describe('game design documentation and configuration', () => {
     expect(guide).toContain('400 XP daily cap');
     expect(guide).toContain('Sync your farm before the week ends');
     expect(guide).toContain('88% reward pool / 10% team / 2% swarm heartbeat');
-    expect(guide).not.toMatch(/Merge|merge|85%|13%|top 10%/);
+    expect(guide).not.toMatch(/Merge|merge|13%|top 10%/);
     expect(guide).not.toMatch(/IMD is planned to launch|Common \+5%|can both apply|refill it with tokens|Takes 10% of the affected farm/);
+  });
+  it.each([['Markdown', markdown], ['In-site guide', rendered]])('%s matches the launch brief', (_,guide) => {
+    for (const text of ['90% during 0–10 minutes','50% during 10–20 minutes','25% during 20–30 minutes','no max buy limit','Packs open 1 hour','team earns ETH from fees','No guaranteed returns','Smart contract risk','Rewards depend on players and volume','3 winners each get an Epic or Legendary item','85%','65%','40%','TBA at launch']) expect(guide).toContain(text);
+    expect(guide).not.toMatch(/0\.5 ETH|Best farm|20 tokens|50 tokens|After 3 in-game days/);
   });
   it('keeps the corrected economic parameters and launch intent in config', () => {
     expect(config.launch).toEqual({token: 'BLACKOUT game token', through: 'IMD', chain: 'Robinhood Chain', rewardPoolSeed: 'Part of supply', supplySplit: 'Exact split announced at launch'});

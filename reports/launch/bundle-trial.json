@@ -1,0 +1,11 @@
+{
+  "measuredAt": "2026-10-11",
+  "method": "Verified complete current-file snapshot Git bundle, created with git init/add/commit/bundle --all in /tmp. Source repository Git metadata was not modified. Measurement file added after measurement.",
+  "snapshotFileCount": 143,
+  "snapshotRawBytes": 6587933,
+  "snapshotBundleBytes": 5306916,
+  "limitBytes": 8388608,
+  "headroomBytes": 3081692,
+  "runtimeExportBytes": 426068,
+  "limitation": "A trial including all original history could not clone the supplied partial/promisor repository: historical object a0c67298eea4ccc39e6ff29eed960dc6f1483b4a was unavailable and lazy fetching disabled. The publisher-created bundle is not available to measure here."
+}

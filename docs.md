@@ -20,13 +20,14 @@ The demo supplies practice balances. Its rewards, prices, rankings and transacti
 
 ## Packs and prices
 
-Every pack contains three soulbound items. Each item has its own rarity roll. There is no purchase quantity limit; available balance, three free inventory slots and finishing the current reveal determine when you can open another.
+Packs are bought with the game token, or with the one-click Buy with ETH option. Every pack contains three soulbound items. Each item has its own rarity roll. There is no purchase quantity limit; available balance, three free inventory slots and finishing the current reveal determine when you can open another.
 
 Pack prices · beta values, may change
 
 | Rule | Value |
 | --- | --- |
-| Starting ETH price | 0.010 ETH |
+| Buy with tokens | Packs use the BLACKOUT game token. The demo starts near 85.71 tokens after its discount and spending bonus. |
+| Buy with ETH | One-click convenience purchase; the demo uses simulated ETH. |
 | Price floor / ceiling | 0.006 / 0.030 ETH |
 | Demand | Price rises as packs sell and decays during quiet periods. |
 | Token packs | Token-equivalent price with a 10% discount. |
@@ -64,14 +65,14 @@ Mythic drops unlock at level 10. Below that level, Common is 70.3% and Mythic is
 
 Each room has six slots. Install any types, with no duplicate type in the same room. Active combos apply within that room. Hash bonuses add together up to a +40% cap; electricity savings and event protections are separate.
 
-Room unlocks · beta values, may change
+Room purchases · illustrative demo prices
 
 | Room | Unlock |
 | --- | --- |
 | 1 | Available at the start |
-| 2 | After 3 in-game days |
-| 3 | Account level 7 |
-| 4 | Account level 10 |
+| 2 | Buy with tokens after room 1. Demo price: 142.86 tokens, including the spending bonus. |
+| 3 | Buy with tokens after room 2. Demo price: 285.71 tokens, including the spending bonus. |
+| 4 | Buy with tokens after room 3. Demo price: 571.43 tokens, including the spending bonus. |
 
 Combo guide · beta values, may change
 
@@ -87,7 +88,7 @@ Combo guide · beta values, may change
 | Locked Rack | Router + Server Rack | Immune to cable theft |
 | Rarity set | At least three items of the same rarity | Common gives no set bonus; Rare +5%, Epic +10%, Legendary +20%, Mythic +30%. Only the strongest set applies. |
 
-Triple Core replaces Compute Duo when GPU, ASIC and FPGA are working in the room; they never stack. GPU + ASIC alone still gives Compute Duo’s +10%. The Farm combo panel shows active combinations and the items still missing, so you can plan the next slot before installing.
+Rooms 2–4 are token purchases, not automatic age or level rewards. Existing demo rooms stay owned. Live prices will come from the launch contracts. Triple Core replaces Compute Duo when GPU, ASIC and FPGA are working in the room; they never stack. GPU + ASIC alone still gives Compute Duo’s +10%. The Farm combo panel shows active combinations and the items still missing, so you can plan the next slot before installing.
 
 ## Inventory
 
@@ -114,8 +115,8 @@ Level milestones · beta values, may change
 | 1 | Common and Rare equipment |
 | 3 | Equip Epic items |
 | 5 | From farm day 1: equip Legendary items |
-| 7 | From farm day 3: room 3 |
-| 10 | From farm day 5: room 4; Mythic drops and equipment |
+| 7 | From farm day 3: account progression |
+| 10 | From farm day 5: Mythic drops and equipment |
 
 A rare pull does not bypass its equip gate. Keep a locked item until you reach the required level, or use the available inventory actions.
 
@@ -141,8 +142,8 @@ Keeping a farm running · beta values, may change
 | Cost | Rule |
 | --- | --- |
 | Electricity | Base tariff is 15% of mining output, withheld each epoch. Combos and events change it; overclock’s extra power use raises it. |
-| Durability | Active items lose 0.5 durability per epoch before extra damage or overclock wear. |
-| Repair | Spend tokens to restore worn hardware. Farm shows the price. |
+| Durability | Working items lose 0.5 durability per epoch before extra damage or overclock wear. Output changes in tiers; below 20% an item overheats and turns off. |
+| Repair | Pay tokens to restore full durability. The price scales with the item’s full-output mining and the durability missing. Farm shows each quote. |
 | Overclock | Each level adds +10% hash, up to 5 levels (+50%). Cost rises each level. Review the cost, extra wear and power use before confirming. |
 | Upgrades | Inventory expansion and lobbying use the displayed token price. |
 
@@ -152,7 +153,21 @@ Cold Power and Off-grid reduce the base tariff by 15% and 20% respectively; toge
 
 Each overclock level adds 25% wear and 25% power use relative to level zero: wear = 0.5 × (1 + 0.25 × level) durability per epoch; tariff = 15% × (1 − combo reductions) × (1 + 0.25 × level) × event multiplier. Overclock levels cost 25, 50, 75, 100 and 125 nominal tokens, divided by 1.05 for the spending bonus.
 
-Repair damaged equipment. Broken items stop contributing until repaired. Repairs, overclock and inventory expansion fund the reward pool. Packs and lobbying use the 88% / 10% / 2% split below. Tokens are not burned.
+Durability and mining output
+
+| Durability | Output |
+| --- | --- |
+| 80–100% | 100% (full output) |
+| 60–under 80% | 85% |
+| 40–under 60% | 65% |
+| 20–under 40% | 40% |
+| Below 20% | Overheated and off (0%) |
+
+At an exact boundary, use the higher-output tier: 80% durability gives full output, 60% gives 85%, 40% gives 65%, and 20% gives 40%. Overheated items do not contribute mining or combos until repaired.
+
+The demo repair formula is full-output item mining per epoch × 12 × missing durability fraction, divided by 1.05 for the spending bonus. A Common GPU at 50% durability costs 5.71 demo tokens to repair. A stronger item at the same wear costs more. Room repair adds the individual quotes. In Demo tools, Preview next wear tier lets you try all output tiers immediately. This coefficient is illustrative; live prices must be read from deployed parameters.
+
+Repair damaged equipment. Repairs, overclock and inventory expansion fund the reward pool. Packs and lobbying use the 88% / 10% / 2% split below. Tokens are not burned.
 
 ## The city and swarm events
 
@@ -176,7 +191,7 @@ Audit eligibility uses a hash threshold, not balances, rank or cumulative season
 
 ## How the swarm runs the grid
 
-The launch design uses 6-hour epochs. Mining, events and claims settle on those boundaries. The demo compresses each epoch to 45 seconds so you can try the loop. Four epochs count as one in-game day: room 2 unlocks after 12 epochs, and a week takes 28 epochs. The demo advance controls let you try those milestones immediately.
+The launch design uses 6-hour epochs. Mining, events and claims settle on those boundaries. The demo compresses each epoch to 45 seconds so you can try the loop. Four epochs count as one in-game day, and a week takes 28 epochs. Buy rooms 2–4 with tokens on Farm. The demo advance controls let you try those milestones immediately.
 
 Anyone can trigger the next due epoch for a small reward. If the swarm is silent, a fallback keeps the grid moving under the same rules. The swarm can act only within hard limits: it cannot choose arbitrary payouts, bypass protections or rewrite the economy.
 
@@ -186,7 +201,7 @@ This is the intended contract architecture. Trigger rewards, fallback timing and
 
 Each sync costs a small Robinhood Chain fee at launch; syncing once a day is enough. There is no wallet or gas payment in this demo.
 
-The top bar says **Synced** or how many epochs remain to sync. Use SYNC, claim, or take any farm action to catch up. Packs, installation, removal, repair, scrap, expansion, overclock and lobbying all sync. Viewing the site and the demo clock controls do not count as farm activity.
+The top bar says **Synced** or how many epochs remain to sync. Use Sync, claim, or take any farm action to catch up. Packs, installation, removal, repair, scrap, expansion, overclock and lobbying all sync. Viewing the site and the demo clock controls do not count as farm activity.
 
 After 3 farm days without an action, your farm stops earning new rewards until synced. Earned rewards are never lost. Syncing collects up to the first 12 inactive epochs (4 epochs per farm day); the idle period after that earns nothing retroactively. Demo catch-up processes at most 160 grid epochs in one read and skips older grid history. Normal launch epochs last 6 hours; demo epochs last 45 seconds. Beta values, may change.
 
@@ -205,12 +220,11 @@ Season rewards
 | Result | Planned prize |
 | --- | --- |
 | Best district | Free packs for qualifying farms in that district |
-| Season lottery | Prizes for 3 farms |
-| Best farm | A prize for the top farm |
+| Season lottery | 3 winners each get an Epic or Legendary item |
 
 The best district is ranked by average synced mining per active farm, not total mining. One wallet counts for at most 10% of its district’s final credited total. The demo caps each wallet’s credited mining, recalculates the district total, then divides by active farm count. Districts need at least ten active wallets for a positive score under that cap; the demo starts with twelve farms per district. Farms with no synced mining are excluded. Your scoring district is fixed for the week; moving in City changes event exposure immediately and your scoring district next week.
 
-**Sync your farm before the week ends to enter the season score.** Only the score recorded by your last sync before the boundary enters that week. Later syncing still collects earned mining; it cannot add score to a closed week. Lottery entries need a positive synced mining score. Best farm uses synced mining before district capping. The local demo simulates rival scores. A season lasts 28 demo epochs, and you can claim any earned practice prizes from Season. It is not a live multiplayer ranking. Launch eligibility, prize amounts and tie rules will be published with the season rules.
+**Sync your farm before the week ends to enter the season score.** Only the score recorded by your last sync before the boundary enters that week. Later syncing still collects earned mining; it cannot add score to a closed week. Lottery entries need a positive synced mining score. The local demo simulates rival scores. A season lasts 28 demo epochs, and you can claim any earned practice prizes from Season. It is not a live multiplayer ranking. The demo draws three distinct qualifying farms. Winning items stay saved until claimed; free inventory space is required. A demo item does not carry over to launch. Final eligibility and tie rules will be published with the launch contracts.
 
 ## Referrals
 
@@ -220,7 +234,7 @@ Demo links and referral figures are practice features stored in the browser. Use
 
 ## NFT holder pack
 
-Identity MD NFT holders are planned to receive one free starter pack. The demo lets you try that claim without a wallet or ownership check.
+[Free starter pack →](https://playblackout.xyz/freepack) opens the separately served claim site. Identity MD NFT holders are planned to receive one free starter pack. The demo lets you try that claim without a wallet or ownership check.
 
 A demo claim does not prove NFT ownership or reserve a launch pack. The launch claim will use the announced ownership and eligibility rules.
 
@@ -228,9 +242,9 @@ A demo claim does not prove NFT ownership or reserve a launch pack. The launch c
 
 The BLACKOUT game token will launch through IMD on Robinhood Chain. 10% of supply goes to IMD swarm contributor agents; part of supply seeds the game reward pool. Exact split announced at launch. Beta values, may change.
 
-The anti-sniper buy tax starts at 90% and drops to normal over 30 minutes; all of it goes to the reward pool. The max buy is 0.5 ETH per swap for the first hour. Packs open 1 hour after the token.
+The launch buy tax is stepped, not a smooth decay: 90% during 0–10 minutes; 50% during 10–20 minutes; 25% during 20–30 minutes; then normal fees after 30 minutes. At minute 10 the rate is 50%, at minute 20 it is 25%, and at minute 30 normal fees apply. All launch tax goes to the reward pool. There is no max buy limit. Packs open 1 hour after token launch. The demo is available now and does not apply real launch taxes.
 
-There is no announced launch date here. Follow [BLACKOUT on X ↗](https://x.com/IMDBlackout) for official updates. This demo does not deploy, mint or sell a token.
+Follow the official dispatch for the confirmed launch time. Follow [BLACKOUT on X ↗](https://x.com/IMDBlackout) for official updates. This demo does not deploy, mint or sell a token.
 
 ## Where the money goes
 
@@ -242,29 +256,46 @@ Packs, lobbying and sell surcharge · beta values, may change
 | Team | 10% |
 | Swarm heartbeat | 2% |
 
-There are no team tokens. The team receives fees, not token allocations. The swap fee is 1% to the team and 1% to the reward pool. The swarm heartbeat funds the work needed to keep epochs moving.
+There are no team tokens. The team earns ETH from fees, not a token allocation. The swap fee is 1% to the team and 1% to the reward pool. The swarm heartbeat funds the work needed to keep epochs moving.
 
-Electricity tariffs and audit contributions go to the reward pool. Repair, overclock and expansion spending goes to the reward pool. Packs, lobbying and sell surcharge split 88% reward pool / 10% team / 2% swarm heartbeat. Demo withdrawal tax models the sell surcharge; there is no swap interaction in the demo. There are no token burns. The demo records token spending as simulated accounting only.
+Electricity tariffs and audit contributions go to the reward pool. Repair, overclock and expansion spending goes to the reward pool. Packs, lobbying and sell surcharge split 88% reward pool / 10% team / 2% swarm heartbeat. Demo withdrawal tax models the sell surcharge; there is no swap interaction in the demo. There are no token burns. The demo converts the team’s token-denominated fee share to simulated ETH using its fixed exchange rate. This is illustrative accounting, not a live swap or real revenue.
 
 ## Who controls what
 
-The intended launch contracts have no owner and no upgrades. The swarm operates the grid within fixed bounds; it does not receive an unrestricted admin key.
+Your farm actions will be governed by the deployed contracts. The swarm’s permissions, parameter bounds, ownership and upgrade controls must be checked against the published source at launch.
 
-Intended responsibilities at launch
+Game responsibilities
 
-| Participant | Control |
+| Participant | Role |
 | --- | --- |
-| You | Your farm layout, packs, upkeep, claims and withdrawals |
-| Contracts | Ownership, balances, settlement, permissions and hard limits |
-| IMD swarm | Permitted grid actions within those limits |
-| Anyone | Trigger the next due epoch through the public path |
+| You | Farm layout, packs, upkeep, claims and withdrawals |
+| Contracts at launch | Ownership, balances, settlement and permissions |
+| IMD swarm | Grid events within the contract rules |
 
-The contracts are not deployed for this demo. Its browser simulation is not evidence that the future contracts have been audited or that their proposed rules are already enforced on chain.
+This site is a browser demo. It does not connect a wallet or enforce contract permissions. It is not evidence of an audit or of rules being enforced on chain.
+
+## Contract addresses
+
+Confirmed addresses will be listed here after deployment. Until then, every entry is TBA at launch.
+
+Robinhood Chain contracts
+
+| Contract | Address |
+| --- | --- |
+| Token | TBA at launch |
+| Packs | TBA at launch |
+| Farm | TBA at launch |
+| Grid | TBA at launch |
+| Params | TBA at launch |
+
+Launch rules on this site follow the announced game design. Contract source and deployed parameters have not been supplied with this demo; verify the published contracts before using the live game.
 
 ## Risks
 
-Rewards depend on new players and volume. Early players earn more under the intended allocation model, but no player is promised a return or a profit. Lower activity, farm costs, grid events and token-price changes can reduce or eliminate rewards.
+**No guaranteed returns.** Rewards depend on players and volume. Lower activity, farm costs, grid events and token-price changes can reduce or eliminate rewards. No player is promised a return or profit.
 
-Packs contain random items. Soulbound hardware cannot be sold to another player. Spending on the game can result in a loss, and future contracts carry technical risk.
+**Smart contract risk.** Contract bugs, exploits and infrastructure failures can cause loss of funds or prevent access. This demo is not an audit or a guarantee that launch contracts are safe.
 
-All numbers are beta values and may change before launch. This is a game, not financial advice. Only spend what you are comfortable spending on a game.
+Packs contain random items. Soulbound hardware cannot be sold to another player. Spending on the game can result in a loss.
+
+Demo economic values are illustrative and may change. Only spend what you are comfortable spending on a game.

@@ -21,7 +21,7 @@ export function playSound(kind:'pack'|'reveal'|'claim'|'event') {
 export function bootScreen(motion:boolean) {
  let seen=false; try {seen=sessionStorage.getItem('blackout.boot')==='seen';sessionStorage.setItem('blackout.boot','seen');}catch{ /* Optional session preference. */ }
  if(seen||!motion)return;
- const boot=document.createElement('div');boot.className='boot-screen';boot.innerHTML='<div><span class="boot-symbol" aria-hidden="true">ϟ</span><strong>GRID ONLINE</strong><p>Welcome to BLACKOUT.</p><button class="button compact" id="skip-boot">Skip boot →</button></div>';
+ const boot=document.createElement('div');boot.className='boot-screen';boot.innerHTML='<div><span class="boot-symbol" aria-hidden="true">ϟ</span><strong>Grid online</strong><p>Welcome to BLACKOUT.</p><button class="button compact" id="skip-boot">Skip boot →</button></div>';
  document.body.append(boot);boot.querySelector('button')!.onclick=()=>boot.remove();window.setTimeout(()=>boot.remove(),1000);
 }
 export function initAtmosphere(canAnimate:()=>boolean) {
@@ -49,19 +49,19 @@ export function claimFeedback(from:number,to:number,motion:boolean) {
  const balance=document.getElementById('balance');
  if(!balance||!motion)return;
  const original=balance.innerHTML,start=performance.now();
- const frame=(now:number)=>{if(!balance.isConnected)return;const t=Math.min((now-start)/650,1),value=from+(to-from)*(1-(1-t)**3);balance.innerHTML=`${value.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1})} <small>DEMO</small>`;if(t<1)requestAnimationFrame(frame);else balance.innerHTML=original;};
+ const frame=(now:number)=>{if(!balance.isConnected)return;const t=Math.min((now-start)/650,1),value=from+(to-from)*(1-(1-t)**3);balance.innerHTML=`${value.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1})} <small>demo</small>`;if(t<1)requestAnimationFrame(frame);else balance.innerHTML=original;};
  requestAnimationFrame(frame);
  const burst=document.createElement('div');burst.className='token-burst';burst.setAttribute('aria-hidden','true');const box=document.getElementById('claim')?.getBoundingClientRect();burst.style.left=`${box?box.left+box.width/2:innerWidth/2}px`;burst.style.top=`${box?box.top+box.height/2:150}px`;burst.innerHTML=Array.from({length:10},(_,i)=>`<i style="--i:${i}">◆</i>`).join('');document.body.append(burst);setTimeout(()=>burst.remove(),900);
 }
 export function levelFeedback(level:number,motion:boolean) {
- const badge=document.createElement('div');badge.className=`level-up ${motion?'level-animate':''}`;badge.setAttribute('role','status');badge.innerHTML=`<span aria-hidden="true">✦</span> Level ${level} unlocked <button aria-label="Dismiss level up">×</button>`;badge.querySelector('button')!.onclick=()=>badge.remove();document.querySelector('.level-up')?.remove();document.body.append(badge);
+ const badge=document.createElement('div');badge.className=`level-up ${motion?'level-animate':''}`;badge.setAttribute('role','status');badge.innerHTML=`<span aria-hidden="true">✦</span> Level ${level} unlocked <button aria-label="Dismiss level up">×</button>`;badge.querySelector('button')!.onclick=()=>badge.remove();document.querySelector('.level-up')?.remove();document.getElementById('feedback-stack')?.prepend(badge);
 }
 export async function downloadPixelCard(type:string,rarity:string) {
  const canvas=document.createElement('canvas');canvas.width=1000;canvas.height=1200;const ctx=canvas.getContext('2d');if(!ctx)throw new Error('Image downloads are unavailable in this browser.');
  const color=({Common:'#bdc8dd',Rare:'#39e6ff',Epic:'#ff3df2',Legendary:'#ffe600',Mythic:'#ff6475'} as Record<string,string>)[rarity]??'#39e6ff';
  ctx.fillStyle='#080d20';ctx.fillRect(0,0,1000,1200);ctx.strokeStyle=color;ctx.lineWidth=8;ctx.strokeRect(30,30,940,1140);ctx.strokeStyle='#263750';ctx.lineWidth=2;
  for(let x=60;x<960;x+=40){ctx.beginPath();ctx.moveTo(x,280);ctx.lineTo(x,900);ctx.stroke();}for(let y=280;y<930;y+=40){ctx.beginPath();ctx.moveTo(60,y);ctx.lineTo(940,y);ctx.stroke();}
- await document.fonts.ready;ctx.textAlign='center';ctx.fillStyle='#39e6ff';ctx.font='56px Pixel, monospace';ctx.fillText('BLACKOUT',500,145);ctx.fillStyle=color;ctx.font='28px Mono, monospace';ctx.fillText(`${rarity.toUpperCase()} PULL`,500,229);
+ await document.fonts.ready;ctx.textAlign='center';ctx.fillStyle='#39e6ff';ctx.font='56px Pixel, monospace';ctx.fillText('BLACKOUT',500,145);ctx.fillStyle=color;ctx.font='28px Mono, monospace';ctx.fillText(`${rarity} pull`,500,229);
  const url=URL.createObjectURL(new Blob([standaloneItem(type,rarity)],{type:'image/svg+xml'}));
  try{const img=new Image();img.src=url;await img.decode();ctx.imageSmoothingEnabled=false;ctx.drawImage(img,276,343,448,448);}finally{URL.revokeObjectURL(url);}
  ctx.fillStyle='#edf2ff';ctx.font='42px Mono, monospace';ctx.fillText(type,500,870,880);ctx.fillStyle='#aebbd2';ctx.font='26px Mono, monospace';ctx.fillText('Pulled in the BLACKOUT demo',500,956);ctx.fillText('Mine the city. Pray the grid stays on.',500,1004);ctx.fillStyle=color;ctx.font='30px Mono, monospace';ctx.fillText('playblackout.xyz',500,1100);

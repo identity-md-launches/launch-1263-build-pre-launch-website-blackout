@@ -16,7 +16,7 @@ async function walk(directory) {
   }
 }
 await walk(root);
-for(const required of ['dist/index.html','dist/og.png','dist/favicon.svg','package.json','package-lock.json','DESIGN.md','README.md','reports/validation.md', 'reports/tabs-validation.md', 'reports/tabs-results.json', 'docs.md', 'CHANGELOG.md', 'reports/publication.md', 'dist/app-icon.png', 'dist/manifest.webmanifest', 'src/landing.ts', 'src/effects.ts', 'reports/polish-validation.md', 'reports/polish/interaction-results.json', 'reports/polish/motion-results.json']) {
+for(const required of ['dist/index.html','dist/og.png','dist/favicon.svg','package.json','package-lock.json','DESIGN.md','README.md','reports/validation.md', 'reports/tabs-validation.md', 'reports/tabs-results.json', 'docs.md', 'CHANGELOG.md', 'reports/publication.md', 'dist/app-icon.png', 'dist/manifest.webmanifest', 'src/landing.ts', 'src/effects.ts', 'reports/polish-validation.md', 'reports/polish/interaction-results.json', 'reports/polish/motion-results.json', 'reports/launch-validation.md', 'reports/launch/interaction-results.json', 'scripts/launch-smoke.mjs']) {
   if(!files.includes(required))throw new Error(`Missing required deliverable: ${required}`);
 }
 const html=await readFile('dist/index.html','utf8');
@@ -26,6 +26,7 @@ for(const [,url] of html.matchAll(/(?:src|href)="([^"]+)"/g)) {
   if(!url.startsWith('./'))throw new Error(`Export URL is not relative: ${url}`);
   await stat(join('dist',url));
 }
+if(files.some(path=>/^dist\/freepack(?:\/|\.)/.test(path)))throw new Error('The separately served freepack page must not be exported here');
 const png=await readFile('dist/og.png');
 if(png.readUInt32BE(16)!==1200||png.readUInt32BE(20)!==630)throw new Error('OG dimensions must be 1200×630');
 const icon=await readFile('dist/app-icon.png');

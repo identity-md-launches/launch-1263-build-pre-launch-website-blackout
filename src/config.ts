@@ -4,8 +4,12 @@ export const config = {
   launchDate: '',
   launch: { token: 'BLACKOUT game token', through: 'IMD', chain: 'Robinhood Chain', rewardPoolSeed: 'Part of supply', supplySplit: 'Exact split announced at launch' },
   xUrl: 'https://x.com/IMDBlackout',
+  freePackUrl: 'https://playblackout.xyz/freepack',
   chainId: 4663,
-  contracts: { token: '', packs: '', farm: '', grid: '', params: '' },
+  // The only address block. Replace these display placeholders after deployment.
+  // Filling addresses does not enable transactions; the site remains a demo.
+  contracts: { token: 'TBA at launch', packs: 'TBA at launch', farm: 'TBA at launch', grid: 'TBA at launch', params: 'TBA at launch' },
+  launchTax: [{ fromMinute: 0, toMinute: 10, rate: 0.90 }, { fromMinute: 10, toMinute: 20, rate: 0.50 }, { fromMinute: 20, toMinute: 30, rate: 0.25 }],
   demo: {
     eventIntervalMs: 45_000,
     storageKey: 'blackout.demo.v3',
@@ -39,8 +43,10 @@ export const config = {
     Fan: { tag: 'cooling' }, 'Liquid Cooling': { tag: 'cooling' }, Router: { tag: 'network' },
     Motherboard: { tag: 'infra' }, 'Server Rack': { tag: 'infra' }, 'Surge Protector': { tag: 'infra' },
   },
-  mining: { nonComputeMultiplier: 0.60, tokensPerHashPerEpoch: 0.10, durabilityPerEpoch: 0.5, maximumDurability: 100 },
-  rooms: { slots: 6, maximum: 4, secondAfterDays: 3, thirdAtLevel: 7, fourthAtLevel: 10 },
+  mining: { nonComputeMultiplier: 0.60, tokensPerHashPerEpoch: 0.10, durabilityPerEpoch: 0.5, maximumDurability: 100, repairEpochs: 12 },
+  durabilityTiers: [{ minimum: 80, output: 1 }, { minimum: 60, output: 0.85 }, { minimum: 40, output: 0.65 }, { minimum: 20, output: 0.40 }, { minimum: 0, output: 0 }],
+  // Illustrative demo prices only. Live prices must be read from deployed Params.
+  rooms: { slots: 6, maximum: 4, prices: [0, 150, 300, 600] },
   inventory: { initialSlots: 15, expansionSlots: 5, expansionCost: 60 },
   combos: {
     hashCap: 0.40, computeDuo: 0.10, tripleCore: 0.20, tripleReplacesDuo: true, fullStack: 0.15, airflow: 0.05,
@@ -50,7 +56,7 @@ export const config = {
   xp: { perActiveEpoch: 20, perPack: 20, perTokenSpent: 0.5, dailyPurchaseCap: 400, dayGates: { 5: 1, 7: 3, 10: 5 }, levels: [0, 40, 110, 210, 350, 520, 720, 960, 1240, 1560] },
   electricity: { tariff: 0.15, cheapMultiplier: 0.50 },
   overclock: { maximum: 5, hashPerLevel: 0.10, extraWearPerLevel: 0.25, extraPowerPerLevel: 0.25 },
-  costs: { repair: 12, overclock: 25, lobby: 10 },
+  costs: { overclock: 25, lobby: 10 },
   economy: { spendBonus: 0.05, withdrawStartTax: 0.20, withdrawEndTax: 0.05, withdrawDecayDays: 7 },
   events: {
     weights: { outage: 14, surge: 12, fire: 12, theft: 10, audit: 8, green: 12, cheap: 12, calm: 20 },
@@ -62,7 +68,7 @@ export const config = {
     startingDistrict: 3,
     rivalFarmMiningMin: 2, rivalFarmMiningMax: 10,
   },
-  season: { days: 7, districtFreePacks: 1, lotteryFarms: 3, demoFarmCount: 96, walletShareCap: 0.10, lotteryTokens: 20, bestFarmTokens: 50 },
+  season: { days: 7, districtFreePacks: 1, lotteryFarms: 3, demoFarmCount: 96, walletShareCap: 0.10 },
   referral: { miningShare: 0.05, demoInviteeMiningPerEpoch: 12 },
   nft: { starterPacks: 1 },
   allocations: { packRewardPool: 0.88, packTeam: 0.10, packHeartbeat: 0.02, swarmContributorSupply: 0.10 },

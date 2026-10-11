@@ -1,0 +1,347 @@
+{
+  "runAt": "2026-10-11T16:52:55.981Z",
+  "export": "dist/",
+  "subpath": "/preview/",
+  "checks": [
+    "390px first screen, launch terms, teaser scope and social metadata",
+    "Token purchase, saved reveals, one-click ETH and free demo pack",
+    "Room token purchases, confirmations, insufficient funds and persistence",
+    "Wear tiers, off state, scaled repair, installation and epoch claims",
+    "Season item rewards, reserved inventory capacity and claim exactly once",
+    "City navigation, withdrawal preview and team ETH accounting",
+    "Guide navigation, risk statements and single address block",
+    "Keyboard purchase, disclosure and visible focus",
+    "Seven routes reflow at 320, 390, 768, 1100 and 1440px; enlarged text",
+    "Accessibility audit and measured opaque contrast pairs",
+    "Reduced motion, pause controls and offline game after initial load",
+    "Local loading metrics: request bytes, no remote runtime dependencies and layout shift"
+  ],
+  "failures": [],
+  "consoleErrors": [],
+  "failedRequests": [],
+  "viewports": [
+    {
+      "width": 320,
+      "route": "home",
+      "overflow": false
+    },
+    {
+      "width": 320,
+      "route": "farm",
+      "overflow": false
+    },
+    {
+      "width": 320,
+      "route": "packs",
+      "overflow": false
+    },
+    {
+      "width": 320,
+      "route": "city",
+      "overflow": false
+    },
+    {
+      "width": 320,
+      "route": "season",
+      "overflow": false
+    },
+    {
+      "width": 320,
+      "route": "wallet",
+      "overflow": false
+    },
+    {
+      "width": 320,
+      "route": "docs",
+      "overflow": false
+    },
+    {
+      "width": 390,
+      "route": "home",
+      "overflow": false
+    },
+    {
+      "width": 390,
+      "route": "farm",
+      "overflow": false
+    },
+    {
+      "width": 390,
+      "route": "packs",
+      "overflow": false
+    },
+    {
+      "width": 390,
+      "route": "city",
+      "overflow": false
+    },
+    {
+      "width": 390,
+      "route": "season",
+      "overflow": false
+    },
+    {
+      "width": 390,
+      "route": "wallet",
+      "overflow": false
+    },
+    {
+      "width": 390,
+      "route": "docs",
+      "overflow": false
+    },
+    {
+      "width": 768,
+      "route": "home",
+      "overflow": false
+    },
+    {
+      "width": 768,
+      "route": "farm",
+      "overflow": false
+    },
+    {
+      "width": 768,
+      "route": "packs",
+      "overflow": false
+    },
+    {
+      "width": 768,
+      "route": "city",
+      "overflow": false
+    },
+    {
+      "width": 768,
+      "route": "season",
+      "overflow": false
+    },
+    {
+      "width": 768,
+      "route": "wallet",
+      "overflow": false
+    },
+    {
+      "width": 768,
+      "route": "docs",
+      "overflow": false
+    },
+    {
+      "width": 1100,
+      "route": "home",
+      "overflow": false
+    },
+    {
+      "width": 1100,
+      "route": "farm",
+      "overflow": false
+    },
+    {
+      "width": 1100,
+      "route": "packs",
+      "overflow": false
+    },
+    {
+      "width": 1100,
+      "route": "city",
+      "overflow": false
+    },
+    {
+      "width": 1100,
+      "route": "season",
+      "overflow": false
+    },
+    {
+      "width": 1100,
+      "route": "wallet",
+      "overflow": false
+    },
+    {
+      "width": 1100,
+      "route": "docs",
+      "overflow": false
+    },
+    {
+      "width": 1440,
+      "route": "home",
+      "overflow": false
+    },
+    {
+      "width": 1440,
+      "route": "farm",
+      "overflow": false
+    },
+    {
+      "width": 1440,
+      "route": "packs",
+      "overflow": false
+    },
+    {
+      "width": 1440,
+      "route": "city",
+      "overflow": false
+    },
+    {
+      "width": 1440,
+      "route": "season",
+      "overflow": false
+    },
+    {
+      "width": 1440,
+      "route": "wallet",
+      "overflow": false
+    },
+    {
+      "width": 1440,
+      "route": "docs",
+      "overflow": false
+    }
+  ],
+  "accessibility": [
+    {
+      "route": "home",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "count": 26
+        }
+      ]
+    },
+    {
+      "route": "farm",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "aria-prohibited-attr",
+          "count": 1
+        },
+        {
+          "id": "color-contrast",
+          "count": 19
+        }
+      ]
+    },
+    {
+      "route": "packs",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "count": 24
+        }
+      ]
+    },
+    {
+      "route": "city",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "count": 16
+        }
+      ]
+    },
+    {
+      "route": "season",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "count": 16
+        }
+      ]
+    },
+    {
+      "route": "wallet",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "count": 16
+        }
+      ]
+    },
+    {
+      "route": "docs",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "count": 43
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    "reports/launch/screenshots/landing-390.png",
+    "reports/launch/screenshots/landing-full-390.png",
+    "reports/launch/screenshots/packs-390.png",
+    "reports/launch/screenshots/overheated-390.png",
+    "reports/launch/screenshots/season-item-390.png",
+    "reports/launch/screenshots/risks-390.png",
+    "reports/launch/screenshots/keyboard-focus-390.png",
+    "reports/launch/screenshots/landing-1440.png",
+    "reports/launch/screenshots/launch-1440.png",
+    "reports/launch/screenshots/farm-1440.png",
+    "reports/launch/screenshots/packs-text-200-percent.png"
+  ],
+  "contrast": [
+    {
+      "selector": ".hero-actions .primary",
+      "foreground": "rgb(11, 16, 32)",
+      "background": "rgb(255, 230, 0)",
+      "ratio": 14.939311198327193
+    },
+    {
+      "selector": ".hero-actions .starter-link",
+      "foreground": "rgb(237, 242, 255)",
+      "background": "rgb(16, 25, 50)",
+      "ratio": 15.529041051350394
+    },
+    {
+      "selector": ".header-starter",
+      "foreground": "rgb(57, 230, 255)",
+      "background": "rgb(5, 6, 15)",
+      "ratio": 13.408395584912455
+    }
+  ],
+  "performance": [
+    {
+      "viewport": 390,
+      "cls": 0,
+      "resources": [
+        {
+          "name": "/preview/assets/pixel-latin.woff2",
+          "origin": "http://127.0.0.1:37021",
+          "bytes": 12480
+        },
+        {
+          "name": "/preview/assets/mono-latin.woff2",
+          "origin": "http://127.0.0.1:37021",
+          "bytes": 14708
+        },
+        {
+          "name": "/preview/assets/index-CjhKdnS3.css",
+          "origin": "http://127.0.0.1:37021",
+          "bytes": 90696
+        },
+        {
+          "name": "/preview/assets/mono-semibold-latin.woff2",
+          "origin": "http://127.0.0.1:37021",
+          "bytes": 15620
+        },
+        {
+          "name": "/preview/assets/index-CyOwWgzZ.js",
+          "origin": "http://127.0.0.1:37021",
+          "bytes": 139073
+        }
+      ],
+      "navigation": [
+        {
+          "domContentLoadedMs": 98.59999990463257,
+          "responseEndMs": 2.799999952316284
+        }
+      ]
+    }
+  ]
+}

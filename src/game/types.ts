@@ -13,18 +13,18 @@ export interface Letter { id: number; title: string; body: string; at: number }
 export interface Combo {
   id: string; name: string; active: boolean; bonus: number; description: string; missing: string[]; replacedBy?: string;
 }
-export interface RoomUnlock { id: number; unlocked: boolean; requirement: string }
+export interface RoomUnlock { id: number; unlocked: boolean; price: number }
 export interface ReferralState { code: string; referredBy: string; invitees: number; inviteeMining: number; earned: number }
 export interface RivalFarm { id: number; district: number; score: number; hashrate: number }
 export interface SeasonState {
   number: number; endsAtEpoch: number; scoringDistrict: number; submittedScore: number; districtScores: number[]; farmScore: number; rivalFarms: RivalFarm[];
-  pendingFreePacks: number; pendingTokens: number; lastResult: string;
+  pendingFreePacks: number; pendingItems: Item[]; lastResult: string;
 }
 export interface GameState {
   version: 3; rng: number; nextId: number; updatedAt: number; createdAt: number; nextEventAt: number;
   tokens: number; unclaimed: number; ethBalance: number;
   lastSyncedEpoch: number; pendingMining: number; purchaseXp: { day: number; earned: number };
-  revenue: { teamTokens: number; heartbeatTokens: number; rewardPoolEth: number; teamEth: number; heartbeatEth: number };
+  revenue: { heartbeatTokens: number; rewardPoolEth: number; teamEth: number; heartbeatEth: number };
   inventory: Item[]; inventoryCapacity: number; rooms: Room[];
   district: number; lobbied: boolean; pendingPack: Pack | null;
   events: GridEvent[]; letters: Letter[]; totalPacks: number; storageWarning: string;
@@ -47,6 +47,7 @@ export interface GameAdapter {
   overclock(roomId: number): Promise<void>;
   sync(): Promise<void>;
   repairItem(itemId: string): Promise<void>;
+  buyRoom(roomId: number): Promise<void>;
   scrap(itemId: string): Promise<void>;
   expandInventory(): Promise<void>;
   lobby(): Promise<void>;
@@ -60,5 +61,6 @@ export interface GameAdapter {
   captureReferral(code: string): Promise<void>;
   simulateInviteeEpoch(): Promise<void>;
   refillDemoFunds(): Promise<void>;
+  previewWear(): Promise<void>;
   reset(): Promise<void>;
 }

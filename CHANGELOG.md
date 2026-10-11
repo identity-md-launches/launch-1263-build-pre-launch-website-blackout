@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-10-11 — Launch economy and starter-pack update
+
+- Preserved the existing city, dispatcher, artwork and `blackout-mine-the-city-pray-the` label.
+- Added the three illustrated steps, header/hero starter-pack links, exact stepped launch tax and four number-free teasers.
+- Made pack purchasing token-first with a one-click ETH alternative. Added five durability output tiers, scaled repair quotes and paid room expansion.
+- Replaced future season token prizes with Epic/Legendary lottery items while retaining best-district rewards and migrating previous saves.
+- Updated the guide, team ETH accounting, risks and central TBA address block. Live contract equivalence remains unverified because no contracts or ABI were supplied.
+- Fixed purchase-coach obstruction, header/HUD overlap, simultaneous feedback, guide anchor offsets and enlarged-text reflow.
+- Rebuilt the static export. Typecheck/build, 85 unit/docs tests and 12 production browser scenarios passed. Seven routes were checked at five widths; the core pages also passed enlarged-text checks.
+
+Current evidence: [launch validation](reports/launch-validation.md), [browser results](reports/launch/interaction-results.json), [design system](DESIGN.md).
+
+Entries below are historical.
+
 ## 2026-10-11 — Living city, art and landing polish
 
 - Rebuilt the skyline with three parallax layers, eight landmarks, a red-eye dispatcher tower, blackout waves, lightning, rain, smoke and drones. Removed building word labels.

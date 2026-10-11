@@ -21,6 +21,10 @@ export const EVENT_PROTECTIONS = {
 };
 export const itemName = (item: Pick<Item, 'type'>): string => item.type;
 export const itemHash = (item: Pick<Item, 'type' | 'rarity'>) => HASHRATE[item.rarity] * (config.items[item.type].tag === 'compute' ? 1 : config.mining.nonComputeMultiplier);
+export const durabilityOutput = (durability: number) => config.durabilityTiers.find(tier => durability >= tier.minimum)?.output ?? 0;
+/** Demo repair quote scales with full-output mining and the fraction of durability lost. */
+export const repairCost = (item: Item) => itemHash(item) * config.mining.tokensPerHashPerEpoch * config.mining.repairEpochs * Math.max(0, 1 - item.durability / config.mining.maximumDurability);
+export const roomRepairCost = (state: GameState, room: Room) => roomItems(state, room).reduce((sum, item) => sum + repairCost(item), 0);
 export const itemDetail = (item: Pick<Item, 'type' | 'rarity'>): string => `${itemHash(item)} hash · ${config.items[item.type].tag}`;
 export const equipLevel = (rarity: Rarity) => config.rarity[rarity].level;
 export function nextRandom(seed: number): [number, number] {
@@ -28,7 +32,7 @@ export function nextRandom(seed: number): [number, number] {
   x ^= x << 13; x ^= x >>> 17; x ^= x << 5;
   return [(x >>> 0) / 4294967296, x >>> 0];
 }
-export function rollRarity(n: number, level: number = config.rooms.fourthAtLevel): Rarity {
+export function rollRarity(n: number, level: number = config.rarity.Mythic.level): Rarity {
   let cumulative = 0;
   for (const rarity of RARITIES) {
     cumulative += config.rarity[rarity].odds;
@@ -46,7 +50,7 @@ export const inventoryUsed = (state: GameState) => spareItems(state).length + re
 export const activeEvent = (state: GameState) => state.events.find(e => e.expiresAt > state.updatedAt);
 export const roomItems = (state: GameState, room: Room) => room.slots.map(id => findItem(state, id)).filter((item): item is Item => !!item);
 export function roomCombos(state: GameState, room: Room): Combo[] {
-  const items = roomItems(state, room).filter(i => i.durability > 0);
+  const items = roomItems(state, room).filter(i => durabilityOutput(i.durability) > 0);
   const types = new Set(items.map(i => i.type));
   const tags = new Set(items.map(i => config.items[i.type].tag));
   const combination = (id: string, name: string, required: ItemType[], bonus: number, description: string): Combo => ({ id, name, active: required.every(t => types.has(t)), bonus, description, missing: required.filter(t => !types.has(t)) });
@@ -74,7 +78,7 @@ export function roomCombos(state: GameState, room: Room): Combo[] {
 export const hasCombo = (state: GameState, room: Room, id: string) => roomCombos(state, room).some(c => c.id === id && c.active);
 export const comboBonus = (state: GameState, room: Room) => Math.min(config.combos.hashCap, roomCombos(state, room).reduce((sum, c) => sum + (c.active ? c.bonus : 0), 0));
 export function roomHashrate(state: GameState, room: Room): number {
-  const base = roomItems(state, room).reduce((sum, item) => sum + itemHash(item) * item.durability / config.mining.maximumDurability, 0);
+  const base = roomItems(state, room).reduce((sum, item) => sum + itemHash(item) * durabilityOutput(item.durability), 0);
   let rate = base * (1 + comboBonus(state, room)) * (1 + config.overclock.hashPerLevel * room.overclock);
   const event = activeEvent(state);
   if (event?.district === state.district) {
@@ -132,12 +136,7 @@ export const levelFromXp = (xp: number, gameDays = Number.POSITIVE_INFINITY): nu
 };
 export const epochsPerDay = () => config.epoch.dayHours / config.epoch.hours;
 export const seasonEpochs = () => config.season.days * epochsPerDay();
-export const roomUnlocks = (state: GameState): RoomUnlock[] => [
-  { id: 0, unlocked: true, requirement: 'Available from the start' },
-  { id: 1, unlocked: state.gameDays >= config.rooms.secondAfterDays, requirement: `Play for ${config.rooms.secondAfterDays} game days (${config.rooms.secondAfterDays * epochsPerDay()} demo epochs)` },
-  { id: 2, unlocked: state.level >= config.rooms.thirdAtLevel, requirement: `Account level ${config.rooms.thirdAtLevel}` },
-  { id: 3, unlocked: state.level >= config.rooms.fourthAtLevel, requirement: `Account level ${config.rooms.fourthAtLevel}` },
-];
+export const roomUnlocks = (state: GameState): RoomUnlock[] => config.rooms.prices.map((price, id) => ({ id, price, unlocked: state.rooms.some(room => room.id === id) }));
 export function packPrice(state: GameState) {
   const quietEpochs = Math.max(0, state.updatedAt - state.market.lastDemandAt) / config.demo.eventIntervalMs;
   return Math.max(config.packs.floorEth, Math.min(config.packs.ceilingEth, state.market.lastPriceEth - quietEpochs * config.packs.quietDecayPerEpoch));

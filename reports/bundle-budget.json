@@ -1,10 +1,10 @@
 {
   "limitBytes": 8388608,
-  "deliverableFileCount": 151,
-  "deliverableBytes": 8063376,
-  "headroomBytes": 325232,
+  "deliverableFileCount": 145,
+  "deliverableBytes": 6603644,
+  "headroomBytes": 1784964,
   "distFileCount": 10,
-  "distBytes": 411889,
+  "distBytes": 426068,
   "excluded": [
     "Protected Git/configuration paths",
     "Pinned .imd inputs",
@@ -18,12 +18,12 @@
       "sha256": "1b2e50dbb5dfe1a30d3c2ef49eb40e59720e18e0063b23db036c86d3fdfa3ebb"
     },
     {
-      "path": "dist/assets/index-BA8Dinys.css",
-      "sha256": "826da821640e3f52c4b908beff8807896ab4620a6653a611ad216bd6fcf1fd49"
+      "path": "dist/assets/index-CjhKdnS3.css",
+      "sha256": "52c053d36f8241c95b6e6aa5168e824793a9051d9c5d3c770a02a96359549e87"
     },
     {
-      "path": "dist/assets/index-DVHLqvh1.js",
-      "sha256": "b209367050cce4a3b70f8fcb31a67608b2e48510a1a3775bc6cc47d6f2626e07"
+      "path": "dist/assets/index-CyOwWgzZ.js",
+      "sha256": "a705810791a34221de0c0cbd078cbb16695d5159413deb258afc377fef2d170e"
     },
     {
       "path": "dist/assets/mono-latin.woff2",
@@ -43,7 +43,7 @@
     },
     {
       "path": "dist/index.html",
-      "sha256": "1234efee5ba088130565ee778ff3e07673aa3f920f8982948dd86944195f7981"
+      "sha256": "b41fa761a4b862fe698713e819744df0240e6ddccaf7dfde03da74ec2a7fc86d"
     },
     {
       "path": "dist/manifest.webmanifest",

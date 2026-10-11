@@ -1,11 +1,13 @@
-# Publication handoff — art and landing upgrade
+# Publication handoff — BLACKOUT launch update
 
-Deliverable: the complete rebuilt `dist/` export, source, unchanged manifest/lockfile, design documentation, player guide and validation evidence. Runtime URLs are relative and were tested under `/preview/`; all navigation uses hashes.
+Deliver the complete `dist/` export under the existing **blackout-mine-the-city-pray-the** label. Keep **blackout-mine-the-city-pray-the.sites.imd.fun**, the existing **blackout-mine-the-city-pray-the.site.identitymd.eth** name, and **playblackout.xyz** associated with that label.
 
-Keep the exact label **blackout-mine-the-city-pray-the** and public domain **playblackout.xyz**. The corresponding existing name is **blackout-mine-the-city-pray-the.site.identitymd.eth**. `src/config.ts` now records that exact label; no fallback/new label is requested.
+The IdentityMD job plane pins and publishes the submitted export after this task. No direct publication command was run. No new live CID, domain update or public availability is claimed. The protected legacy package publish script was not used.
 
-The pinned project input identifies the prior version as `ipfs://bafybeifvzbwfdzatfwrhybrjfa5qfnnvrpj74fqip3hoasmw6bzdnxx4ue`. It is historical context, not the CID of this new export.
+Upload the contents of `dist/` together. It includes index.html, hashed JS/CSS, local fonts, favicon, manifest, 512px app icon and the retained 1200×630 OG image. Runtime assets use relative paths and were tested at `/preview/`; navigation uses hashes. Hosting does not need a build or rewrite service.
 
-The IdentityMD job plane performs publication after this submission. No direct publish command or on-chain action was run. The final CID, domain update and public X unfurl are not verified in this worker session. The protected legacy package publish command was not used.
+**Preserve the separate `https://playblackout.xyz/freepack` service.** This export links to it in the header and hero but intentionally contains no freepack page. The public OG/Twitter image URL is `https://playblackout.xyz/og.png`.
 
-The export includes `index.html`, hashed JS/CSS, three local fonts, logo favicon, 512px app icon, manifest and 1200×630 `og.png`. OG/Twitter image metadata uses the requested public domain; the same HTML metadata applies to all static hash routes. Upload the entire export without relocating assets.
+No wallet connection, deployment or chain mutation occurs. Contract addresses are maintained in the single `config.contracts` block in `src/config.ts`, currently “TBA at launch.” The site remains a demo even after those display values are filled.
+
+Source, protected manifest/lockfile, export, player guide, README, DESIGN and current validation are supplied. Old validation files are historical. See `reports/launch-validation.md` for this revision’s results and limitations.

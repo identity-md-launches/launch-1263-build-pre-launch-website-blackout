@@ -1,104 +1,124 @@
 # BLACKOUT
 
-A playable 16-bit idle mining demo. Open hardware packs, build a farm and survive a city run by the IMD swarm. No wallet or real money is used. Game rules and economic values are unchanged by this art/landing upgrade.
+A playable 16-bit idle mining demo: open packs, build a farm and survive the IMD swarm’s grid. This launch update preserves the existing city, dispatcher and pixel art. No wallet or real money is used.
 
-Site label: **blackout-mine-the-city-pray-the**. Public domain: **playblackout.xyz**. Project X: [@IMDBlackout](https://x.com/IMDBlackout).
+**Keep the site label `blackout-mine-the-city-pray-the`** (`blackout-mine-the-city-pray-the.sites.imd.fun`) and public domain **playblackout.xyz**. X: [@IMDBlackout](https://x.com/IMDBlackout).
 
-## What ships
+## This update
 
-- Living three-layer skyline, eight district landmarks, dispatcher tower, rain, drones, smoke, flickering windows, district blackout waves and substation lightning.
-- Complete landing: four steps, all twelve hardware items, three event dispatches, the hooded swarm operator, launch details, five FAQs and footer.
-- Shared 64×64 SVG hardware atlas, five rarity treatments and damage overlays. District art is shared by the skyline, map and event cards.
-- Compact sticky game HUD, floating coach marks and one dismissible warning strip. Worn hardware warns below 50% durability.
-- Session boot, CRT transitions, pack/reveal/claim/level effects, optional synthesized sound, pause controls and reduced-motion support.
-- Epic+ X post intents and downloadable pixel cards. Local 1200×630 social preview, logo favicon, 512px app icon and manifest.
+- Three illustrated “How to play in 60 seconds” steps immediately after the hero.
+- Visible **Free starter pack** links in the header and hero, both pointing to **https://playblackout.xyz/freepack**. That service is separate; this export contains no `/freepack` page.
+- Token-first packs, a one-click simulated ETH alternative, durability output tiers, mining-scaled repairs, and token purchases for rooms 2–4.
+- Launch tax steps: 90% for 0–10 minutes, 50% for 10–20, 25% for 20–30, then normal fees. All launch tax goes to the reward pool. No max buy limit. Packs open one hour after token launch.
+- Four number-free teasers: Enhancement, Grid stake, Billboards, Season pot.
+- Best-district season rewards and a three-winner Epic/Legendary item lottery. New seasons do not award the old token prizes.
+- Updated player guide, explicit team ETH fee accounting, risk statements and a central contract-address block.
+- Responsive header/HUD offsets, visible purchase quotes, stacked feedback and enlarged-text reflow fixes.
 
-| Hash route | Purpose |
-| --- | --- |
-| `#/` | Discover the game and launch |
-| `#/farm` | Rooms, combos, inventory and item actions |
-| `#/packs` | Practice pack purchases and reveals |
-| `#/city` | Districts, grid events, lobbying and dispatcher letters |
-| `#/season` | Scores, countdown and practice prizes |
-| `#/wallet` | Claims, withdrawal previews and referrals |
-| `#/docs` | Player guide and replayable onboarding |
+## Install, preview and rebuild
 
-The existing localStorage key and adapter are retained. Dockside takes the former Night Market ID; Solar Hill takes the former Fringe ID. Other district IDs stay unchanged, preserving saves. Launch tax copy describes the requested launch; it adds no real-token, wallet or anti-sniper transaction code to this demo.
-
-## Install and preview
-
-Use Node.js 22.12+ and the existing lockfile. In a normal local checkout:
+Use Node.js 22.12+ and the existing lockfile. In a normal development checkout:
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Production:
+Production and checks:
 
 ```sh
 npm run typecheck
 npm run build
 npm run preview
+npm test
+npx --no-install playwright install chromium
+node scripts/launch-smoke.mjs
+node scripts/check-delivery.mjs
 ```
 
-The full ready-to-serve export is in **`dist/`**. Vite retains `base: './'`; assets, fonts, favicon and manifest work at a static gateway subpath. Navigation uses hashes, so no server rewrite is needed. There are no external runtime packages, font CDNs, wallet SDKs or backend services.
+`npm run build` runs TypeScript checking and Vite. Vite retains `base: './'`. The complete static export is in **`dist/`**, including its JS/CSS, three local fonts, favicon, app icon, manifest and OG image. Runtime asset URLs are relative and the production checks serve it under `/preview/`. There are no remote runtime dependencies or backend credentials.
 
-For this restricted assignment, dependencies and browser binaries were kept outside the repository:
+The browser validation script owns a bounded local preview and Chromium session, closes both, writes results to `reports/launch/`, and exits nonzero on failures. The older smoke scripts are historical revision checks; use `scripts/launch-smoke.mjs` for the current UI.
 
-```sh
-mkdir -p /tmp/blackout-tools
-cp package.json package-lock.json /tmp/blackout-tools/
-npm ci --prefix /tmp/blackout-tools --cache /tmp/blackout-npm-cache
-/tmp/blackout-tools/node_modules/.bin/tsc --noEmit
-/tmp/blackout-tools/node_modules/.bin/vite build
-PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browsers /tmp/blackout-tools/node_modules/.bin/playwright install chromium
-```
-
-No dependency, cache, archive, registry mirror or submodule is included. Existing manifests, lockfile and build configuration were not modified. No ignore file was added or changed.
-
-## Rebuild artwork and player guide
-
-All game art is in `src/sprites.ts`. `spriteSheet()` defines the twelve hardware symbols; consumers use `itemSprite()`. Rarity/effect CSS is in `src/style.css`. The landing is `src/landing.ts`; presentation-only timing/audio/downloads live in `src/effects.ts`.
+Regenerate the standalone player guide from the same source as the website:
 
 ```sh
-npm run build
-node scripts/render-assets.mjs
-npm run build
 npx --no-install vite-node scripts/export-docs.ts
 ```
 
-The asset script owns and closes its local preview/browser, renders `public/og.png`, and derives favicon/app icon from the actual header logo. Run a build after changing any public file. With external dependencies, prefix browser scripts with `BLACKOUT_TOOLCHAIN=/tmp/blackout-tools PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browsers` and use the corresponding binaries above.
+Artwork is in `src/sprites.ts`; the existing raster social assets are in `public/`. A build copies them to `dist/`. The existing `scripts/render-assets.mjs` can regenerate social/app images if the art changes; run another build afterward.
+
+## Routes and demo behavior
+
+| Hash route | Purpose |
+| --- | --- |
+| `#/` | Landing, launch schedule and teasers |
+| `#/farm` | Rooms, inventory, repair and room purchases |
+| `#/packs` | Token/ETH/free demo packs and saved reveals |
+| `#/city` | Eight districts, events, lobbying and dispatches |
+| `#/season` | District standings and hardware lottery rewards |
+| `#/wallet` | Claims, withdrawal previews, fee accounting and referrals |
+| `#/docs` | Player guide |
+| `#/docs/risks` | No guaranteed returns, player/volume dependence and smart contract risk |
+| `#/docs/contract-addresses` | Addresses from the single config block |
+
+No server rewrites are needed. The existing `blackout.demo.v3` localStorage save is retained. Old owned rooms remain owned. Legacy pending practice token prizes are credited once during migration, while future lottery prizes are items. Legacy team accounting is converted to simulated ETH; no new team token balance accrues. No chain state is read or changed.
+
+Demo tools can advance epochs, refill practice balances and **Preview next wear tier**. The latter makes each new output tier immediately testable. A 45-second demo epoch represents the existing six-hour launch design. Demo progress never becomes launch assets.
+
+## Launch configuration and assumptions
+
+Edit only **`config.contracts` in `src/config.ts`** to fill the token, packs, farm, grid and params addresses after deployment. Each currently reads **“TBA at launch”**. The guide renders that block directly. Rebuild the export after filling it. Address strings are display values; entering them does not enable transactions or deploy anything. The future ChainAdapter composition point stays in `src/game/adapter.ts`.
+
+The supplied workspace has no contract source, ABI or deployed addresses. Documentation follows the explicit launch brief and labels other economic values as illustrative. Contract-level parity, deployed permissions, live quotes and audit status remain unverified. Unsupported promises about ownerlessness/upgrades were removed.
+
+Consequential demo choices are centralized and documented:
+
+- Exact durability boundaries use the higher-output tier: ≥80% → 100%, ≥60% → 85%, ≥40% → 65%, ≥20% → 40%, below 20% → off. Overheated equipment contributes neither mining nor combos.
+- Repair quotes scale with full-output item mining × 12 demo epochs × missing durability fraction, then apply the existing 5% spending bonus. This coefficient is a demo setting, not an asserted deployed price.
+- Room nominal demo prices are 150 / 300 / 600 tokens, with the existing spending bonus; rooms are bought in sequence. No age/level gate grants new rooms automatically.
+- Lottery selection uses the existing local seeded simulation and three distinct eligible farms. Epic/Legendary selection is equally weighted in the demo only. Item claims respect reserved inventory slots and are idempotent.
+- Team token-denominated fee shares convert to simulated ETH at the existing demo exchange rate. Live conversion/execution is not implemented.
+
+No exact launch timestamp was supplied, so there is no invented countdown or date. X remains the official launch-time link.
 
 ## Validation actually run
 
-The final source/export was checked locally on 2026-10-11:
+The task environment’s protected dependencies/build configuration were left unchanged. Dependencies and Chromium were installed outside the repository:
 
-| Command | Actual result |
+```sh
+mkdir -p /tmp/blackout-launch-tools
+cp package.json package-lock.json /tmp/blackout-launch-tools/
+npm ci --prefix /tmp/blackout-launch-tools --cache /tmp/blackout-launch-npm-cache
+PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-launch-browsers /tmp/blackout-launch-tools/node_modules/.bin/playwright install chromium
+```
+
+Final verification on 2026-10-11:
+
+| Actual command | Result |
 | --- | --- |
-| `/tmp/blackout-tools/node_modules/.bin/tsc --noEmit` | Passed |
-| `/tmp/blackout-tools/node_modules/.bin/vite build` | Passed; 13 modules; complete relative-URL export |
-| `BLACKOUT_TOOLCHAIN=/tmp/blackout-tools /tmp/blackout-tools/node_modules/.bin/vitest run` | 67 tests passed across two files |
-| `PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browsers BLACKOUT_TOOLCHAIN=/tmp/blackout-tools node scripts/smoke.mjs` | 21 scenarios passed; zero console errors and failed resources |
-| `PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browsers BLACKOUT_TOOLCHAIN=/tmp/blackout-tools node scripts/motion-smoke.mjs` | 12 groups passed, including timed effects, sharing assets, font/layout measurements and landing accessibility |
-| `node scripts/check-delivery.mjs` | Passed; byte totals and SHA-256 export hashes in `reports/bundle-budget.json` |
+| `/tmp/blackout-launch-tools/node_modules/.bin/tsc --noEmit` | Passed |
+| `/tmp/blackout-launch-tools/node_modules/.bin/vite build` | Passed; 13 modules; complete relative-URL export |
+| `BLACKOUT_TOOLCHAIN=/tmp/blackout-launch-tools /tmp/blackout-launch-tools/node_modules/.bin/vitest run --reporter=dot` | 85 tests passed |
+| `BLACKOUT_TOOLCHAIN=/tmp/blackout-launch-tools PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-launch-browsers node scripts/launch-smoke.mjs` | 12 scenarios passed; zero console errors and failed resources |
+| `node scripts/check-delivery.mjs` | Passed; file sizes and final export hashes recorded in `reports/bundle-budget.json` |
 
-The production suites serve the actual `dist/` at `/preview/`, close their servers/browsers, and use a controlled clock. They cover real pack/reveal/install/claim flows, keyboard-only navigation, confirmations/focus return, withdrawal previews, district movement, saved state, offline use after initial loading, storage failure, worn thresholds, downloads, sound opt-in and reduced motion. Seven routes were checked at 320, 390, 768 and 1440px. Root text was enlarged to 200%. The 390px landing and pack purchase actions are above the bottom edge/navigation respectively.
+The export is 426,068 bytes. A verified complete-current-file snapshot Git bundle measured 5,306,916 bytes, below 8 MiB; the publisher’s final bundle is unavailable here. See [the size check and its history limitation](reports/launch/bundle-trial.json).
 
-Axe found zero violations on the six game pages, overclock dialog and desktop/mobile landing in the tested states; incomplete contrast checks over complex surfaces are recorded. Local unthrottled landing CLS was **0** at 390px and 1440px after font preloads. This is worker evidence, not an independent certification or a field performance score.
+The browser suite covers actual token/ETH/free purchases, reveal persistence, paid rooms, insufficient funds, all wear tiers, overheating and repair, installation, epoch claims, season item claims, full inventory, City/Wallet actions, doc anchors, keyboard interaction, pause/reduced motion and offline navigation after initial load. Seven routes were checked at 320, 390, 768, 1100 and 1440px. Landing, Farm, Packs and Docs were checked with 200% root text at 390px. The first 390×844 screen contains the product, main action and both starter-pack links.
 
-See [the six-domain review](reports/polish-validation.md), [interaction results](reports/polish/interaction-results.json), [motion/performance results](reports/polish/motion-results.json), [design system](DESIGN.md), [changelog and screenshots](CHANGELOG.md), and [player guide](docs.md). Named handoff artifacts also live in `artifacts/`; core evidence is copied into `reports/polish/` because the worker excludes `artifacts/` from Git by default. Older reports are historical, not evidence for this revision.
+Axe reported zero violations in the seven tested route states; incomplete checks over art/translucent surfaces and the native meter remain disclosed. Three opaque action/link contrast pairs were measured. The local unthrottled 390px landing had CLS 0 and loaded only local resources; these are worker measurements, not field performance scores.
 
-Limitations: Chromium desktop/mobile emulation only; no physical-device, native screen-reader, browser-native zoom, live X unfurl, public-domain or listening test. The X intent text and PNG were verified locally; no post was sent. npm reported four advisories in the unchanged development toolchain; dependency remediation was outside the permitted paths.
+See [the consolidated six-domain review](reports/launch-validation.md), [machine-readable browser evidence](reports/launch/interaction-results.json), [implemented design](DESIGN.md), and [player guide](docs.md). Earlier reports and screenshots are historical, not evidence for this revision.
+
+Limitations: the supplied MCP browser could not start because its expected Chrome binary was absent; the actual export was instead tested with temporary Playwright Chromium. No physical-device, native screen-reader, browser-native zoom, Safari/Firefox, public-domain availability, live X unfurl, live freepack claim or on-chain verification was performed. The unchanged development toolchain reported four npm advisories. No dependencies, caches, npm archives, ignore-file changes or submodules were added to the submission.
 
 ## Publish
 
-This assignment delivers the complete static export for the IdentityMD job plane to pin and publish after submission, under **blackout-mine-the-city-pray-the** and the existing public domain **playblackout.xyz**. No direct publish command was run and no new live CID is claimed. See [publication handoff](reports/publication.md).
+The IdentityMD job plane publishes the **committed contents of `dist/`** after submission; it does not rebuild. Retain the existing label **`blackout-mine-the-city-pray-the`** so **playblackout.xyz** keeps pointing to the same site. No direct publishing command was run and no new live CID is claimed.
 
-For any other static host, upload **the contents of `dist/` together**, keeping its assets directory. No install or rebuild is needed on the host. The social crawler image points to `https://playblackout.xyz/og.png`; this canonical image is included locally in the export but its public availability depends on publication. All page runtime URLs remain relative.
-
-The protected legacy `npm run publish` entry still names an earlier workflow and is not this handoff mechanism. No contracts were deployed or changed.
+For another static host, upload the entire contents of `dist/` with the asset paths intact. Preserve the separately served `/freepack` service when updating the public domain. The canonical OG image is `https://playblackout.xyz/og.png`, and the same image is included in the export. The protected legacy `npm run publish` entry names an old workflow; it is not used for this handoff. See [publication notes](reports/publication.md).
 
 ## Attribution
 
-Art is authored as local SVG. Local font licenses and the pinned Better Interface/Impeccable notices are retained in [NOTICE.md](NOTICE.md) and `licenses/`.
+Existing SVG artwork and local font licenses remain. The pinned Better Interface/Impeccable notices are retained in [NOTICE.md](NOTICE.md) and `licenses/`.
