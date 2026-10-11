@@ -1,0 +1,290 @@
+{
+  "runAt": "2026-10-11T10:43:42.859Z",
+  "export": "dist/",
+  "subpath": "/preview/",
+  "browser": "Chromium",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "reducedMotion": "reduce",
+  "checks": [
+    "Fresh landing → Play demo shows hardware above mobile tabs with the guide retained",
+    "Fresh direct Farm shows hardware above mobile tabs with one h1",
+    "Normal wear appears across all tabs and the cross-tab repair shortcut restores mining",
+    "Warning edge cases distinguish installed wear, broken hardware and active or expired fire"
+  ],
+  "failures": [],
+  "consoleErrors": [],
+  "failedRequests": [],
+  "firstVisits": [
+    {
+      "entry": "landing",
+      "scrollY": 0,
+      "scrollWidth": 390,
+      "viewportWidth": 390,
+      "room": {
+        "x": 16,
+        "y": 650.25,
+        "width": 358,
+        "height": 588.9375,
+        "top": 650.25,
+        "bottom": 1239.1875
+      },
+      "roomHeader": {
+        "x": 17,
+        "y": 651.25,
+        "width": 356,
+        "height": 41,
+        "top": 651.25,
+        "bottom": 692.25
+      },
+      "hardware": {
+        "x": 45,
+        "y": 727.25,
+        "width": 68,
+        "height": 54.390625,
+        "top": 727.25,
+        "bottom": 781.640625
+      },
+      "slot": {
+        "x": 26,
+        "y": 717.25,
+        "width": 106,
+        "height": 169.1875,
+        "top": 717.25,
+        "bottom": 886.4375
+      },
+      "guide": {
+        "x": 16,
+        "y": 368.3125,
+        "width": 358,
+        "height": 183.5625,
+        "top": 368.3125,
+        "bottom": 551.875
+      },
+      "guideAction": {
+        "x": 33,
+        "y": 490.875,
+        "width": 121.203125,
+        "height": 44,
+        "top": 490.875,
+        "bottom": 534.875
+      },
+      "nav": {
+        "x": 0,
+        "y": 783,
+        "width": 390,
+        "height": 61,
+        "top": 783,
+        "bottom": 844
+      },
+      "claim": {
+        "x": 245.625,
+        "y": 148.359375,
+        "width": 115.359375,
+        "height": 66,
+        "top": 148.359375,
+        "bottom": 214.359375
+      },
+      "farmPaddingTop": "16px"
+    },
+    {
+      "entry": "direct",
+      "scrollY": 0,
+      "scrollWidth": 390,
+      "viewportWidth": 390,
+      "room": {
+        "x": 16,
+        "y": 650.25,
+        "width": 358,
+        "height": 588.9375,
+        "top": 650.25,
+        "bottom": 1239.1875
+      },
+      "roomHeader": {
+        "x": 17,
+        "y": 651.25,
+        "width": 356,
+        "height": 41,
+        "top": 651.25,
+        "bottom": 692.25
+      },
+      "hardware": {
+        "x": 45,
+        "y": 727.25,
+        "width": 68,
+        "height": 54.390625,
+        "top": 727.25,
+        "bottom": 781.640625
+      },
+      "slot": {
+        "x": 26,
+        "y": 717.25,
+        "width": 106,
+        "height": 169.1875,
+        "top": 717.25,
+        "bottom": 886.4375
+      },
+      "guide": {
+        "x": 16,
+        "y": 368.3125,
+        "width": 358,
+        "height": 183.5625,
+        "top": 368.3125,
+        "bottom": 551.875
+      },
+      "guideAction": {
+        "x": 33,
+        "y": 490.875,
+        "width": 121.203125,
+        "height": 44,
+        "top": 490.875,
+        "bottom": 534.875
+      },
+      "nav": {
+        "x": 0,
+        "y": 783,
+        "width": 390,
+        "height": 61,
+        "top": 783,
+        "bottom": 844
+      },
+      "claim": {
+        "x": 245.625,
+        "y": 148.359375,
+        "width": 115.359375,
+        "height": 66,
+        "top": 148.359375,
+        "bottom": 214.359375
+      },
+      "farmPaddingTop": "16px"
+    }
+  ],
+  "wear": [
+    {
+      "stage": "two exposed epochs",
+      "epoch": 2,
+      "durability": 99,
+      "hashrate": 9.9,
+      "events": [
+        {
+          "type": "cheap",
+          "district": 3
+        },
+        {
+          "type": "surge",
+          "district": 5
+        }
+      ]
+    },
+    {
+      "stage": "farm",
+      "warnings": [
+        "Worn hardware is reducing mining. Repair your items to restore output."
+      ],
+      "hashrate": 9.9
+    },
+    {
+      "stage": "packs",
+      "warnings": [
+        "Worn hardware is reducing mining. Repair your items to restore output."
+      ],
+      "hashrate": 9.9
+    },
+    {
+      "stage": "city",
+      "warnings": [
+        "Worn hardware is reducing mining. Repair your items to restore output."
+      ],
+      "hashrate": 9.9
+    },
+    {
+      "stage": "season",
+      "warnings": [
+        "Worn hardware is reducing mining. Repair your items to restore output."
+      ],
+      "hashrate": 9.9
+    },
+    {
+      "stage": "wallet",
+      "warnings": [
+        "Worn hardware is reducing mining. Repair your items to restore output."
+      ],
+      "hashrate": 9.9
+    },
+    {
+      "stage": "docs",
+      "warnings": [
+        "Worn hardware is reducing mining. Repair your items to restore output."
+      ],
+      "hashrate": 9.9
+    },
+    {
+      "stage": "repair shortcut focus",
+      "focused": "slot-0-0",
+      "outlineStyle": "solid",
+      "outlineWidth": "3px",
+      "outlineColor": "rgb(255, 230, 0)"
+    },
+    {
+      "stage": "repaired",
+      "durability": 100,
+      "hashrate": 10,
+      "warnings": []
+    }
+  ],
+  "fixtures": [
+    {
+      "name": "installed wear without any event",
+      "warnings": [
+        "Worn hardware is reducing mining. Repair your items to restore output."
+      ],
+      "hashrate": 7.5
+    },
+    {
+      "name": "worn spare only",
+      "warnings": [],
+      "hashrate": 10
+    },
+    {
+      "name": "broken installed item only",
+      "warnings": [
+        "1 broken item stopped mining. Repair or remove the hardware."
+      ],
+      "hashrate": 0
+    },
+    {
+      "name": "active local fire with worn installed item",
+      "warnings": [
+        "Server fire damaged your hardware and reduced its mining. Repair the affected items."
+      ],
+      "hashrate": 7.5
+    },
+    {
+      "name": "expired local fire leaves wear warning",
+      "warnings": [
+        "Worn hardware is reducing mining. Repair your items to restore output."
+      ],
+      "hashrate": 7.5
+    },
+    {
+      "name": "mixed broken and worn installed items",
+      "warnings": [
+        "1 broken item stopped mining. Repair or remove the hardware.",
+        "Worn hardware is reducing mining. Repair your items to restore output."
+      ],
+      "hashrate": 4.5
+    },
+    {
+      "name": "mixed recovery targets",
+      "wornFocus": "slot-0-1",
+      "brokenFocus": "slot-0-0"
+    }
+  ],
+  "screenshots": [
+    "reports/screenshots/fidelity/landing-farm-390.png",
+    "reports/screenshots/fidelity/direct-farm-390.png",
+    "reports/screenshots/fidelity/worn-warning-390.png"
+  ]
+}

@@ -43,7 +43,7 @@ Local fonts use WOFF2 and `font-display: swap`; no CDN is required. `Pixel` is P
 | `--font-display` | `2rem` / 32px | Page headings and season timer |
 | `--font-logo` | `4rem` / 64px | Desktop landing wordmark |
 
-This is the entire six-size scale. The root uses 16px/1.6 and weight 400. `h1/h2` use Pixel 400/1.6; `h3/h4` use Mono 600/1.5. The guide uses Mono headings to keep instructions compact. Page headings step down to the 20px role at narrower widths. Mobile form controls use 16px, including item room selectors and referral inputs.
+This is the entire six-size scale. The root uses 16px/1.6 and weight 400. `h1/h2` use Pixel 400/1.6; `h3/h4` use Mono 600/1.5. The guide uses Mono headings to keep instructions compact. Farm’s `#rooms-title` is its single `h1`, using the existing 20px section role (16px/1.7 below 580px); individual room `h2` titles retain Mono 600/1.5 at 14px. Page headings step down to the 20px role at narrower widths. Mobile form controls use 16px, including item room selectors and referral inputs.
 
 Headings balance lines; paragraphs use pretty wrapping; long text can break. No additional letter spacing is introduced. Navigation capitalization is CSS presentation. Timers, balances, XP and ranking values use tabular numerals. Docs uses a 75ch column, 70ch paragraphs and 1.75 line-height; dispatcher copy uses 58ch/1.85. Supporting text is smaller without creating another type scale.
 
@@ -65,6 +65,8 @@ Use `.wrap` for a maximum 1200px content width and shared alignment edges. Side 
 
 The top bar is in normal document flow, leaving reading space on small screens. Bottom navigation is fixed at z-index 40, with matching body bottom clearance. Notifications sit above it. The guide stays in flow, rather than obscuring controls with a modal overlay. Item menus expand in their grid and cannot escape the viewport. Closed menus show just art, identity, rarity, condition/hash and a disclosure cue. Generic rerenders retain open disclosures, focus and field values.
 
+Farm starts directly with Mining rooms, its room count and “Six slots. One of each item type.” Its `.inner-page` top padding is 16px at widths up to 600px (`src/style.css`); other pages retain their existing spacing. At 390×844 with the first-play guide visible, both fresh entry paths show the room header and complete starter GPU sprite above the bottom navigation. This is a first-screen preview of the hardware, not the entire six-slot room; the rest remains scrollable.
+
 All seven routes were rendered at 320, 390, 768 and 1440 CSS pixels with no document overflow. A separate 390px check enlarged the root text to 200%; this is not browser-native zoom. Physical device safe-area behavior was not tested.
 
 ## Elevation & Depth
@@ -79,10 +81,10 @@ Square corners are intentional. Fields, meters and progress bars have zero radiu
 
 ## Components
 
-- **Page shell:** `pageHeading()`, `.wrap`, `.inner-page` and route dispatch in `src/main.ts`. Each page has one `h1`; links use hash routes and `aria-current="page"` for navigation.
+- **Page shell:** `pageHeading()`, `.wrap`, `.inner-page` and route dispatch in `src/main.ts`. Each page has one `h1`; Farm uses Mining rooms directly instead of a separate intro block. Links use hash routes and `aria-current="page"` for navigation.
 - **Farm status:** `gameTopbar()` exposes shared values and a large CLAIM action. A native progress bar carries an accessible XP label. Age-gated progress explicitly says which farm day is needed. The sync line shows Synced or the number of outstanding epochs, with SYNC available on every tab.
 - **Guide:** `onboarding()` renders four numbered steps and an explicit skip/next control. It progresses through real pack reveals, installation, an epoch and claim. Docs can replay it. Cross-page controls are links; local actions are buttons. Highlights use `.guide-highlight`. Preference storage is optional.
-- **Warnings:** `miningWarnings()` gives a reason and a recovery control for empty/idle farms, broken or fire-damaged hardware, affected outage/theft/audit events and insufficient repair funds. Color is redundant with text. A stable status region announces changes; errors use a separate alert region.
+- **Warnings:** `miningWarnings()` gives a reason and a recovery control for empty/idle farms, broken or worn installed hardware, affected outage/theft/audit events and insufficient repair funds. Installed hardware with durability above 0 and below 100 triggers Repair hardware even without an active event; local fire damage retains contextual wording, and the wear warning persists after the fire expires. Worn spares do not trigger it. Separate shortcuts focus worn versus broken installed items. Color is redundant with text. A stable status region announces changes; errors use a separate alert region.
 - **Items/rooms:** `roomPanel()` and `inventoryPanel()` use native `details/summary`. Each item owns its menu. Installed items offer removal and repair; spares offer room selection, installation, repair and confirmed scrap. Active combos are compact chips; missing combinations and overclock are disclosed in room settings. No merging or electricity reserve UI exists.
 - **Buttons/forms:** `.button`, `.primary`, `.compact`, `.full`, `.text-button` reuse the palette and 44–48px target sizes. CLAIM is the persistent primary; the pack page retains its purchase primary as required. Native radio groups, labels, selects and number inputs retain browser keyboard behavior. Invalid withdrawals have linked text and `aria-invalid`.
 - **Confirmations:** Native `dialog` for scrap, reset, overclock and withdrawals, with descriptive action labels, Cancel initially focused, Escape support and return focus. Overclock shows rising cost, hash, wear, power and tariff before confirmation. A stale withdrawal tax requires a new preview.
@@ -96,4 +98,4 @@ Start another page with the shared route shell, `.wrap`, status bar and `pageHea
 
 Keep item actions next to the item and secondary controls in disclosures. Preserve visible keyboard focus: three-pixel yellow outlines with four-pixel offset, and system Highlight in forced colors. Preserve local art/fonts and relative asset URLs. Do not add a wallet connection, new font/scale, another theme, auto-playing explanation overlay or a second settings dashboard for this demo.
 
-The six-domain review, fixed findings and unperformed checks are recorded in `reports/tabs-validation.md`. This is an implementation record, not a promise about the future on-chain game.
+The current six-domain revision review, reproduced findings and unperformed checks are recorded in `reports/fidelity-validation.md`; the broader implementation review is in `reports/tabs-validation.md`. This is an implementation record, not a promise about the future on-chain game.

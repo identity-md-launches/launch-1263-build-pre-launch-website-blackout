@@ -113,11 +113,12 @@ small,.small{font-size:var(--font-small)}
 .farm-stats strong small{font-size:var(--font-small);color:var(--muted)}
 .farm-layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:24px;align-items:start}
 .farm-rooms>.section-heading{margin-bottom:8px}
+#rooms-title{font-size:var(--font-title)}
 .farm-rooms>p{margin-bottom:20px}
 .mining-room{margin-top:16px;border:1px solid var(--border);background:var(--surface)}
 .room-title{display:flex;justify-content:space-between;gap:12px;background:#172034;padding:10px 16px;font-size:var(--font-small);font-variant-numeric:tabular-nums;align-items:center}
 .room-title>span{color:var(--accent)}
-.room-title h3{font-size:var(--font-label)}
+.room-title h2{font-family:Mono,monospace;font-size:var(--font-label);line-height:1.5;font-weight:600}
 .room-scene{position:relative;padding:28px 16px 20px;background:repeating-linear-gradient(0deg,transparent 0,transparent 27px,#33496422 28px,#33496422 29px),repeating-linear-gradient(90deg,transparent 0,transparent 57px,#33496422 58px,#33496422 59px),#101c2c;border-bottom:5px solid #253a4a;box-shadow:inset 0 -12px #162436}
 .room-pipes{position:absolute;top:9px;left:12px;right:12px;height:8px;border-top:3px solid #3a495b;border-right:5px solid #3a495b;pointer-events:none}
 .room-pipes::after{content:'';display:block;width:35%;height:3px;background:var(--accent);opacity:.45;margin-top:-3px}
@@ -514,7 +515,7 @@ body[data-page="home"] .site-header nav{display:none}
 .farm-stats .button{font-size:var(--font-small);padding:10px}
 .farm-stats>div{gap:4px}
 .panel{padding:20px 16px}
-.section-heading h2{font-size:var(--font-body);line-height:1.7}
+.section-heading h2,#rooms-title{font-size:var(--font-body);line-height:1.7}
 .farm-layout{gap:28px}
 .room-scene{padding:24px 10px 16px}
 .room-slots{gap:8px}
@@ -737,6 +738,7 @@ meter,progress{border:1px solid CanvasText}
  .onboarding{padding:16px}.guide-copy{gap:12px;flex-wrap:wrap}.guide-copy>div{flex-basis:calc(100% - 60px)}.guide-copy>.text-button{order:3;min-height:44px;padding:0}.guide-copy p{font-size:var(--font-small)}
  .guide-actions{margin-top:8px;justify-content:space-between;gap:12px}.guide-step{font-size:var(--font-small)}
  .page-heading{gap:12px;margin-bottom:24px}.page-heading p{font-size:var(--font-label)}.inner-page{padding-block:24px 40px}
+ body[data-page="farm"] .inner-page{padding-top:16px}
  .page-heading .button{font-size:var(--font-small);min-height:44px;padding:10px 12px}
  .room-scene{padding:24px 8px 16px}.room-slots{gap:8px}.farm-slot{min-height:148px}.farm-slot strong{font-size:var(--font-small)}
  .item-menu{min-height:0}.item-menu summary{padding:10px 4px;min-height:148px}.item-menu summary .sprite{width:68px}

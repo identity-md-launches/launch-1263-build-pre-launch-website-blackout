@@ -1,0 +1,39 @@
+{
+  "browser": "Supplied Chromium browser connector",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "reducedMotion": "reduce",
+  "export": "original dist/ before source edits",
+  "observations": {
+    "mobile-before": {
+      "roomTop": 820.828125,
+      "navTop": 783,
+      "inventoryTop": 1674.71875,
+      "guide": "1 / 4 Open a packStart with a demo pack, then reveal your three cards. Your practice funds are ready.SkipGo to Packs \u2192Next tip",
+      "installed": {
+        "x": 45,
+        "y": 897.828125,
+        "width": 68,
+        "height": 54.390625,
+        "top": 897.828125,
+        "right": 113,
+        "bottom": 952.21875,
+        "left": 45
+      },
+      "scrollY": 0
+    },
+    "wear-before": {
+      "epoch": 2,
+      "durability": 99,
+      "hash": "9.9 H/s",
+      "warnings": 0
+    },
+    "mixed-focus-before": {
+      "focused": "slot-0-0",
+      "broken": 0,
+      "worn": 90
+    }
+  }
+}

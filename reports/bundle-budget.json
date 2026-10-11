@@ -1,10 +1,10 @@
 {
   "limitBytes": 8388608,
-  "deliverableFileCount": 99,
-  "deliverableBytes": 3567121,
-  "headroomBytes": 4821487,
+  "deliverableFileCount": 107,
+  "deliverableBytes": 3699297,
+  "headroomBytes": 4689311,
   "distFileCount": 8,
-  "distBytes": 326496,
+  "distBytes": 326728,
   "excluded": [
     "Protected Git/configuration paths",
     "Pinned .imd inputs",
@@ -14,12 +14,12 @@
   "notes": "Raw source, export, documentation and evidence bytes, including this report. No Git metadata was touched. This is not a measurement of a worker-created Git bundle.",
   "exportHashes": [
     {
-      "path": "dist/assets/index-DUGXy2uU.css",
-      "sha256": "1158bb11bd8f932a3f52808401a4599aa8914be06763ed64510edb4021e937f9"
+      "path": "dist/assets/index-DT46041E.js",
+      "sha256": "618d821dba54096c282e65879ef84f2db8c76d52dc834f6583b8ad39536b5235"
     },
     {
-      "path": "dist/assets/index-e_ILI_qD.js",
-      "sha256": "e95d157580b58f6627afe8f75df2851f01b99c65855d2297bbbc1491468d7fb8"
+      "path": "dist/assets/index-Do90Ku4z.css",
+      "sha256": "28f68d2306fd8b451d6c30f7b4428f0969e3686b2f9817ee65ff9512dd531fba"
     },
     {
       "path": "dist/assets/mono-latin.woff2",
@@ -39,7 +39,7 @@
     },
     {
       "path": "dist/index.html",
-      "sha256": "e902a8c9314a28e619e8a2655da1e217719e07f9e148058cd7fb82d2e4fd3304"
+      "sha256": "80197104a629fa47fa4c20b9e9e913c3fd0d347130f8f5dfca3fe3deff3ebc71"
     },
     {
       "path": "dist/og.png",

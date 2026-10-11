@@ -63,6 +63,7 @@ No dependency directory, cache, registry mirror, package archive or Git submodul
 npm test
 npx playwright install chromium
 npm run test:smoke
+node scripts/fidelity-smoke.mjs
 npm run check:delivery
 ```
 
@@ -77,7 +78,13 @@ BLACKOUT_TOOLCHAIN=/tmp/blackout-tabs-deps PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=ubu
 node scripts/check-delivery.mjs
 ```
 
-Current results and scope are recorded in [reports/tabs-validation.md](reports/tabs-validation.md), with machine-readable browser results in [reports/tabs-results.json](reports/tabs-results.json). These supersede earlier validation narratives. Production build and strict typecheck passed; **67 engine/documentation tests and 16 production browser scenarios passed**. The browser report records the final interaction count, responsive checks, accessibility findings and measured contrast. Screenshots are in `reports/screenshots/tabs/`. [DESIGN.md](DESIGN.md) describes the implemented system and six-domain review coverage is in the validation report.
+The current review revision is recorded in [reports/fidelity-validation.md](reports/fidelity-validation.md), including commands, before/after measurements, six-domain coverage and limitations. Both reported defects reproduced and were fixed. Production build and strict typecheck passed; **67 engine/documentation tests, 16 existing production browser scenarios and four focused regressions passed**. The full suite was rerun after the fixes. Machine-readable results are [tabs-results.json](reports/tabs-results.json) and [fidelity-results.json](reports/fidelity-results.json); screenshots are in `reports/screenshots/tabs/` and `reports/screenshots/fidelity/`. [DESIGN.md](DESIGN.md) describes the final implementation. The preceding broader review remains in [reports/tabs-validation.md](reports/tabs-validation.md).
+
+This revision used the unchanged dependencies installed in `/tmp/blackout-revision-tools` and Chromium in `/tmp/blackout-revision-browsers`, with the same external-toolchain commands above substituting those paths. Run the focused regression with:
+
+```sh
+BLACKOUT_TOOLCHAIN=/tmp/blackout-revision-tools PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=ubuntu24.04-x64 PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-revision-browsers node scripts/fidelity-smoke.mjs
+```
 
 Checks cover all seven routes at 320, 390, 768 and 1440 CSS pixels, the complete onboarding flow, item menus, claims, costs, idle recovery, withdrawals, events, season rewards, referrals, holder packs and a keyboard-only pack/install/claim flow. A 390px viewport with 200% root text enlargement was checked separately from native browser zoom. Chrome was also inspected with the supplied browser connector. Physical devices, actual screen readers, native browser zoom, Firefox/Safari and live-chain behavior were not tested. Axe’s incomplete checks remain listed; zero reported violations is not a certification.
 

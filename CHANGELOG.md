@@ -1,5 +1,11 @@
 # Changelog
 
+## Review revision: visible rooms and wear recovery
+
+- Removed the duplicate Farm intro and shortened its room instruction; the first room and starter GPU now appear above the tabs at 390×844 with onboarding retained.
+- Added repair warnings for all worn installed hardware, including damage after a fire ends. Repair shortcuts distinguish worn items from broken ones.
+- Rebuilt `dist/`. Strict typecheck/build, 67 engine/docs tests, 16 existing browser scenarios and four focused regressions passed. [Revision evidence](reports/fidelity-validation.md).
+
 ## Simpler first-play update
 
 All gameplay numbers are **beta values, may change**.
