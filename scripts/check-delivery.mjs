@@ -16,7 +16,7 @@ async function walk(directory) {
   }
 }
 await walk(root);
-for(const required of ['dist/index.html','dist/og.png','dist/favicon.svg','package.json','package-lock.json','DESIGN.md','README.md','reports/validation.md', 'reports/tabs-validation.md', 'reports/tabs-results.json', 'docs.md', 'CHANGELOG.md', 'reports/publication.md']) {
+for(const required of ['dist/index.html','dist/og.png','dist/favicon.svg','package.json','package-lock.json','DESIGN.md','README.md','reports/validation.md', 'reports/tabs-validation.md', 'reports/tabs-results.json', 'docs.md', 'CHANGELOG.md', 'reports/publication.md', 'dist/app-icon.png', 'dist/manifest.webmanifest', 'src/landing.ts', 'src/effects.ts', 'reports/polish-validation.md', 'reports/polish/interaction-results.json', 'reports/polish/motion-results.json']) {
   if(!files.includes(required))throw new Error(`Missing required deliverable: ${required}`);
 }
 const html=await readFile('dist/index.html','utf8');
@@ -28,6 +28,10 @@ for(const [,url] of html.matchAll(/(?:src|href)="([^"]+)"/g)) {
 }
 const png=await readFile('dist/og.png');
 if(png.readUInt32BE(16)!==1200||png.readUInt32BE(20)!==630)throw new Error('OG dimensions must be 1200×630');
+const icon=await readFile('dist/app-icon.png');
+if(icon.readUInt32BE(16)!==512||icon.readUInt32BE(20)!==512)throw new Error('App icon dimensions must be 512×512');
+const manifest=JSON.parse(await readFile('dist/manifest.webmanifest','utf8'));
+for(const icon of manifest.icons){if(!icon.src.startsWith('./'))throw new Error('Manifest asset is not relative');await stat(join('dist',icon.src));}
 const reportPath='reports/bundle-budget.json';
 if(!files.includes(reportPath))files.push(reportPath);
 let report={};

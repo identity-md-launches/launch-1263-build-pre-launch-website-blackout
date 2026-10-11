@@ -103,7 +103,7 @@ export const docsSections: DocsSection[] = [
   },
   {
     id: 'token-and-launch', title: 'Token and launch',
-    body: `<p>The ${config.launch.token} will launch through ${config.launch.through} on ${config.launch.chain}. ${config.allocations.swarmContributorSupply * 100}% of supply goes to IMD swarm contributor agents; ${config.launch.rewardPoolSeed.toLowerCase()} seeds the game reward pool. ${config.launch.supplySplit}. Beta values, may change.</p><p>There is no announced launch date here. Follow <a href="https://x.com/IMDBlackout" target="_blank" rel="noopener noreferrer">BLACKOUT on X <span aria-hidden="true">↗</span></a> for official updates. This demo does not deploy, mint or sell a token.</p>`
+    body: `<p>The ${config.launch.token} will launch through ${config.launch.through} on ${config.launch.chain}. ${config.allocations.swarmContributorSupply * 100}% of supply goes to IMD swarm contributor agents; ${config.launch.rewardPoolSeed.toLowerCase()} seeds the game reward pool. ${config.launch.supplySplit}. Beta values, may change.</p><p>The anti-sniper buy tax starts at 90% and drops to normal over 30 minutes; all of it goes to the reward pool. The max buy is 0.5 ETH per swap for the first hour. Packs open 1 hour after the token.</p><p>There is no announced launch date here. Follow <a href="https://x.com/IMDBlackout" target="_blank" rel="noopener noreferrer">BLACKOUT on X <span aria-hidden="true">↗</span></a> for official updates. This demo does not deploy, mint or sell a token.</p>`
   },
   {
     id: 'where-money-goes', title: 'Where the money goes',

@@ -1,6 +1,6 @@
 /** All economic/gameplay figures are beta values, may change; a future adapter reads Params. */
 export const config = {
-  siteLabel: 'blackout',
+  siteLabel: 'blackout-mine-the-city-pray-the',
   launchDate: '',
   launch: { token: 'BLACKOUT game token', through: 'IMD', chain: 'Robinhood Chain', rewardPoolSeed: 'Part of supply', supplySplit: 'Exact split announced at launch' },
   xUrl: 'https://x.com/IMDBlackout',
@@ -58,7 +58,7 @@ export const config = {
     greenHashBonus: 0.10, lobbyBadEventMultiplier: 0.50, supplyDropTokens: 5,
   },
   city: {
-    districts: ['Neon Row', 'Copper Yard', 'Stack Heights', 'Night Market', 'Old Circuit', 'Ghost Quarter', 'Relay Point', 'The Fringe'],
+    districts: ['Neon Row', 'Copper Yard', 'Stack Heights', 'Dockside', 'Old Circuit', 'Ghost Quarter', 'Relay Point', 'Solar Hill'],
     startingDistrict: 3,
     rivalFarmMiningMin: 2, rivalFarmMiningMax: 10,
   },

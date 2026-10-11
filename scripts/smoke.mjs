@@ -13,7 +13,7 @@ const skip=async page=>{if(await page.locator('#skip-guide').count())await page.
 const tools=async page=>{await page.locator('#demo-tools').evaluate(el=>el.open=true);};
 const dismiss=async page=>{if(await page.locator('#dismiss-notice').isVisible())await page.locator('#dismiss-notice').click();};
 const seed=async(page,change)=>{const state=await saved(page);change(state);await page.evaluate(({key,state})=>localStorage.setItem(key,JSON.stringify(state)),{key,state});await page.reload();await expect(page.locator('#storage-warning')).toBeHidden();};
-const shot=async(page,name)=>{const path=`reports/screenshots/tabs/${name}.png`;await page.screenshot({path,fullPage:false});report.screenshots.push(path);};
+const shot=async(page,name)=>{const path=`artifacts/screenshots/after-${name}.png`;await page.screenshot({path,fullPage:false});report.screenshots.push(path);};
 const nav=async(page,name)=>{await page.locator(`[data-route="${name}"]`).click();await expect(page.locator(`[data-route="${name}"]`)).toHaveAttribute('aria-current','page');};
 async function scenario(name,callback,viewport={width:1440,height:1000}){
  const context=await browser.newContext({viewport,reducedMotion:'reduce'});const page=await context.newPage();page.setDefaultTimeout(7000);
@@ -25,18 +25,18 @@ async function scenario(name,callback,viewport={width:1440,height:1000}){
  finally{clearTimeout(timeout);await context.close();}
 }
 try{
- await mkdir('reports/screenshots/tabs',{recursive:true});await mkdir('test/scratch',{recursive:true});browser=await chromium.launch({headless:true});
- await scenario('390px landing: product, main action, beta label and metadata',async page=>{
-  await goto(page);for(const selector of ['#hero-title','.hero-description','.hero-actions .primary','.demo-strip span']){const box=await page.locator(selector).boundingBox();assert(box.y>=0&&box.y+box.height<=844,`${selector} outside first screen`);}
+ await mkdir('artifacts/screenshots',{recursive:true});await mkdir('test/scratch',{recursive:true});browser=await chromium.launch({headless:true});
+ await scenario('390px landing: product, main action, launch message and metadata',async page=>{
+  await goto(page);for(const selector of ['#hero-title','.hero-description','.hero-actions .primary','.hero-launch']){const box=await page.locator(selector).boundingBox();assert(box.y>=0&&box.y+box.height<=844,`${selector} outside first screen`);}
   for(const name of ['description','og:title','og:image'])assert(await page.locator(`meta[${name.includes(':')?'property':'name'}="${name}"]`).getAttribute('content'));
   assert(await page.locator('link[rel=icon]').getAttribute('href'));assert(await page.evaluate(()=>document.fonts.check('16px Pixel') && document.fonts.check('16px Mono')));await shot(page,'landing-390');
  },{width:390,height:844});
- await scenario('Mobile onboarding: open, reveal, install, epoch, claim; skip persists and docs replay works',async page=>{
-  await goto(page,'farm');await expect(page.locator('.onboarding')).toContainText('1 / 4');await shot(page,'onboarding-390');
-  await page.locator('#guide-action').click();await expect(page.locator('#open-pack')).toHaveClass(/guide-highlight/);await shot(page,'packs-390');await page.locator('#guide-action').click();await page.locator('#guide-action').click();await expect(page.locator('.onboarding')).toContainText('2 / 4');
-  await dismiss(page);await page.locator('#guide-action').click();await page.locator('#item-item-2').click();await shot(page,'inventory-menu-390');await page.locator('#install-item-2').click();await expect(page.locator('.onboarding')).toContainText('3 / 4');
-  await tools(page);await page.locator('#next-epoch').click();await expect(page.locator('.onboarding')).toContainText('4 / 4');await page.locator('#claim').click();await expect(page.locator('.onboarding')).toHaveCount(0);assert.equal((await saved(page)).unclaimed,0);
-  await nav(page,'docs');await page.locator('#replay-guide').click();await expect(page.locator('.onboarding')).toContainText('1 / 4');await page.locator('#skip-guide').click();await page.reload();await expect(page.locator('.onboarding')).toHaveCount(0);
+ await scenario('Mobile coach marks: real pack, reveal, install, epoch and claim controls; replay and dismiss persist',async page=>{
+  await goto(page,'farm');await expect(page.locator('.coach-mark')).toContainText('1/4');await expect(page.locator('[data-route="packs"]')).toHaveClass(/guide-highlight/);
+  await nav(page,'packs');await expect(page.locator('#open-pack')).toHaveClass(/guide-highlight/);const openBox=await page.locator('#open-pack').boundingBox();const navBox=await page.locator('.game-nav').boundingBox();assert(openBox.y+openBox.height<navBox.y,'Pack action must be above mobile tabs');await page.locator('#open-pack').click();await page.locator('#reveal-all').click();await expect(page.locator('.coach-mark')).toContainText('2/4');
+  await dismiss(page);await nav(page,'farm');await page.locator('#item-item-2').click();await page.locator('#install-item-2').click();await expect(page.locator('.coach-mark')).toContainText('3/4');
+  await tools(page);await page.locator('#next-epoch').click();await expect(page.locator('.coach-mark')).toContainText('4/4');await page.locator('#claim').click();await expect(page.locator('.coach-mark')).toHaveCount(0);assert.equal((await saved(page)).unclaimed,0);
+  await nav(page,'docs');await page.locator('#replay-guide').click();await expect(page.locator('.coach-mark')).toContainText('1/4');await page.locator('#skip-guide').click();await page.reload();await expect(page.locator('.coach-mark')).toHaveCount(0);
  },{width:390,height:844});
  await scenario('Six focused routes share the HUD and keep demo controls collapsed',async page=>{
   await goto(page,'farm');await skip(page);
@@ -98,7 +98,7 @@ try{
   await page.keyboard.press('Escape');await seed(page,f=>{f.pendingMining=1;f.tokens=0;});await page.locator('#sync').focus();await shot(page,'keyboard-focus');
   report.contrast=await page.evaluate(()=>{
    const rgb=c=>c.match(/[\d.]+/g).slice(0,3).map(Number);const lum=c=>rgb(c).map(v=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4}).reduce((s,v,i)=>s+v*[.2126,.7152,.0722][i],0);
-   return [['HUD label','.hud-stat>span','.game-topbar'],['HUD value','#total-hash','.game-topbar'],['Primary text','#claim','#claim'],['Body','body','html'],['Warning','.mining-warning','.mining-warning']].map(([name,fg,bg])=>{const color=getComputedStyle(document.querySelector(fg)).color,background=getComputedStyle(document.querySelector(bg)).backgroundColor;const a=lum(color),b=lum(background);return {name,color,background,ratio:(Math.max(a,b)+.05)/(Math.min(a,b)+.05)};});
+   return [['HUD label (page background reference)','.hud-stat>span','html'],['HUD value (page background reference)','#total-hash','html'],['Primary text','#claim','#claim'],['Body','body','html'],['Warning','.mining-warning','.mining-warnings']].map(([name,fg,bg])=>{const color=getComputedStyle(document.querySelector(fg)).color,background=getComputedStyle(document.querySelector(bg)).backgroundColor;const a=lum(color),b=lum(background);return {name,color,background,ratio:(Math.max(a,b)+.05)/(Math.min(a,b)+.05)};});
   });
  });
  await scenario('Keyboard-only pack, install and claim flow',async page=>{
@@ -109,10 +109,42 @@ try{
   await keyboardTo('#demo-tools-summary');await keyboardTo('#next-epoch');await keyboardTo('#claim');assert.equal((await saved(page)).unclaimed,0);assert((await saved(page)).tokens>350);
  });
  await scenario('Text enlargement and storage failure keep actions accessible',async(page,context)=>{
-  await goto(page,'farm');await skip(page);await page.setViewportSize({width:390,height:844});await page.addStyleTag({content:'html{font-size:200%}'});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.locator('#sync').click();
+  await goto(page,'farm');await skip(page);await page.setViewportSize({width:390,height:844});await page.addStyleTag({content:'html{font-size:200%}'});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.locator('#item-item-2').click();
   const another=await context.newPage();await another.addInitScript(()=>{Object.defineProperty(window,'localStorage',{get(){throw new Error('unavailable');}});});await goto(another,'farm');await expect(another.locator('#storage-warning')).toBeVisible();await another.locator('#skip-guide').click();await another.locator('#item-item-2').click();await another.locator('#install-item-2').click();await expect(another.locator('#slot-0-1')).toContainText('Power Supply');await another.close();
  });
+ await scenario('All landing sections, 12 atlas sprites, hardware scrolling, FAQ, launch terms and sound opt-in',async page=>{
+  await goto(page);assert.equal(await page.locator('.how-steps li').count(),4);assert.equal(await page.locator('.hardware-card').count(),12);assert.equal(await page.locator('symbol[id^="hardware-"]').count(),12);assert.equal(await page.locator('.event-card').count(),3);assert.equal(await page.locator('.faq-list details').count(),5);
+  for(const text of ['90%','30 minutes','0.5 ETH','one hour'])assert((await page.locator('.launch-section').innerText()).includes(text));
+  await page.locator('[data-hardware-scroll="1"]').click();assert(await page.locator('#hardware-track').evaluate(el=>el.scrollLeft)>0);
+  await page.locator('#faq-1 summary').click();await expect(page.locator('#faq-1 p')).toBeVisible();
+  await expect(page.locator('#sound-toggle')).toHaveAttribute('aria-pressed','false');await page.locator('#sound-toggle').click();await expect(page.locator('#sound-toggle')).toHaveAttribute('aria-pressed','true');await page.locator('#sound-toggle').click();
+  await page.evaluate(()=>scrollTo(0,0));await shot(page,'landing-desktop');
+ });
+ await scenario('Worn warning threshold, single dismissible strip, precise repair focus and shared damage art',async page=>{
+  await goto(page,'farm');await skip(page);await seed(page,f=>{f.inventory[0].durability=50;});await expect(page.locator('.mining-warnings')).toHaveCount(0);
+  await seed(page,f=>{f.inventory[0].durability=49;});await expect(page.locator('.mining-warning')).toHaveCount(1);await expect(page.locator('.farm-slot .damage-cracks')).toHaveCount(1);await expect(page.locator('.farm-slot .badly-damaged')).toHaveCount(1);
+  await page.locator('[data-fix="damaged"]').click();await expect(page.locator('#slot-0-0')).toBeFocused();await page.locator('#dismiss-warning').click();await expect(page.locator('.mining-warnings')).toHaveCount(0);
+ });
+ await scenario('Eight district landmarks, player highlight and all requested event visuals',async page=>{
+  await goto(page,'city');await skip(page);assert.equal(await page.locator('.district-art').count(),8);
+  assert.equal(new Set(await page.locator('.district-landmark').allTextContents()).size,8);
+  for(const type of ['outage','fire','surge','green','theft']){await seed(page,f=>{f.events=[{id:0,type,district:f.district,at:f.updatedAt,expiresAt:f.nextEventAt,lobbied:false,protection:'Presentation fixture'}];});await expect(page.locator(`.your-district svg.event-${type}`)).toHaveCount(1);}
+  await shot(page,'district-theft');
+ });
+ await scenario('Epic+ X intent and a real downloadable PNG; Common pulls do not prompt sharing',async page=>{
+  await goto(page,'packs');await skip(page);await page.locator('#open-pack').click();await page.locator('#reveal-all').click();
+  await seed(page,f=>{f.pendingPack.cards[0].rarity='Legendary';f.pendingPack.cards[0].type='GPU';f.pendingPack.cards[1].rarity='Epic';f.pendingPack.cards[2].rarity='Common';});
+  assert.equal(await page.locator('.share-actions').count(),2);
+  const link=page.getByRole('link',{name:'Share on X'}).first();const url=new URL(await link.getAttribute('href'));assert.equal(url.origin,'https://twitter.com');assert.equal(url.pathname,'/intent/tweet');assert.equal(url.searchParams.get('text'),'I just pulled a Legendary GPU in the BLACKOUT demo. Mine the city: playblackout.xyz @IMDBlackout');
+  const downloaded=page.waitForEvent('download');await page.locator('[data-download-card]').first().click();const download=await downloaded;assert.equal(download.suggestedFilename(),'BLACKOUT-Legendary-GPU.png');await download.saveAs('artifacts/BLACKOUT-Legendary-GPU.png');
+  const bytes=await (await import('node:fs/promises')).readFile('artifacts/BLACKOUT-Legendary-GPU.png');assert.equal(bytes.readUInt32BE(16),1000);assert.equal(bytes.readUInt32BE(20),1200);assert(bytes.length>5000);await dismiss(page);await shot(page,'epic-share');
+ });
+ await scenario('Reduced motion disables animation, preserves reveals and pauses the city control',async page=>{
+  await goto(page);await expect(page.locator('.boot-screen')).toHaveCount(0);await expect(page.locator('[data-motion-toggle]')).toBeDisabled();
+  assert(await page.evaluate(()=>[...document.querySelectorAll('.window-flicker,.dispatcher-eye,.city-drone,.item-shimmer')].every(el=>getComputedStyle(el).animationName==='none')));
+  await nav(page,'packs');await skip(page);await page.locator('#open-pack').click();await page.locator('#reveal-all').click();await expect(page.locator('.item-card.revealed')).toHaveCount(3);
+ });
  assert.equal(report.consoleErrors.length,0,'Console errors');assert.equal(report.failedRequests.length,0,'Failed resources');
-}finally{await browser?.close();await preview.close();await writeFile('reports/tabs-results.json',JSON.stringify(report,null,2)+'\n');}
+}finally{await browser?.close();await preview.close();await writeFile('artifacts/interaction-results.json',JSON.stringify(report,null,2)+'\n');}
 console.log(`${report.checks.length} passed; ${report.failures.length} failed; ${report.consoleErrors.length} console errors; ${report.failedRequests.length} failed requests`);
 if(report.failures.length)process.exitCode=1;

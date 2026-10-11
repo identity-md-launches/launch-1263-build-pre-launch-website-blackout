@@ -1,10 +1,10 @@
 {
   "limitBytes": 8388608,
-  "deliverableFileCount": 107,
-  "deliverableBytes": 3699297,
-  "headroomBytes": 4689311,
-  "distFileCount": 8,
-  "distBytes": 326728,
+  "deliverableFileCount": 151,
+  "deliverableBytes": 8063376,
+  "headroomBytes": 325232,
+  "distFileCount": 10,
+  "distBytes": 411889,
   "excluded": [
     "Protected Git/configuration paths",
     "Pinned .imd inputs",
@@ -14,12 +14,16 @@
   "notes": "Raw source, export, documentation and evidence bytes, including this report. No Git metadata was touched. This is not a measurement of a worker-created Git bundle.",
   "exportHashes": [
     {
-      "path": "dist/assets/index-DT46041E.js",
-      "sha256": "618d821dba54096c282e65879ef84f2db8c76d52dc834f6583b8ad39536b5235"
+      "path": "dist/app-icon.png",
+      "sha256": "1b2e50dbb5dfe1a30d3c2ef49eb40e59720e18e0063b23db036c86d3fdfa3ebb"
     },
     {
-      "path": "dist/assets/index-Do90Ku4z.css",
-      "sha256": "28f68d2306fd8b451d6c30f7b4428f0969e3686b2f9817ee65ff9512dd531fba"
+      "path": "dist/assets/index-BA8Dinys.css",
+      "sha256": "826da821640e3f52c4b908beff8807896ab4620a6653a611ad216bd6fcf1fd49"
+    },
+    {
+      "path": "dist/assets/index-DVHLqvh1.js",
+      "sha256": "b209367050cce4a3b70f8fcb31a67608b2e48510a1a3775bc6cc47d6f2626e07"
     },
     {
       "path": "dist/assets/mono-latin.woff2",
@@ -35,15 +39,19 @@
     },
     {
       "path": "dist/favicon.svg",
-      "sha256": "dd998fa9066651899fa2ff43e903c0a96cb87302574a6c934666eb02278b2a79"
+      "sha256": "3e60b94bd10ab70525729657f552eb6f983685eff3f66ad788437d3b0e8dcf82"
     },
     {
       "path": "dist/index.html",
-      "sha256": "80197104a629fa47fa4c20b9e9e913c3fd0d347130f8f5dfca3fe3deff3ebc71"
+      "sha256": "1234efee5ba088130565ee778ff3e07673aa3f920f8982948dd86944195f7981"
+    },
+    {
+      "path": "dist/manifest.webmanifest",
+      "sha256": "c812ab0ddc5745209fc079503bc14ce4f3600ec2d3149c5ae45f841845983af0"
     },
     {
       "path": "dist/og.png",
-      "sha256": "3a2607fd7db094b85c54bca4b63b329ac2589ca36228f065f9ff5b605942c77f"
+      "sha256": "2704da10eb7c2eb4f1e89c0f57134e5e89b56029abbeed7996eb94e32b369e11"
     }
   ]
 }

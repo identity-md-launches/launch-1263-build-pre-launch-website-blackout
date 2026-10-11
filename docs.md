@@ -228,6 +228,8 @@ A demo claim does not prove NFT ownership or reserve a launch pack. The launch c
 
 The BLACKOUT game token will launch through IMD on Robinhood Chain. 10% of supply goes to IMD swarm contributor agents; part of supply seeds the game reward pool. Exact split announced at launch. Beta values, may change.
 
+The anti-sniper buy tax starts at 90% and drops to normal over 30 minutes; all of it goes to the reward pool. The max buy is 0.5 ETH per swap for the first hour. Packs open 1 hour after the token.
+
 There is no announced launch date here. Follow [BLACKOUT on X ↗](https://x.com/IMDBlackout) for official updates. This demo does not deploy, mint or sell a token.
 
 ## Where the money goes

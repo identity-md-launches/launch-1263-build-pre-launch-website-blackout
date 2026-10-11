@@ -2,100 +2,99 @@
 
 ## Overview
 
-BLACKOUT is a pixel-art idle mining demo for new players. The city landing page leads directly to Play demo. Six focused game tabs separate rooms, packs, city management, seasons, balances and documentation. All use the same farm status bar and saved state. The four-step first-play guide is optional and replayable.
+BLACKOUT is a playable pixel-art idle mining demo. The landing introduces the city, hardware and launch; Farm, Packs, City, Season, Wallet and Docs share the existing saved farm and adapter. This revision keeps the navy/purple, cyan, yellow and magenta identity, with crisp 16-bit artwork and restrained CRT texture.
 
-The retained visual language is a cyberpunk night city: near-black navy surfaces, crisp pixel art, neon cyan, electric yellow and magenta accents. Keep the illustration style and square hardware panels. The game is dense enough to show equipment, but secondary settings use disclosure controls. This document describes the final implementation in `src/style.css`, `src/main.ts`, `src/sprites.ts` and `src/docs.ts`.
+The landing uses generous section spacing and a living skyline. Game screens use compact sticky status controls and progressive disclosure so the working area starts near the top. This document describes the implemented source, including the final overrides at the end of `src/style.css`; earlier legacy declarations are not a second design system.
 
 ## Colors
 
-The canonical hex sRGB tokens are in `src/style.css:7`. There is one dark theme with `color-scheme: dark`.
+Canonical sRGB hex tokens live in `src/style.css:7`. There is one dark theme.
 
-| Semantic token | Value | Role |
+| Token | Value | Role |
 | --- | --- | --- |
 | `--bg` / `--navy-950` | `#05060f` | Page background |
-| `--surface` / `--navy-900` | `#090e1d` | Panels, top bar and bottom navigation |
-| `--surface-raised` / `--navy-850` | `#0e1428` | Buttons, onboarding and selected tab surface |
-| `--hover` / `--navy-800` | `#141d33` | Item-summary hover |
+| `--surface` / `--navy-900` | `#090e1d` | Panels |
+| `--surface-raised` / `--navy-850` | `#0e1428` | Secondary controls |
+| `--hover` / `--navy-800` | `#141d33` | Hover surface |
 | `--border` / `--navy-600` | `#354664` | Structural borders |
-| `--border-control` | `#65748f` | Interactive borders |
-| `--text` / `--gray-100` | `#edf2ff` | Main text |
-| `--muted` / `--gray-400` | `#a1aec5` | Supporting copy |
-| `--accent` / `--cyan-400` | `#39e6ff` | Brand, links, active combinations, hashrate and sync affordances |
-| `--highlight`, `--focus` / `--yellow-400` | `#ffe600` | Primary action, warning text, timers and keyboard focus |
-| `--magenta-400` | `#ff3df2` | Epic equipment and illustration accents |
-| `--danger` | `#ff869c` | Scrap/reset text and error border |
-| Rarity tokens | Common `#bdc8dd`, Rare `#39e6ff`, Epic `#ff3df2`, Legendary `#ffe600`, Mythic `#ff6475` | Borders and written rarity labels |
+| `--border-control` | `#65748f` | Control boundaries |
+| `--text` / `--gray-100` | `#edf2ff` | Primary text |
+| `--muted` / `--gray-400` | `#b3bfd3` | Readable supporting text |
+| `--accent` / `--cyan-400` | `#39e6ff` | Brand, links, hashrate, selected districts |
+| `--highlight`, `--focus` | `#ffe600` | Primary action, warning and keyboard focus |
+| `--magenta-400` | `#ff3df2` | Epic items and neon artwork |
+| `--danger` | `#ff869c` | Destructive actions and errors |
+| Rarity | Common `#bdc8dd`, Rare `#39e6ff`, Epic `#ff3df2`, Legendary `#ffe600`, Mythic `#ff6475` | Written rarity, trim and effects |
 
-Primary buttons use `#111323` text on yellow, hovering to `#fff168`. Warnings use `#211d13` with a yellow leading border and explicit reason/action. Combo chips use `#102632` with `#31566a` borders. Form backgrounds are `#080e1e`; notification backgrounds are `#101f30`. Pixel-art palettes remain separate from interface tokens.
+Primary buttons use `#0b1020` on yellow. Disabled controls use `#9aa9bd` on `#202a3c` rather than opacity-reduced text. The warning strip is `#201e15`; coach marks use `#152b3d` with cyan borders. The HUD is `#090e1df5` with backdrop blur. Illustration palettes intentionally add metal, copper, window and atmosphere tones.
 
-Measured opaque rendered pairs: HUD supporting text 8.58:1; cyan HUD value 12.76:1; enabled primary action text 14.52:1; page text 18.04:1; warning text 13.26:1. Evidence and exact RGB values are in `reports/tabs-results.json`. These do not certify image/gradient contrast or every state; incomplete axe contrast checks are retained there.
+District accents are defined once in `src/sprites.ts` as `districtArt`: Neon Row magenta `#ff3df2`; Copper Yard orange `#ffa452`; Stack Heights cyan `#39e6ff`; Dockside teal `#4ff5ce`; Old Circuit amber `#ffc16a`; Ghost Quarter pale green `#b6f7b0`; Relay Point blue `#82aaff`; Solar Hill yellow `#ffe600`. District name, landmark and event label accompany color. “Your farm” and an outline identify the player.
+
+Measured opaque pairs: primary button 14.94:1, page text 18.04:1, warning text 13.17:1. See `reports/polish/interaction-results.json` for exact RGB pairs. HUD reference calculations use the page background and are not measurements of its translucent composite. Contrast over art and other translucent surfaces remains partly unverified.
 
 ## Typography
 
-Local fonts use WOFF2 and `font-display: swap`; no CDN is required. `Pixel` is Press Start 2P 400, falling back to monospace. `Mono` is IBM Plex Mono 400/600, falling back to Courier New then monospace. Files are `public/assets/pixel-latin.woff2`, `mono-latin.woff2`, and `mono-semibold-latin.woff2`. Production tests checked both font families loaded.
+All fonts are local WOFF2 files in `public/assets/`, with preload links in `index.html`. Pixel is Press Start 2P 400 with a monospace fallback. Mono is IBM Plex Mono 400/600, then Courier New/monospace. `font-display: swap` is retained. Browser checks confirmed both families loaded.
 
-| Token | Size | Use |
+| Token | Size | Role |
 | --- | --- | --- |
-| `--font-small` | `.75rem` / 12px | Captions, compact controls, item labels, mobile tabs |
-| `--font-label` | `.875rem` / 14px | Standard controls, supporting descriptions |
-| `--font-body` | `1rem` / 16px | Body, forms, component headings |
-| `--font-title` | `1.25rem` / 20px | Section headings and counters |
-| `--font-display` | `2rem` / 32px | Page headings and season timer |
-| `--font-logo` | `4rem` / 64px | Desktop landing wordmark |
+| `--font-small`, `--font-label` | `.875rem` / 14px | Minimum captions, labels, controls, supporting copy |
+| `--font-body` | `1rem` / 16px | Body, forms, item and card headings |
+| `--font-title` | `1.25rem` / 20px | Page/section headings, large counters |
+| `--font-display` | `2rem` / 32px | Mobile wordmark, launch figures, season countdown |
+| `--font-logo` | `4rem` / 64px | Desktop wordmark |
 
-This is the entire six-size scale. The root uses 16px/1.6 and weight 400. `h1/h2` use Pixel 400/1.6; `h3/h4` use Mono 600/1.5. The guide uses Mono headings to keep instructions compact. Farm’s `#rooms-title` is its single `h1`, using the existing 20px section role (16px/1.7 below 580px); individual room `h2` titles retain Mono 600/1.5 at 14px. Page headings step down to the 20px role at narrower widths. Mobile form controls use 16px, including item room selectors and referral inputs.
+Six semantic tokens resolve to five sizes. The root uses 16px/1.6 at weight 400. Pixel headings use 400, with 1.6–1.9 line-height for the blocky letterforms; Mono headings use 600/1.5. The hero wordmark uses 1.3 and −2px letter spacing on desktop, resetting spacing on mobile. No small tracked uppercase eyebrow system is used.
 
-Headings balance lines; paragraphs use pretty wrapping; long text can break. No additional letter spacing is introduced. Navigation capitalization is CSS presentation. Timers, balances, XP and ranking values use tabular numerals. Docs uses a 75ch column, 70ch paragraphs and 1.75 line-height; dispatcher copy uses 58ch/1.85. Supporting text is smaller without creating another type scale.
+Headings balance; paragraphs use pretty wrapping. Supporting landing copy uses 1.7–1.8 line-height; docs retain a 75ch column and 70ch paragraphs. Timers, balances and prices use tabular numbers. Mobile input/select text remains 16px. Visible text was checked at 14px minimum. The interface supports 200% root text enlargement; this is distinct from native browser zoom.
 
 ## Layout
 
-Use `.wrap` for a maximum 1200px content width and shared alignment edges. Side gutters are 32px desktop, 20px below 820px, and 16px below 580px. Existing spacing tokens `--space-1` through `--space-8` are 4, 8, 12, 16, 24, 32, 48 and 80px; component rules also use corresponding literal values. Major panels use 24px padding and grids use 24px gaps. Mobile inventory and guide panels use 16px padding.
+`.wrap` has a 1200px maximum width, with 32px desktop, 20px intermediate and 16px phone gutters. Existing spacing tokens are 4, 8, 12, 16, 24, 32, 48 and 80px. Major landing sections use 88px vertical spacing, reduced to 56px at 680px; hardware uses 64/48px. Panels typically use 24px padding, reduced to 16–20px on phones.
 
-| Component | Expanded layout | Adaptation |
+| Pattern | Desktop | Responsive behavior |
 | --- | --- | --- |
-| `.game-topbar` | Five columns: hash, balance, claim, epoch, level | Three columns with a second row below 1120px; 12px inset and smaller role sizes at 600px |
-| `.game-nav` | Six header links, current tab underlined | Fixed six-column bottom bar at 600px, text plus symbols, safe-area padding; absent on landing |
-| `.farm-layout` | Rooms 1.5fr / inventory 1fr | Single column at 820px |
-| `.room-slots` | Three columns / six slots | Retains three columns, smaller gaps and art on phones |
-| `.inventory` | Three columns of item disclosures | Two columns at 600px; an expanded item spans two columns |
-| `.city-layout` | Map 1.2fr / dispatcher 1fr | Single column at 820px; district grid adapts between four/two columns |
-| `.season-layout`, `.wallet-layout` | Two equal columns | Single column at 820px; season countdown/prizes precede standings |
-| Pack lab | Pack stage plus reveal area | Stacked at 820px, existing compact mobile reveal treatment retained |
-| Docs | Sticky contents and reading column | Single column on phones; tables scroll inside labeled regions |
+| Header/HUD | Sticky 64px header; single compact status row below | 60px header at 600px; two compact HUD rows; Sync stays available |
+| Navigation | Six header links, underlined current tab | Six fixed bottom tabs at 600px, with labels, symbols and safe-area padding; hidden on landing |
+| Hero | Centered 64px wordmark over a 960×420 scene | 32px wordmark; art crops deliberately; Play demo is in the first 390px viewport |
+| How it works | Four columns | Two columns at 940px |
+| Hardware | Scrollable, snap-aligned 218px cards | 202px cards; visible overflow cue, native scrollbar and arrow controls |
+| Grid event cards | Three columns | One column at 680px, each with a narrow illustration column |
+| Swarm/launch/FAQ | Two columns | One column at 680px |
+| Farm | Rooms 1.5fr / inventory 1fr | One column at 820px; room slots stay three across, inventory two at 600px |
+| City | Map and dispatcher side by side | One column at 820px; four districts across, two at 600px |
+| Season/wallet | Two columns | One at 820px |
+| Pack lab | Pack stage beside three cards | Stacked at 820px; 128px pack-art stage on phones puts purchase above tabs; cards scroll horizontally below 380px |
+| Docs | Contents alongside reading column | Stacked at 820px; labeled tables scroll within their own region |
 
-The top bar is in normal document flow, leaving reading space on small screens. Bottom navigation is fixed at z-index 40, with matching body bottom clearance. Notifications sit above it. The guide stays in flow, rather than obscuring controls with a modal overlay. Item menus expand in their grid and cannot escape the viewport. Closed menus show just art, identity, rarity, condition/hash and a disclosure cue. Generic rerenders retain open disclosures, focus and field values.
-
-Farm starts directly with Mining rooms, its room count and “Six slots. One of each item type.” Its `.inner-page` top padding is 16px at widths up to 600px (`src/style.css`); other pages retain their existing spacing. At 390×844 with the first-play guide visible, both fresh entry paths show the room header and complete starter GPU sprite above the bottom navigation. This is a first-screen preview of the hardware, not the entire six-slot room; the rest remains scrollable.
-
-All seven routes were rendered at 320, 390, 768 and 1440 CSS pixels with no document overflow. A separate 390px check enlarged the root text to 200%; this is not browser-native zoom. Physical device safe-area behavior was not tested.
+Coach marks are fixed overlays anchored to the real navigation/action element, not part of document flow. They flip above the target when needed, hide when its target is offscreen, and reposition on scroll/resize. The guide can be dismissed or replayed from Docs. At 390px the pack action is above the bottom tabs; farm title and starter equipment remain visible. All seven routes were checked at 320, 390, 768 and 1440 CSS pixels without document overflow.
 
 ## Elevation & Depth
 
-Tonal panels and one-pixel borders provide structure. Standard buttons use `3px 3px 0 #0006`; yellow primary buttons use `4px 4px 0 #6a561e`, reduced to a two-pixel offset for the mobile claim. Item-menu buttons drop that shadow. Rooms retain the tiled wall, pipes, five-pixel floor border and inset floor shadow. The hero retains its pixel city and dark text overlay.
+Square tonal panels and one-pixel borders organize the UI. Buttons use hard 3–4px offset shadows; hover adds a restrained glow. Rooms retain pipes and tiled surfaces. The hero uses far silhouettes, mid buildings and near roofs, moved at different scroll rates. Rain, drones, smoke, lit windows and the central tower supply depth without text labels on buildings.
 
-Notifications use z-index 30 and `0 8px 40px #0009`. The decorative Mythic flash is pointer-transparent at z-index 50; the skip link uses 100. Native dialogs occupy the browser top layer, with the existing dark/blurred backdrop, maximum 500px width and 85vh height. The guide’s cyan two-pixel outline highlights a control without blocking pointer input.
+The header is z-index 40, HUD 25, coach 55, bottom nav 60, messages 70, level badge 72 and boot 100. Native dialogs use the browser top layer and a dark translucent backdrop. Decorative glows/scanlines are pointer-transparent. Coach shadows are `0 12px 32px #0009`; item rarity glows are modest drop shadows.
 
 ## Shapes
 
-Square corners are intentional. Fields, meters and progress bars have zero radius. Empty room slots have dashed borders, installed items solid rarity borders, and open item menus cyan borders. Progress and durability use flat bars with written values. SVG sprites use crisp edges and `image-rendering: pixelated`; repeated illustrations reuse the existing registry rather than a new icon package.
+Square corners, stepped silhouettes, pixel rects and crisp edges are intentional. Do not round cards or blur the sprite shapes. Empty slots use dashed borders; installed items use solid rarity borders. All hardware has an explicit 64×64 viewBox. Scene viewBoxes are 960×420 (city), 104×100 (district), 128×128 (dispatcher), 76×96 (pack) and 100×128 (tower). Artwork uses `shape-rendering: crispEdges` and `image-rendering: pixelated`.
 
 ## Components
 
-- **Page shell:** `pageHeading()`, `.wrap`, `.inner-page` and route dispatch in `src/main.ts`. Each page has one `h1`; Farm uses Mining rooms directly instead of a separate intro block. Links use hash routes and `aria-current="page"` for navigation.
-- **Farm status:** `gameTopbar()` exposes shared values and a large CLAIM action. A native progress bar carries an accessible XP label. Age-gated progress explicitly says which farm day is needed. The sync line shows Synced or the number of outstanding epochs, with SYNC available on every tab.
-- **Guide:** `onboarding()` renders four numbered steps and an explicit skip/next control. It progresses through real pack reveals, installation, an epoch and claim. Docs can replay it. Cross-page controls are links; local actions are buttons. Highlights use `.guide-highlight`. Preference storage is optional.
-- **Warnings:** `miningWarnings()` gives a reason and a recovery control for empty/idle farms, broken or worn installed hardware, affected outage/theft/audit events and insufficient repair funds. Installed hardware with durability above 0 and below 100 triggers Repair hardware even without an active event; local fire damage retains contextual wording, and the wear warning persists after the fire expires. Worn spares do not trigger it. Separate shortcuts focus worn versus broken installed items. Color is redundant with text. A stable status region announces changes; errors use a separate alert region.
-- **Items/rooms:** `roomPanel()` and `inventoryPanel()` use native `details/summary`. Each item owns its menu. Installed items offer removal and repair; spares offer room selection, installation, repair and confirmed scrap. Active combos are compact chips; missing combinations and overclock are disclosed in room settings. No merging or electricity reserve UI exists.
-- **Buttons/forms:** `.button`, `.primary`, `.compact`, `.full`, `.text-button` reuse the palette and 44–48px target sizes. CLAIM is the persistent primary; the pack page retains its purchase primary as required. Native radio groups, labels, selects and number inputs retain browser keyboard behavior. Invalid withdrawals have linked text and `aria-invalid`.
-- **Confirmations:** Native `dialog` for scrap, reset, overclock and withdrawals, with descriptive action labels, Cancel initially focused, Escape support and return focus. Overclock shows rising cost, hash, wear, power and tariff before confirmation. A stale withdrawal tax requires a new preview.
-- **Season/city/wallet:** Shared panels, lists, native disclosures and labels; the leaderboard uses aligned rank/name/score columns and text for the player’s district. Claim availability, lottery entry and NFT credit states are explicit.
-- **Demo tools:** One closed `details` panel per game route. Its clock controls are clearly separated from farm actions and do not sync the farm.
-- **Motion:** Existing one-off card/pack effects and decorative loops remain within reduced-motion rules. The footer can disable motion. Reduced motion disables animations/transitions; ordinary button feedback uses the existing short transition and 0.96 press scale. No new persistent animation was added.
+- **Shared art:** `spriteSheet()`, `itemSprite(type, rarity, className, durability)`, `districtSprite(index, event, className)`, `sprite(name, className)` in `src/sprites.ts`. Twelve hardware symbols are defined once and referenced with SVG `<use>` throughout the landing, rooms, inventory and reveals. Common is plain; Rare has cyan trim, Epic sparks, Legendary shimmer and Mythic a red electric aura. Damaged art adds cracks, with smoke for worn gear. The standalone download uses the same drawing registry.
+- **Landing:** `landing()` in `src/landing.ts` contains the four-step illustrations, 12-item row, three sample dispatches, hooded dispatcher, exact launch terms and five native FAQ disclosures. Links lead to working hash routes. The hardware row scrolls natively and supports buttons/keyboard.
+- **Page shell:** `pageHeading()`, `.wrap`, `.inner-page`, the hash dispatcher and `gameTopbar()` in `src/main.ts`. Each route has one h1. Header links use `aria-current`. The HUD provides hash, balance, claim, epoch and sync; detail density reduces at narrow sizes without removing the claim/sync actions.
+- **Warnings:** `miningWarnings()` shows one relevant strip with an action and dismiss control. Worn installed hardware warns only below 50% durability; broken equipment has a separate higher-priority warning. Dismissal is in memory for that warning signature. Stable live regions announce status/errors.
+- **Coach marks:** `onboarding()`/`highlightGuide()` point at pack opening, inventory, epoch and claim. Actual gameplay advances the optional four-step guide; no duplicate purchase action is introduced.
+- **Item menus:** Native details/summary for install/remove/repair/scrap. Open menu state, field values and focus survive rerenders. Room settings disclose combo explanations and overclock. Scrap, reset, withdrawals and overclock retain native confirmation dialogs with Cancel focus, Escape and focus return.
+- **Controls:** `.button` plus primary/compact/full variants. Minimum ordinary target 44px; fixed close controls are at least 32–40px. Focus is a 3px yellow outline with 4px offset, with system Highlight in forced colors. Native fields have persistent labels and withdrawal errors are associated with the field.
+- **Motion/sound:** `src/effects.ts` holds presentation effects only. Boot is one second, once per session and skippable; the 800ms logo flicker begins after that screen clears. City waves recur at 9–11 second intervals and restore power after 2.2 seconds; every third wave includes a substation strike. Pack opening lasts 850ms, sequential reveals 400ms apart, claim count-up 650ms and token burst 900ms. Tab CRT feedback is 140ms. Legend/Mythic get a one-off screen flash. Sound is off until explicitly enabled and synthesized locally with Web Audio. The visible Pause city and footer toggle disable motion; reduced motion removes parallax, flashes, looping animation and sequence delays.
+- **Sharing:** Epic+ revealed cards expose an X intent and `Download pixel card`. `downloadPixelCard()` exports a local 1000×1200 PNG; it does not upload anything. `index.html` supplies shared OG/Twitter metadata for all hash routes. Social image is 1200×630; favicon and 512px app icon use the header logo.
 
 ## Do’s and Don’ts
 
-Start another page with the shared route shell, `.wrap`, status bar and `pageHeading()`. Use existing palette/type tokens and native controls. Keep game numbers under the persistent “Beta values, may change” label and make all money-related copy explicit about demo mode.
+Reuse the existing hex tokens, five-size type scale, `.wrap`, native disclosures and shared atlas. Preserve the no-wallet demo and keep all gameplay numbers in the existing config/rules. New art must have an explicit viewBox and share the same item definitions rather than invent a second item style.
 
-Keep item actions next to the item and secondary controls in disclosures. Preserve visible keyboard focus: three-pixel yellow outlines with four-pixel offset, and system Highlight in forced colors. Preserve local art/fonts and relative asset URLs. Do not add a wallet connection, new font/scale, another theme, auto-playing explanation overlay or a second settings dashboard for this demo.
+Use a filled yellow action for the important next step. Keep practical button labels and written rarity/event states; never rely only on glow, color or animation. Preserve reduced motion and optional sound. For a new game page, add a hash route, the shared shell and one h1, then use existing panels and field patterns. Avoid introducing a new font, wallet flow, external asset dependency or blocking onboarding panel.
 
-The current six-domain revision review, reproduced findings and unperformed checks are recorded in `reports/fidelity-validation.md`; the broader implementation review is in `reports/tabs-validation.md`. This is an implementation record, not a promise about the future on-chain game.
+Current review and evidence: `reports/polish-validation.md`. Earlier reports remain historical. Design/documentation guidance attribution and licenses are retained in `NOTICE.md` and `licenses/`.

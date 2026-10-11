@@ -1,0 +1,269 @@
+{
+  "runAt": "2026-10-11T11:44:03.418Z",
+  "export": "dist/",
+  "subpath": "/preview/",
+  "checks": [
+    "390px landing: product, main action, launch message and metadata",
+    "Mobile coach marks: real pack, reveal, install, epoch and claim controls; replay and dismiss persist",
+    "Six focused routes share the HUD and keep demo controls collapsed",
+    "Item menus: install/remove, repair, scrap confirmation and capacity recovery",
+    "Overclock previews all five levels, rising costs, wear and power; keyboard escape returns focus",
+    "Polling does not sync; idle pauses new rewards, sync preserves accrued rewards and resumes mining",
+    "Low balance warning offers a working refill path; costs remain a tariff, with no reserve",
+    "City map, current event, lobby accounting, district movement and dispatch history",
+    "Wallet withdrawal tax preview and confirmation, referrals, NFT pack and free pack use",
+    "Season synced score, capped leaderboard, deadline and one-time reward claim",
+    "Event banners give fixes; audits use the hash threshold; XP shows day gates",
+    "Changed withdrawal tax cannot silently bypass its confirmation preview",
+    "Docs match live rules, replay onboarding, relative assets work offline after loading",
+    "Responsive reflow, bottom tabs, semantic accessibility and contrast across routes",
+    "Keyboard-only pack, install and claim flow",
+    "Text enlargement and storage failure keep actions accessible",
+    "All landing sections, 12 atlas sprites, hardware scrolling, FAQ, launch terms and sound opt-in",
+    "Worn warning threshold, single dismissible strip, precise repair focus and shared damage art",
+    "Eight district landmarks, player highlight and all requested event visuals",
+    "Epic+ X intent and a real downloadable PNG; Common pulls do not prompt sharing",
+    "Reduced motion disables animation, preserves reveals and pauses the city control"
+  ],
+  "failures": [],
+  "consoleErrors": [],
+  "failedRequests": [],
+  "viewports": [
+    {
+      "route": "home",
+      "width": 320,
+      "overflow": false
+    },
+    {
+      "route": "farm",
+      "width": 320,
+      "overflow": false
+    },
+    {
+      "route": "packs",
+      "width": 320,
+      "overflow": false
+    },
+    {
+      "route": "city",
+      "width": 320,
+      "overflow": false
+    },
+    {
+      "route": "season",
+      "width": 320,
+      "overflow": false
+    },
+    {
+      "route": "wallet",
+      "width": 320,
+      "overflow": false
+    },
+    {
+      "route": "docs",
+      "width": 320,
+      "overflow": false
+    },
+    {
+      "route": "home",
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "route": "farm",
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "route": "packs",
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "route": "city",
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "route": "season",
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "route": "wallet",
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "route": "docs",
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "route": "home",
+      "width": 768,
+      "overflow": false
+    },
+    {
+      "route": "farm",
+      "width": 768,
+      "overflow": false
+    },
+    {
+      "route": "packs",
+      "width": 768,
+      "overflow": false
+    },
+    {
+      "route": "city",
+      "width": 768,
+      "overflow": false
+    },
+    {
+      "route": "season",
+      "width": 768,
+      "overflow": false
+    },
+    {
+      "route": "wallet",
+      "width": 768,
+      "overflow": false
+    },
+    {
+      "route": "docs",
+      "width": 768,
+      "overflow": false
+    },
+    {
+      "route": "home",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "route": "farm",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "route": "packs",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "route": "city",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "route": "season",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "route": "wallet",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "route": "docs",
+      "width": 1440,
+      "overflow": false
+    }
+  ],
+  "accessibility": [
+    {
+      "route": "farm",
+      "violations": [],
+      "incomplete": [
+        "aria-prohibited-attr",
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "packs",
+      "violations": [],
+      "incomplete": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "city",
+      "violations": [],
+      "incomplete": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "season",
+      "violations": [],
+      "incomplete": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "wallet",
+      "violations": [],
+      "incomplete": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "docs",
+      "violations": [],
+      "incomplete": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "overclock dialog",
+      "violations": [],
+      "incomplete": [
+        "color-contrast"
+      ]
+    }
+  ],
+  "screenshots": [
+    "artifacts/screenshots/after-landing-390.png",
+    "artifacts/screenshots/after-overclock-390.png",
+    "artifacts/screenshots/after-city-desktop.png",
+    "artifacts/screenshots/after-season-desktop.png",
+    "artifacts/screenshots/after-farm-390.png",
+    "artifacts/screenshots/after-farm-desktop.png",
+    "artifacts/screenshots/after-keyboard-focus.png",
+    "artifacts/screenshots/after-landing-desktop.png",
+    "artifacts/screenshots/after-district-theft.png",
+    "artifacts/screenshots/after-epic-share.png"
+  ],
+  "contrast": [
+    {
+      "name": "HUD label (page background reference)",
+      "color": "rgb(179, 191, 211)",
+      "background": "rgb(5, 6, 15)",
+      "ratio": 10.880972499767172
+    },
+    {
+      "name": "HUD value (page background reference)",
+      "color": "rgb(57, 230, 255)",
+      "background": "rgb(5, 6, 15)",
+      "ratio": 13.408395584912455
+    },
+    {
+      "name": "Primary text",
+      "color": "rgb(11, 16, 32)",
+      "background": "rgb(255, 230, 0)",
+      "ratio": 14.939311198327193
+    },
+    {
+      "name": "Body",
+      "color": "rgb(237, 242, 255)",
+      "background": "rgb(5, 6, 15)",
+      "ratio": 18.035157545026774
+    },
+    {
+      "name": "Warning",
+      "color": "rgb(255, 230, 0)",
+      "background": "rgb(32, 30, 21)",
+      "ratio": 13.172768902800389
+    }
+  ]
+}

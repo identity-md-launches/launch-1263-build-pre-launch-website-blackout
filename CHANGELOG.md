@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-10-11 — Living city, art and landing polish
+
+- Rebuilt the skyline with three parallax layers, eight landmarks, a red-eye dispatcher tower, blackout waves, lightning, rain, smoke and drones. Removed building word labels.
+- Filled the landing with illustrated steps, all twelve hardware types, grid dispatches, the hooded swarm operator, exact launch terms and five FAQs.
+- Redrew hardware as a shared 64×64 atlas with rarity and damage treatments. Added district identities, event overlays and the player highlight.
+- Replaced stacked onboarding/warnings with floating coach marks and one dismissible strip. Worn alerts start below 50%; sticky controls and 14px-minimum text leave room for the game.
+- Added session boot, CRT/pack/claim/level feedback, optional sound, reduced-motion support, Epic+ X intents, downloadable cards and refreshed social/app assets.
+- Preserved game engine and numeric configuration. Kept the exact `blackout-mine-the-city-pray-the` label. Rebuilt `dist/`; typecheck/build, 67 unit/docs tests, 21 interaction scenarios and 12 motion/performance groups passed.
+
+| View | Before | After |
+| --- | --- | --- |
+| Landing, desktop | [Before](reports/polish/screenshots/before-landing-desktop.png) | [After](reports/polish/screenshots/after-landing-desktop.png) |
+| Landing, 390px | [Before](reports/polish/screenshots/before-landing-390.png) | [After](reports/polish/screenshots/after-landing-390.png) |
+| Farm, 390px | [Before](reports/polish/screenshots/before-farm-390.png) | [After with coach](reports/polish/screenshots/after-coach-390.png) |
+
+Also: [full mobile landing](reports/polish/screenshots/after-landing-full-390.png), [city](reports/polish/screenshots/after-city-desktop.png), [Epic+ sharing](reports/polish/screenshots/after-share-390.png), [six-domain review](reports/polish-validation.md). Before images were captured from the original export at the start of this assignment. Sharing evidence uses explicit rarity fixtures.
+
+Earlier entries below describe earlier implementations and checks.
+
 ## Review revision: visible rooms and wear recovery
 
 - Removed the duplicate Farm intro and shortened its room instruction; the first room and starter GPU now appear above the tabs at 390×844 with onboarding retained.

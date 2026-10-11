@@ -3,7 +3,9 @@ import { game } from './game/adapter';
 import { activeEvent, actualSpend, auditEligibility, claimable, districtStandings, epochsToSync, isIdle, COSTS, DISTRICTS, electricityTariff, equippedIds, EVENT_LABELS, findItem, hasCombo, inventoryUsed, itemDetail, overclockCost, packPrice, roomCombos, roomHashrate, roomItems, roomUnlocks, tokenPackPrice, totalHashrate, withdrawTax } from './game/rules';
 import { RARITIES } from './game/types';
 import type { GameState, Item, PackCurrency, Room } from './game/types';
-import { itemSprite, sprite } from './sprites';
+import { itemSprite, sprite, spriteSheet, districtSprite, districtArt } from './sprites';
+import { landing } from './landing';
+import { bootScreen, initAtmosphere, claimFeedback, levelFeedback, soundEnabled, toggleSound, playSound, downloadPixelCard, shareIntent } from './effects';
 import { renderDocs } from './docs';
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
@@ -21,6 +23,11 @@ const saveGuide = () => { try { localStorage.setItem('blackout.guide.v1', JSON.s
 let filter = 'All';
 let pendingFix: string | null = null;
 let lastWarning = '';
+const dismissedWarnings = new Set<string>();
+let warningKey = '';
+let lastLevel = state.level;
+let lastEvent = state.events[0]?.id;
+let claimStart: number | null = null;
 let currency: PackCurrency = 'eth';
 let busy = false;
 let opening = false;
@@ -35,12 +42,12 @@ const lock = (item: Item) => state.level < config.rarity[item.rarity].level;
 const cost = (n: number) => num(actualSpend(n), 2);
 const capacity = () => state.inventoryCapacity - inventoryUsed(state);
 
-$('#app').innerHTML = `
+$('#app').innerHTML = `${spriteSheet()}
 <a class="skip-link" href="#main">Skip to content</a>
 <header class="site-header wrap">
   <a class="brand" href="#/" aria-label="BLACKOUT home">${sprite('mascot')}<span>BLACKOUT</span></a>
   <nav class="game-nav" aria-label="Game tabs">${['farm','packs','city','season','wallet','docs'].map((name, i) => `<a href="#/${name}" data-route="${name}"><span class="nav-symbol" aria-hidden="true">${['▦','▣','▥','★','◈','≡'][i]}</span>${name}</a>`).join('')}</nav>
-  <span class="mode-label"><i aria-hidden="true"></i>${isDemo ? 'DEMO MODE' : 'CHAIN MODE'}</span>
+  <button class="sound-toggle" id="sound-toggle" aria-label="Sound: ${soundEnabled() ? 'on' : 'off'}" aria-pressed="${soundEnabled()}"><span aria-hidden="true">♪</span><span class="sound-label">Sound ${soundEnabled() ? 'on' : 'off'}</span></button><span class="mode-label"><i aria-hidden="true"></i>${isDemo ? 'DEMO MODE' : 'CHAIN MODE'}</span>
 </header>
 <div class="demo-strip"><div class="wrap">${isDemo ? 'No wallet. No real money.' : 'Farm state is provided by the connected game adapter.'}<span>Beta values, may change</span></div></div>
 <div id="storage-warning" class="wrap warning" hidden></div>
@@ -86,15 +93,6 @@ async function act(action: () => Promise<unknown>, message?: string, renderAfter
   }
   finally { busy = false; }
 }
-function hero() {
-  return `<section class="landing-hero" aria-labelledby="hero-title"><div class="hero-city">${sprite('city')}</div><div class="hero-copy wrap">
-    <h1 id="hero-title">BLACK<span>O</span>UT</h1><p class="tagline">Open packs. Mine the city.<br>Pray the grid stays on.</p><p class="hero-description">A pixel-art idle mining game.</p>
-    <div class="hero-actions"><a class="button primary" href="#/farm">Play demo <span aria-hidden="true">→</span></a><a class="button" href="#/docs">Read docs</a>${xLink('Follow on X', 'button quiet')}</div>
-    <span class="launch-badge">${sprite('bolt')} Launching soon on Robinhood Chain</span>
-  </div><div class="city-caption wrap"><span>Eight districts. One unreliable grid.</span><span>Operated by the IMD swarm</span></div></section>
-  <section class="landing-steps wrap" aria-label="How to play"><div>${sprite('pack')}<p><strong>Crack a pack.</strong><br>Find hardware. Chase rare pulls.</p></div><div>${sprite('gpu')}<p><strong>Build your farm.</strong><br>Mix six items. Find your combos.</p></div><div>${sprite('tower')}<p><strong>Weather the swarm.</strong><br>The city changes every epoch.</p></div></section>
-  <div class="landing-note wrap"><p>The power is temporary. Your next move is yours.</p><a href="#/docs/what-is-blackout">Meet BLACKOUT <span aria-hidden="true">↗</span></a></div>`;
-}
 function pageHeading(title: string, description: string, aside = '') {
   return `<div class="page-heading"><div><h1>${title}</h1>${description ? `<p>${description}</p>` : ''}</div>${aside}</div>`;
 }
@@ -106,7 +104,7 @@ function roomPanel(room: Room) {
   const combos = roomCombos(state, room).filter(c => c.active);
   return `<article class="mining-room"><div class="room-title"><h2>Room ${String(room.id + 1).padStart(2, '0')}</h2><span>${num(roomHashrate(state, room))} H/s</span></div><div class="room-scene"><div class="room-pipes" aria-hidden="true"></div><div class="room-slots">${room.slots.map((id, index) => {
     const item = findItem(state, id);
-    return item ? `<details class="farm-slot filled ${item.rarity.toLowerCase()} item-menu" id="installed-${item.id}"><summary id="slot-${room.id}-${index}" aria-label="${esc(item.type)} actions, room ${room.id + 1}, slot ${index + 1}">${itemSprite(item.type, item.rarity)}<strong>${esc(item.type)}</strong><span>${esc(item.rarity)}</span><meter min="0" max="100" value="${item.durability}" aria-label="Durability ${num(item.durability)} percent"></meter><small>${item.durability === 0 ? 'Broken' : `${num(item.durability)}% durability`} <span aria-hidden="true">▾</span></small></summary><div class="item-actions"><button class="button compact" data-unplace="${room.id},${index}" id="remove-${item.id}">Remove</button><button class="button compact" data-repair-item="${item.id}" id="repair-${item.id}" ${item.durability === 100 ? 'disabled' : ''}>Repair · ${cost(COSTS.repair)}</button></div></details>` : `<button id="slot-${room.id}-${index}" class="farm-slot" data-place="${room.id},${index}" aria-label="Choose an item for room ${room.id + 1}, slot ${index + 1}"><span class="slot-plus" aria-hidden="true">+</span><strong>Slot ${index + 1}</strong><small>Install hardware</small></button>`;
+    return item ? `<details class="farm-slot filled ${item.rarity.toLowerCase()} item-menu" id="installed-${item.id}"><summary id="slot-${room.id}-${index}" aria-label="${esc(item.type)} actions, room ${room.id + 1}, slot ${index + 1}">${itemSprite(item.type, item.rarity, '', item.durability)}<strong>${esc(item.type)}</strong><span>${esc(item.rarity)}</span><meter min="0" max="100" value="${item.durability}" aria-label="Durability ${num(item.durability)} percent"></meter><small>${item.durability === 0 ? 'Broken' : `${num(item.durability)}% durability`} <span aria-hidden="true">▾</span></small></summary><div class="item-actions"><button class="button compact" data-unplace="${room.id},${index}" id="remove-${item.id}">Remove</button><button class="button compact" data-repair-item="${item.id}" id="repair-${item.id}" ${item.durability === 100 ? 'disabled' : ''}>Repair · ${cost(COSTS.repair)}</button></div></details>` : `<button id="slot-${room.id}-${index}" class="farm-slot" data-place="${room.id},${index}" aria-label="Choose an item for room ${room.id + 1}, slot ${index + 1}"><span class="slot-plus" aria-hidden="true">+</span><strong>Slot ${index + 1}</strong><small>Install hardware</small></button>`;
   }).join('')}</div></div><div class="room-combos"><div class="combo-chips" aria-label="Active room combos">${combos.length ? combos.map(c => `<span class="combo-chip">✓ ${esc(c.name)}${c.bonus ? ` +${pct(c.bonus)}` : ''}</span>`).join('') : '<span class="muted small">No combos yet. Try Power Supply + Liquid Cooling.</span>'}</div><details id="combos-${room.id}"><summary>Combo guide &amp; room settings</summary>${comboList(room, true)}<div class="room-controls"><button id="repair-room-${room.id}" class="text-button" data-repair="${room.id}">Repair room · ${cost(COSTS.repair)}</button><button id="overclock-${room.id}" class="button compact" data-overclock="${room.id}" ${room.overclock >= config.overclock.maximum ? 'disabled' : ''}>${room.overclock >= config.overclock.maximum ? 'Overclock at max' : `Overclock · ${cost(overclockCost(room))}`}</button></div><p class="small muted">Overclock ${room.overclock}/${config.overclock.maximum}. Preview hash, extra wear and power before paying. Combo hash bonus cap: ${pct(config.combos.hashCap)}.</p></details><p class="room-tariff small muted">Electricity: ${tariffPct(electricityTariff(state, room))} of this room’s mining · withheld each epoch.</p></div></article>`;
 }
 function inventoryPanel() {
@@ -114,7 +112,7 @@ function inventoryPanel() {
   const spares = state.inventory.filter(i => !equipped.has(i.id));
   const shown = spares.filter(i => filter === 'All' || config.items[i.type].tag === filter);
   return `<aside class="panel inventory-panel" aria-labelledby="inventory-title"><div class="section-heading"><h2 id="inventory-title" tabindex="-1">Inventory</h2><span>${inventoryUsed(state)} / ${state.inventoryCapacity} slots</span></div><p class="muted small">Open an item’s menu to install, repair or scrap.</p><label class="filter-label" for="inventory-filter">Show items <select id="inventory-filter">${['All', 'compute', 'power', 'cooling', 'network', 'infra'].map(t => `<option ${t === filter ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
-    <div class="inventory">${shown.map(i => `<details id="spare-${i.id}" class="inventory-item item-menu ${i.rarity.toLowerCase()}"><summary id="item-${i.id}" aria-label="${esc(i.type)} actions, ${i.rarity}">${itemSprite(i.type, i.rarity)}<strong>${esc(i.type)}</strong><span>${esc(i.rarity)}</span><small>${lock(i) ? `Level ${config.rarity[i.rarity].level} required` : `${itemDetail(i).split(' · ')[0]}`} <span aria-hidden="true">▾</span></small></summary><div class="item-actions">${lock(i) ? `<p class="small warning">Equip at level ${config.rarity[i.rarity].level}. You are level ${state.level}.</p>` : `<label for="install-room-${i.id}">Install in room</label><select id="install-room-${i.id}">${state.rooms.map(r => `<option value="${r.id}">Room ${r.id + 1}</option>`).join('')}</select><button id="install-${i.id}" data-install-item="${i.id}" class="button compact">Install item</button>`}<button data-repair-item="${i.id}" id="repair-spare-${i.id}" class="button compact" ${i.durability === 100 ? 'disabled' : ''}>Repair · ${cost(COSTS.repair)}</button><button data-scrap-item="${i.id}" id="scrap-${i.id}" class="text-button danger">Scrap · +${config.rarity[i.rarity].scrap}</button></div></details>`).join('')}</div>
+    <div class="inventory">${shown.map(i => `<details id="spare-${i.id}" class="inventory-item item-menu ${i.rarity.toLowerCase()}"><summary id="item-${i.id}" aria-label="${esc(i.type)} actions, ${i.rarity}">${itemSprite(i.type, i.rarity, '', i.durability)}<strong>${esc(i.type)}</strong><span>${esc(i.rarity)}</span><small>${lock(i) ? `Level ${config.rarity[i.rarity].level} required` : `${itemDetail(i).split(' · ')[0]}`} <span aria-hidden="true">▾</span></small></summary><div class="item-actions">${lock(i) ? `<p class="small warning">Equip at level ${config.rarity[i.rarity].level}. You are level ${state.level}.</p>` : `<label for="install-room-${i.id}">Install in room</label><select id="install-room-${i.id}">${state.rooms.map(r => `<option value="${r.id}">Room ${r.id + 1}</option>`).join('')}</select><button id="install-${i.id}" data-install-item="${i.id}" class="button compact">Install item</button>`}<button data-repair-item="${i.id}" id="repair-spare-${i.id}" class="button compact" ${i.durability === 100 ? 'disabled' : ''}>Repair · ${cost(COSTS.repair)}</button><button data-scrap-item="${i.id}" id="scrap-${i.id}" class="text-button danger">Scrap · +${config.rarity[i.rarity].scrap}</button></div></details>`).join('')}</div>
     ${!shown.length ? '<p class="empty-state">No spare items here. Choose another filter or open a pack.</p>' : ''}
     ${state.pendingPack && !state.pendingPack.revealed.every(Boolean) ? '<p class="small warning">Space reserved for your pack. <a href="#/packs">Reveal the remaining cards.</a></p>' : ''}
     <details id="inventory-space"><summary>${capacity()} spaces free · expand inventory</summary><button class="button full" id="expand">Add ${config.inventory.expansionSlots} slots · ${cost(config.inventory.expansionCost)} tokens</button></details><a class="text-link" href="#/packs">Open another pack →</a>
@@ -123,8 +121,8 @@ function inventoryPanel() {
 function cityPanel() {
   const event = activeEvent(state);
   const latest = state.letters[0];
-  return `<section class="city-section" aria-labelledby="city-title"><div class="section-heading"><h2 id="city-title">City grid</h2><span>Next event in <strong id="city-timer"></strong></span></div><div class="city-layout"><div class="panel map-panel"><div class="section-heading"><h3>District status</h3><span class="badge">${esc(DISTRICTS[state.district])}</span></div><div class="district-map">${DISTRICTS.map((name, i) => `<div class="district ${i === state.district ? 'your-district' : ''} ${(event?.type === 'supply' || event?.district === i) ? 'district-affected' : ''}"><div><span>${String(i + 1).padStart(2, '0')}</span><span>${i === state.district ? 'Your farm' : 'Grid'}</span></div>${sprite('district')}<strong>${name}</strong><small>${(event?.type === 'supply' || event?.district === i) ? EVENT_LABELS[event.type] : 'Online'}</small></div>`).join('')}</div><div class="lobby-row"><div><h3>${state.lobbied ? 'Lobbying filed' : 'Lobby your district'}</h3><p class="muted small">Lower the odds of a bad event targeting your district next epoch. No guaranteed protection.</p></div><button class="button compact" id="lobby" ${state.lobbied ? 'disabled' : ''}>Lobby · ${cost(COSTS.lobby)}</button></div><details id="district-choice"><summary>Move demo district</summary><label for="district-select">Choose district</label><select id="district-select">${DISTRICTS.map((name, i) => `<option value="${i}" ${i === state.district ? 'selected' : ''}>${name}</option>`).join('')}</select><button class="button compact" id="move-district">Move farm</button></details></div>
-    <div class="panel terminal"><div class="terminal-bar"><span><i></i><i></i><i></i></span><span>Grid dispatch / incoming</span>${sprite('tower')}</div><div class="terminal-content"><div class="subheading"><span>Current event</span><span>${event ? event.type === 'supply' ? 'Citywide' : `District ${event.district + 1}` : 'Standing by'}</span></div><h3 class="event-title">${event ? EVENT_LABELS[event.type] : 'Calm'}</h3><p class="event-protection">${esc(event?.protection || 'Build room combos before the next event arrives.')}</p><article id="latest-letter"><h3>${esc(latest?.title || 'Connection established')}</h3><p>${esc(latest?.body || 'Resident. Your meter is ready. Keep the grid productive. — IMD Grid Dispatch')}</p></article><details id="letter-history"><summary>Dispatcher letters (${state.letters.length})</summary><div class="letter-log">${state.letters.slice(1).map(l => `<article><strong>${esc(l.title)}</strong><p>${esc(l.body)}</p></article>`).join('') || '<p class="muted small">New letters arrive every epoch.</p>'}</div></details><a href="#/docs/city-and-swarm-events">Read the event protections →</a></div></div></div></section>`;
+  return `<section class="city-section" aria-labelledby="city-title"><div class="section-heading"><h2 id="city-title">City grid</h2><span>Next event in <strong id="city-timer"></strong></span></div><div class="city-layout"><div class="panel map-panel"><div class="section-heading"><h3>District status</h3><span class="badge">${esc(DISTRICTS[state.district])}</span></div><div class="district-map">${DISTRICTS.map((name, i) => `<div style="--district:${districtArt[i].color}" class="district ${i === state.district ? 'your-district' : ''} ${(event?.type === 'supply' || event?.district === i) ? 'district-affected' : ''}"><div><span>${String(i + 1).padStart(2, '0')}</span><span>${i === state.district ? 'Your farm' : 'Grid'}</span></div>${districtSprite(i, (event?.type === 'supply' || event?.district === i) ? event.type : 'calm')}<strong>${name}</strong><span class="district-landmark">${districtArt[i].landmark}</span><small>${(event?.type === 'supply' || event?.district === i) ? EVENT_LABELS[event.type] : 'Online'}</small></div>`).join('')}</div><div class="lobby-row"><div><h3>${state.lobbied ? 'Lobbying filed' : 'Lobby your district'}</h3><p class="muted small">Lower the odds of a bad event targeting your district next epoch. No guaranteed protection.</p></div><button class="button compact" id="lobby" ${state.lobbied ? 'disabled' : ''}>Lobby · ${cost(COSTS.lobby)}</button></div><details id="district-choice"><summary>Move demo district</summary><label for="district-select">Choose district</label><select id="district-select">${DISTRICTS.map((name, i) => `<option value="${i}" ${i === state.district ? 'selected' : ''}>${name}</option>`).join('')}</select><button class="button compact" id="move-district">Move farm</button></details></div>
+    <div class="panel terminal"><div class="terminal-bar"><span><i></i><i></i><i></i></span><span>Grid dispatch / incoming</span>${sprite('dispatcher')}</div><div class="terminal-content"><div class="subheading"><span>Current event</span><span>${event ? event.type === 'supply' ? 'Citywide' : `District ${event.district + 1}` : 'Standing by'}</span></div><h3 class="event-title">${event ? EVENT_LABELS[event.type] : 'Calm'}</h3><p class="event-protection">${esc(event?.protection || 'Build room combos before the next event arrives.')}</p><article id="latest-letter"><h3>${esc(latest?.title || 'Connection established')}</h3><p>${esc(latest?.body || 'Resident. Your meter is ready. Keep the grid productive. — IMD Grid Dispatch')}</p></article><details id="letter-history"><summary>Dispatcher letters (${state.letters.length})</summary><div class="letter-log">${state.letters.slice(1).map(l => `<article><strong>${esc(l.title)}</strong><p>${esc(l.body)}</p></article>`).join('') || '<p class="muted small">New letters arrive every epoch.</p>'}</div></details><a href="#/docs/city-and-swarm-events">Read the event protections →</a></div></div></div></section>`;
 }
 function seasonPanel() {
   const remaining = Math.max(0, state.season.endsAtEpoch - state.epoch);
@@ -141,7 +139,7 @@ function farm() {
   <div class="farm-layout"><section class="farm-rooms" aria-labelledby="rooms-title"><div class="section-heading"><h1 id="rooms-title">Mining rooms</h1><span>${state.rooms.length} / ${config.rooms.maximum} unlocked</span></div><p class="muted small">Six slots. One of each item type.</p>${state.rooms.map(roomPanel).join('')}<details class="locked-rooms" id="room-unlocks"><summary>Next room unlocks</summary>${roomUnlocks(state).filter(r => !r.unlocked).map(r => `<div class="locked-room">${sprite('room')}<div><strong>Room ${String(r.id + 1).padStart(2, '0')} · Locked</strong><span>${esc(r.requirement)}</span></div></div>`).join('') || '<p>All rooms unlocked.</p>'}</details></section>${inventoryPanel()}</div></div>`;
 }
 function wallet() {
-  return `<div class="wrap inner-page">${pageHeading('Demo wallet.', 'Your tokens, rewards and invitations. No wallet connection needed.')}<div class="wallet-layout"><section class="panel withdraw-panel"><div class="section-heading"><h2>Balance</h2><span>${num(state.tokens,2)} DEMO tokens</span></div><p class="small muted">${num(claimable(state),2)} ready to claim using the button above. ${num(state.ethBalance,3)} simulated ETH for packs.</p><h2>Withdraw</h2><p class="small muted">Tax falls from ${pct(config.economy.withdrawStartTax)} to ${pct(config.economy.withdrawEndTax)} over ${config.economy.withdrawDecayDays} farm days. In-game spending has no withdrawal tax and ${pct(config.economy.spendBonus)} extra buying power.</p><form id="withdraw-form"><label for="withdraw-amount">Amount in DEMO tokens</label><div class="withdraw-row"><input type="number" inputmode="decimal" id="withdraw-amount" aria-describedby="withdraw-preview" min="0.01" step="0.01" placeholder="10.00" required><button class="button" type="submit">Preview withdrawal</button></div><p class="withdraw-preview" id="withdraw-preview">Enter an amount to see what you receive after tax.</p></form><p class="small muted">Simulated withdrawn: ${num(state.withdrawn)} tokens. No transfer is made.</p><details id="money-accounting"><summary>Where demo fees go</summary><p class="small">Packs, lobbying and the sell surcharge: ${pct(config.allocations.packRewardPool)} reward pool / ${pct(config.allocations.packTeam)} team / ${pct(config.allocations.packHeartbeat)} swarm heartbeat. Demo withdrawals model the sell surcharge. Swap fee at launch: ${pct(config.swap.teamFee)} team + ${pct(config.swap.rewardPoolFee)} reward pool. No team tokens. No burns.</p><dl class="tariff-list"><div><dt>Reward pool</dt><dd>${num(state.rewardPoolTokens,2)} tokens</dd></div><div><dt>Team</dt><dd>${num(state.revenue.teamTokens,2)} tokens</dd></div><div><dt>Heartbeat</dt><dd>${num(state.revenue.heartbeatTokens,2)} tokens</dd></div></dl><p class="small muted">Repair, overclock and expansion costs, electricity and audit levies fund the reward pool. ETH pack allocations are tracked separately. All figures are simulated; beta values, may change.</p></details></section>${referralPanel()}</div></div>`;
+  return `<div class="wrap inner-page">${pageHeading('Demo wallet.', 'Your tokens, rewards and invitations. No wallet connection needed.')}<div class="wallet-layout"><section class="panel withdraw-panel"><div class="section-heading"><h2>Balance</h2><span>${num(state.tokens,2)} DEMO tokens</span></div><p class="small muted">${num(claimable(state),2)} ready to claim in the top bar. ${num(state.ethBalance,3)} simulated ETH for packs.</p><h2>Withdraw</h2><p class="small muted">Tax falls from ${pct(config.economy.withdrawStartTax)} to ${pct(config.economy.withdrawEndTax)} over ${config.economy.withdrawDecayDays} farm days. In-game spending has no withdrawal tax and ${pct(config.economy.spendBonus)} extra buying power.</p><form id="withdraw-form"><label for="withdraw-amount">Amount in DEMO tokens</label><div class="withdraw-row"><input type="number" inputmode="decimal" id="withdraw-amount" aria-describedby="withdraw-preview" min="0.01" step="0.01" placeholder="10.00" required><button class="button" type="submit">Preview withdrawal</button></div><p class="withdraw-preview" id="withdraw-preview">Enter an amount to see what you receive after tax.</p></form><p class="small muted">Simulated withdrawn: ${num(state.withdrawn)} tokens. No transfer is made.</p><details id="money-accounting"><summary>Where demo fees go</summary><p class="small">Packs, lobbying and the sell surcharge: ${pct(config.allocations.packRewardPool)} reward pool / ${pct(config.allocations.packTeam)} team / ${pct(config.allocations.packHeartbeat)} swarm heartbeat. Demo withdrawals model the sell surcharge. Swap fee at launch: ${pct(config.swap.teamFee)} team + ${pct(config.swap.rewardPoolFee)} reward pool. No team tokens. No burns.</p><dl class="tariff-list"><div><dt>Reward pool</dt><dd>${num(state.rewardPoolTokens,2)} tokens</dd></div><div><dt>Team</dt><dd>${num(state.revenue.teamTokens,2)} tokens</dd></div><div><dt>Heartbeat</dt><dd>${num(state.revenue.heartbeatTokens,2)} tokens</dd></div></dl><p class="small muted">Repair, overclock and expansion costs, electricity and audit levies fund the reward pool. ETH pack allocations are tracked separately. All figures are simulated; beta values, may change.</p></details></section>${referralPanel()}</div></div>`;
 }
 function demoTools() {
   return `<div class="wrap"><details class="demo-tools" id="demo-tools"><summary>Demo tools</summary><p class="small muted">Fast-forward the city clock or top up practice funds. Clock tools do not sync your farm.</p><div class="actions"><button class="button compact" id="next-epoch">Next epoch</button><button class="button compact" id="advance-day">Advance day</button><button class="button compact" id="refill-demo">Refill demo funds</button><button class="button compact" id="simulate-referral">Simulate invitee</button><button class="text-button danger" id="reset">Reset demo</button></div></details></div>`;
@@ -151,10 +149,11 @@ function gameTopbar() {
   const ageGate = Object.entries(config.xp.dayGates).find(([level,day]) => Number(level) === state.level + 1 && state.gameDays < day);
   const xpHint = ageGate && state.xp >= nextXp ? `unlocks day ${ageGate[1]}` : `farm day ${Math.floor(state.gameDays)}`;
   const pending = epochsToSync(state);
-  return `<div class="game-hud wrap"><div class="game-topbar"><div class="hud-stat"><span>Hashrate</span><strong id="total-hash">${num(isIdle(state) ? 0 : totalHashrate(state))} <small>H/s</small></strong></div><div class="hud-stat"><span>Balance</span><strong id="balance">${num(state.tokens)} <small>DEMO</small></strong></div><button id="claim" class="button primary claim-button" ${claimable(state) <= 0 ? 'disabled' : ''}>CLAIM <strong id="unclaimed">${num(claimable(state),2)}</strong></button><div class="epoch-box" id="epoch-clock"><span>Epoch ${state.epoch} in <strong id="epoch-timer"></strong></span><small>45s demo</small></div><div class="level-box"><strong>Level ${state.level}</strong><progress value="${Math.min(state.xp,nextXp)}" max="${Math.max(nextXp,1)}" aria-label="Level XP progress"></progress><span>${num(state.xp,0)} XP · ${xpHint}</span></div></div><div class="sync-line"><span><span class="sync-dot" aria-hidden="true"></span><strong id="sync-status">${pending ? `${pending} epoch${pending === 1 ? '' : 's'} to sync` : 'Synced'}</strong><span class="sync-help"> · Actions sync automatically</span></span><button class="text-button" id="sync" data-sync>SYNC</button></div></div>`;
+  return `<div class="game-hud"><div class="game-topbar wrap"><div class="hud-stat"><span>Hashrate</span><strong id="total-hash">${num(isIdle(state) ? 0 : totalHashrate(state))} <small>H/s</small></strong></div><div class="hud-stat"><span>Balance</span><strong id="balance">${num(state.tokens)} <small>DEMO</small></strong></div><button id="claim" class="button primary claim-button" ${claimable(state) <= 0 ? 'disabled' : ''}>Claim <strong id="unclaimed">${num(claimable(state),2)}</strong></button><div class="epoch-box" id="epoch-clock"><span>Epoch ${state.epoch} <strong id="epoch-timer"></strong></span><small>45s in demo</small></div><div class="level-box"><strong>Level ${state.level}</strong><progress value="${Math.min(state.xp,nextXp)}" max="${Math.max(nextXp,1)}" aria-label="Level XP progress"></progress><span>${num(state.xp,0)} XP · ${xpHint}</span></div><button class="hud-sync" id="sync" data-sync><span class="sync-dot" aria-hidden="true"></span><span id="sync-status">${pending ? `Sync ${pending} epoch${pending === 1 ? '' : 's'}` : 'Synced'}</span><span aria-hidden="true">↻</span></button></div></div>`;
 }
 function focusFix(kind: string) {
-  const el = kind === 'broken' ? document.querySelector<HTMLElement>('.farm-slot:has(meter[value="0"]) summary') : kind === 'damaged' ? document.querySelector<HTMLElement>('.farm-slot:has(meter:not([value="0"]):not([value="100"])) summary') : document.querySelector<HTMLElement>('#inventory-title');
+  const damaged = state.inventory.find(i => equippedIds(state).has(i.id) && i.durability > 0 && i.durability < 50);
+  const el = kind === 'broken' ? document.querySelector<HTMLElement>('.farm-slot:has(meter[value="0"]) summary') : kind === 'damaged' && damaged ? document.getElementById(`installed-${damaged.id}`)?.querySelector<HTMLElement>('summary') : document.querySelector<HTMLElement>('#inventory-title');
   el?.scrollIntoView({block:'center'}); el?.focus({preventScroll:true});
 }
 function miningWarnings() {
@@ -165,8 +164,8 @@ function miningWarnings() {
   if (broken.length) warnings.push(banner(`${broken.length} broken item${broken.length === 1 ? '' : 's'} stopped mining. Repair or remove the hardware.`, '<a class="button compact" href="#/farm" data-fix="broken">Fix broken items</a>'));
   if (!equippedIds(state).size) warnings.push(banner('Nothing is installed, so your farm cannot mine.', '<a class="button compact" href="#/farm" data-fix="inventory">Install hardware</a>'));
   const event = activeEvent(state);
-  if (state.inventory.some(i => equippedIds(state).has(i.id) && i.durability > 0 && i.durability < 100)) {
-    const fireDamage = event?.district === state.district && event.type === 'fire' && state.rooms.some(r => !hasCombo(state,r,'cold') && roomItems(state,r).some(i => i.durability > 0 && i.durability < 100));
+  if (state.inventory.some(i => equippedIds(state).has(i.id) && i.durability > 0 && i.durability < 50)) {
+    const fireDamage = event?.district === state.district && event.type === 'fire' && state.rooms.some(r => !hasCombo(state,r,'cold') && roomItems(state,r).some(i => i.durability > 0 && i.durability < 50));
     warnings.push(banner(fireDamage ? 'Server fire damaged your hardware and reduced its mining. Repair the affected items.' : 'Worn hardware is reducing mining. Repair your items to restore output.', '<a class="button compact" href="#/farm" data-fix="damaged">Repair hardware</a>'));
   }
   if (event?.district === state.district) {
@@ -176,34 +175,43 @@ function miningWarnings() {
     if (event.type === 'audit' && auditEligibility(state).eligible) warnings.push(banner('Tax audit: 10% of this epoch’s mining goes to the reward pool. Stored balances stay yours.', '<a class="button compact" href="#/city">Lobby the next event</a>'));
   }
   if (state.tokens < actualSpend(COSTS.repair)) warnings.push(banner('Low balance: repairs need ' + cost(COSTS.repair) + ' DEMO tokens. Electricity comes from mining, so a low balance alone does not stop it.', `<button class="button compact" data-fix-funds>${claimable(state) > 0 ? 'Claim mining' : 'Open Demo tools'}</button>`));
-  return warnings.length ? `<section class="mining-warnings wrap" aria-label="Mining warnings">${warnings.join('')}</section>` : '';
+  warningKey = warnings.find(w => !dismissedWarnings.has(w)) || '';
+  return warningKey ? `<section class="mining-warnings wrap" aria-label="Mining warning">${warningKey}<button id="dismiss-warning" aria-label="Dismiss this warning">×</button></section>` : '';
 }
 function onboarding() {
   if (guide.dismissed) return '';
   const steps = [
-    ['Open a pack', 'Start with a demo pack, then reveal your three cards. Your practice funds are ready.', 'Go to Packs', '#/packs'],
-    ['Install an item', 'In Inventory, open an item’s menu. Choose a room and select Install item.', 'Go to Inventory', '#/farm'],
-    ['Wait for the epoch', 'Working hardware earns mining every 45 seconds here. You can jump ahead in Demo tools.', 'Show epoch timer', '#epoch-clock'],
-    ['Claim your mining', 'CLAIM syncs your farm and adds earned mining to your balance. Then keep building.', 'Show Claim', '#claim']
+    ['Open a pack', 'Three cards. Your practice funds are ready.'],
+    ['Install an item', 'Open an inventory item, choose a room, then select Install item.'],
+    ['Wait for the epoch', 'Your hardware mines every 45 seconds. This timer tracks the next epoch.'],
+    ['Claim your mining', 'Collect earned mining and add it to your demo balance.']
   ];
   const current = steps[guide.step];
-  const inPackStep = guide.step === 0 && route() === 'packs';
-  const unfinished = state.pendingPack && !state.pendingPack.revealed.every(Boolean);
-  const guideAction = inPackStep ? unfinished ? 'Reveal all cards' : `Open pack · ${currency === 'free' ? 'free credit' : currency === 'eth' ? `${num(packPrice(state),5)} demo ETH` : `${cost(tokenPackPrice(state))} tokens`}` : guide.step === 1 && route() === 'farm' ? 'Find an item' : current[2];
-  const localAction = inPackStep || (guide.step === 1 && route() === 'farm') || guide.step >= 2;
-  const control = localAction ? `<button class="button compact" id="guide-action">${guideAction} →</button>` : `<a class="button compact" id="guide-action" href="${current[3]}">${guideAction} →</a>`;
-  return `<section class="onboarding wrap" aria-label="First farm guide"><div class="guide-progress" aria-label="Step ${guide.step+1} of 4">${steps.map((_,i)=>`<span class="${i <= guide.step ? 'complete' : ''}"></span>`).join('')}</div><div class="guide-copy"><div><h2><span class="guide-step">${guide.step+1} / 4</span> ${current[0]}</h2><p>${current[1]}</p></div><button id="skip-guide" class="text-button">Skip</button></div><div class="guide-actions">${control}<button class="text-button" id="guide-next">${guide.step === 3 ? 'Finish guide' : 'Next tip'}</button></div></section>`;
+  return `<aside class="coach-mark" id="coach-mark" aria-label="First farm guide"><div class="coach-title"><strong><span>${guide.step+1}/4</span> ${current[0]}</strong><button id="skip-guide" aria-label="Dismiss guide">×</button></div><p>${current[1]}</p><button class="text-button" id="guide-next">${guide.step===3?'Finish guide':'Next tip'} →</button><i class="coach-pointer" aria-hidden="true"></i></aside>`;
 }
 function highlightGuide() {
   if (guide.dismissed) return;
-  const selector = ['#open-pack', '.inventory', '#epoch-clock', '#claim'][guide.step];
-  document.querySelector(selector)?.classList.add('guide-highlight');
+  const pending = state.pendingPack && !state.pendingPack.revealed.every(Boolean);
+  const selector = guide.step === 0 ? route() === 'packs' ? pending ? '[data-reveal]:not(:disabled)' : '#open-pack' : '[data-route="packs"]' : guide.step === 1 ? route() === 'farm' ? '.inventory-item summary' : '[data-route="farm"]' : guide.step === 2 ? '#epoch-clock' : '#claim';
+  const target = document.querySelector<HTMLElement>(selector);
+  const mark = document.getElementById('coach-mark');
+  if (!target || !mark) return;
+  target.classList.add('guide-highlight');
+  const rect = target.getBoundingClientRect();
+  const nav = target.closest('.game-nav');
+  const below = !(nav && innerWidth <= 600) && rect.bottom + mark.offsetHeight + 20 < innerHeight - (innerWidth <= 600 ? 78 : 16);
+  const top = below ? rect.bottom + 10 : rect.top - mark.offsetHeight - 10;
+  mark.hidden = rect.bottom < (nav ? 0 : 60) || rect.top > innerHeight || top < 0;
+  const left = Math.max(16,Math.min(rect.left,innerWidth - mark.offsetWidth - 16));
+  mark.style.left = `${left}px`; mark.style.top = `${top}px`;
+  mark.classList.toggle('coach-above', !below);
+  mark.style.setProperty('--pointer-x', `${Math.max(16,Math.min(rect.left + rect.width/2 - left, mark.offsetWidth - 20))}px`);
 }
 function packCards() {
   const pack = state.pendingPack;
   return `<div class="cards" id="cards">${Array.from({length:config.packs.items}, (_, i) => {
     const item = pack?.cards[i]; const revealed = !!pack?.revealed[i];
-    if (item && revealed) return `<article class="item-card revealed ${item.rarity.toLowerCase()} ${newlyRevealed === item.id ? 'just-revealed' : ''}"><div class="card-rarity"><span>${item.rarity}</span><span>${String(i + 1).padStart(2, '0')}</span></div><div class="card-art">${itemSprite(item.type, item.rarity)}${Array.from({length:2 + RARITIES.indexOf(item.rarity) * 3}, (_, k) => `<i class="card-particle" style="--i:${k}" aria-hidden="true"></i>`).join('')}</div><h3>${item.type}</h3><p>${itemDetail(item)}</p><span class="card-added">${lock(item) ? `🔒 Equip at level ${config.rarity[item.rarity].level}` : 'Added to inventory'}</span></article>`;
+    if (item && revealed) return `<article class="item-card revealed ${item.rarity.toLowerCase()} ${newlyRevealed === item.id ? 'just-revealed' : ''}"><div class="card-rarity"><span>${item.rarity}</span><span>${String(i + 1).padStart(2, '0')}</span></div><div class="card-art">${itemSprite(item.type, item.rarity, '', item.durability)}${Array.from({length:2 + RARITIES.indexOf(item.rarity) * 3}, (_, k) => `<i class="card-particle" style="--i:${k}" aria-hidden="true"></i>`).join('')}</div><h3>${item.type}</h3><p>${itemDetail(item)}</p><span class="card-added">${lock(item) ? `🔒 Equip at level ${config.rarity[item.rarity].level}` : 'Added to inventory'}</span>${RARITIES.indexOf(item.rarity) >= 2 ? `<div class="share-actions"><a class="button compact" href="${shareIntent(item.type,item.rarity)}" target="_blank" rel="noopener noreferrer">Share on X ↗</a><button class="text-button" data-download-card="${item.id}">Download pixel card ↓</button></div>` : ''}</article>`;
     const next = pack && i === pack.revealed.findIndex(r => !r);
     return `<button class="item-card card-back" id="reveal-${i}" data-reveal="${i}" ${!pack || !next || opening ? 'disabled' : ''} aria-label="Reveal card ${i + 1}"><span class="card-corner">${String(i + 1).padStart(2, '0')}</span>${sprite('bolt')}<span>${pack ? next ? 'Reveal card' : 'Up next' : 'Unknown hardware'}</span></button>`;
   }).join('')}</div>`;
@@ -246,7 +254,7 @@ function render(focusPage = false) {
   document.body.dataset.page = page;
   document.body.classList.toggle('motion-off', !motion);
   document.querySelectorAll('[data-route]').forEach(a => a.getAttribute('data-route') === page ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
-  const content = page === 'home' ? hero() : page === 'farm' ? farm() : page === 'packs' ? packs() : page === 'city' ? `<div class="wrap inner-page">${pageHeading('The city.', 'Eight districts. One unpredictable power grid.')}${cityPanel()}</div>` : page === 'season' ? `<div class="wrap inner-page">${pageHeading('This week.', 'Keep mining. Give your district a chance.')}${seasonPanel()}</div>` : page === 'wallet' ? wallet() : page === 'docs' ? `<div class="wrap inner-page docs-page">${renderDocs()}</div>` : `<div class="wrap inner-page">${pageHeading('This district is off-grid.', 'That page does not exist.')}<a class="button primary" href="#/">Back to BLACKOUT</a></div>`;
+  const content = page === 'home' ? landing() : page === 'farm' ? farm() : page === 'packs' ? packs() : page === 'city' ? `<div class="wrap inner-page">${pageHeading('The city.', 'Eight districts. One unpredictable power grid.')}${cityPanel()}</div>` : page === 'season' ? `<div class="wrap inner-page">${pageHeading('This week.', 'Keep mining. Give your district a chance.')}${seasonPanel()}</div>` : page === 'wallet' ? wallet() : page === 'docs' ? `<div class="wrap inner-page docs-page">${renderDocs()}</div>` : `<div class="wrap inner-page">${pageHeading('This district is off-grid.', 'That page does not exist.')}<a class="button primary" href="#/">Back to BLACKOUT</a></div>`;
   const gamePage = ['farm','packs','city','season','wallet','docs'].includes(page);
   $('#main').innerHTML = (gamePage ? gameTopbar() + miningWarnings() + (page === 'docs' ? '' : onboarding()) : '') + content + (gamePage ? demoTools() : '');
   newlyRevealed = null;
@@ -266,6 +274,12 @@ function render(focusPage = false) {
   const warning = [...document.querySelectorAll('.mining-warning p')].map(el => el.textContent).join(' ');
   if (warning !== lastWarning) { $('#mining-status').textContent = warning; lastWarning = warning; }
   updateLive(); highlightGuide();
+  syncMotionControls();
+  if (state.level > lastLevel) levelFeedback(state.level, motion);
+  lastLevel = state.level;
+  if (lastEvent !== undefined && state.events[0]?.id !== lastEvent) playSound('event');
+  lastEvent = state.events[0]?.id;
+  if (claimStart !== null) { claimFeedback(claimStart, state.tokens, motion); claimStart = null; }
   if (pendingFix && page === 'farm') { focusFix(pendingFix); pendingFix = null; }
 }
 function previewWithdrawal() {
@@ -277,7 +291,8 @@ function previewWithdrawal() {
 async function reveal(index: number) {
   const pack = state.pendingPack; if (!pack) return;
   const item = await game.reveal(pack.id, index); state = await game.getFarm(); newlyRevealed = item.id; render();
-  if (item.rarity === 'Mythic' && motion) { document.body.classList.remove('mythic-pull'); void document.body.offsetWidth; document.body.classList.add('mythic-pull'); }
+  playSound('reveal');
+  if ((item.rarity === 'Mythic' || item.rarity === 'Legendary') && motion) { document.body.classList.remove('mythic-pull'); void document.body.offsetWidth; document.body.classList.add('mythic-pull'); }
   notify(`${item.rarity} ${item.type} added to your inventory.${lock(item) ? ` Equip at level ${config.rarity[item.rarity].level}.` : ''}`);
   const next = state.pendingPack?.revealed.findIndex(r => !r) ?? -1;
   if (next >= 0) document.getElementById(`reveal-${next}`)?.focus({preventScroll:true});
@@ -286,7 +301,7 @@ async function reveal(index: number) {
 async function openPack() {
   if (busy) return; busy = true;
   try {
-    await game.openPack(currency); state = await game.getFarm(); opening = motion; render();
+    await game.openPack(currency); playSound('pack'); state = await game.getFarm(); opening = motion; render();
     if (opening) await delay(850);
     opening = false; render();
     if (route() === 'packs') { $('#cards').scrollIntoView({behavior:motion ? 'smooth' : 'instant',block:'center'}); $('#reveal-0').focus({preventScroll:true}); }
@@ -308,7 +323,11 @@ document.addEventListener('click', event => {
   if (target.id === 'dismiss-notice') { $('#notice').hidden = true; return; }
   if (target.id === 'cancel-confirm') { closeConfirm(); return; }
   if (target.id === 'accept-confirm') { const action = confirmAction; closeConfirm(); if (action) void act(action); return; }
-  if (target.id === 'motion-toggle') { if (motionPreference.matches) return; motion = !motion; target.setAttribute('aria-pressed',String(motion)); target.textContent = `Animation: ${motion ? 'on' : 'off'}`; document.body.classList.toggle('motion-off',!motion); return; }
+  if (target.id === 'motion-toggle' || target.hasAttribute('data-motion-toggle')) { if (motionPreference.matches) return; motion = !motion; syncMotionControls(); return; }
+  if (target.id === 'sound-toggle') { const enabled=toggleSound(); target.setAttribute('aria-pressed',String(enabled));target.setAttribute('aria-label',`Sound: ${enabled?'on':'off'}`);target.querySelector('.sound-label')!.textContent=`Sound ${enabled?'on':'off'}`;return; }
+  if (target.dataset.hardwareScroll) { document.getElementById('hardware-track')?.scrollBy({left:Number(target.dataset.hardwareScroll)*264,behavior:motion?'smooth':'instant'}); return; }
+  if (target.id === 'dismiss-warning') { dismissedWarnings.add(warningKey); render(); return; }
+  if (target.dataset.downloadCard) { const item=state.pendingPack?.cards.find(i=>i.id===target.dataset.downloadCard);if(item)void downloadPixelCard(item.type,item.rarity).then(()=>notify('Pixel card downloaded.'),()=>notify('Unable to download the card. Please try again.',true));return; }
   if (busy) return;
   if (target.dataset.sync !== undefined) { void act(() => game.sync(), 'Farm synced. Mining resumed and season score entered.'); return; }
   if (target.id === 'skip-guide') { guide.dismissed = true; saveGuide(); render(); return; }
@@ -352,7 +371,7 @@ document.addEventListener('click', event => {
   }
   if (target.dataset.reveal) { void act(() => reveal(Number(target.dataset.reveal)), undefined, false); return; }
   switch (target.id) {
-    case 'claim': void act(async () => { await game.claim(); if (!guide.dismissed && guide.step === 3) { guide.dismissed = true; saveGuide(); } },'Mining claimed. Your farm is synced.'); break;
+    case 'claim': void act(async () => { const before = state.tokens; await game.claim(); claimStart = before; if (!guide.dismissed && guide.step === 3) { guide.dismissed = true; saveGuide(); } },'Mining claimed. Your farm is synced.'); break;
     case 'lobby': void act(() => game.lobby(),'Lobbying filed for the next epoch.'); break;
     case 'move-district': void act(() => game.selectDistrict(Number($<HTMLSelectElement>('#district-select').value)),'Demo farm moved.'); break;
     case 'expand': void act(() => game.expandInventory(),`Inventory expanded by ${config.inventory.expansionSlots} slots.`); break;
@@ -395,12 +414,22 @@ $<HTMLDialogElement>('#confirm-dialog').addEventListener('close', () => { confir
 window.addEventListener('hashchange', () => {
   if (location.hash === '#main') { $('#main').focus(); return; }
   render(true);
+  if (motion) { $('#main').classList.remove('tab-transition');void $('#main').offsetWidth;$('#main').classList.add('tab-transition'); }
   const section = location.hash.split('/')[2];
   if (route() === 'docs' && section) { const el = document.getElementById(`docs-${section}`); el?.scrollIntoView(); el?.setAttribute('tabindex','-1'); el?.focus({preventScroll:true}); }
 });
-motionPreference.addEventListener('change', () => { motion = !motionPreference.matches; $<HTMLButtonElement>('#motion-toggle').disabled = motionPreference.matches; $('#motion-toggle').setAttribute('aria-pressed',String(motion)); $('#motion-toggle').textContent = `Animation: ${motion ? 'on' : 'off'}`; document.body.classList.toggle('motion-off',!motion); });
+function syncMotionControls() {
+  document.body.classList.toggle('motion-off',!motion);
+  const toggle=$<HTMLButtonElement>('#motion-toggle');toggle.disabled=motionPreference.matches;toggle.setAttribute('aria-pressed',String(motion));toggle.textContent=`Animation: ${motion?'on':'off'}`;
+  document.querySelectorAll<HTMLButtonElement>('[data-motion-toggle]').forEach(button=>{button.disabled=motionPreference.matches;button.setAttribute('aria-pressed',String(motion));button.innerHTML=`${motion?'Pause city':'City paused'} <span aria-hidden="true">${motion?'Ⅱ':'▷'}</span>`;});
+}
+motionPreference.addEventListener('change',()=>{motion=!motionPreference.matches;syncMotionControls();});
+window.addEventListener('resize',highlightGuide);
+window.addEventListener('scroll',highlightGuide,{passive:true});
 const ref = new URL(location.href).searchParams.get('ref'); if (ref) { try { await game.captureReferral(ref); state = await game.getFarm(); } catch { /* Invalid referral links never block the demo. */ } }
 render();
+bootScreen(motion);
+initAtmosphere(()=>motion);
 if (route() === 'docs' && location.hash.split('/')[2]) document.getElementById(`docs-${location.hash.split('/')[2]}`)?.scrollIntoView();
 setInterval(async () => {
   if (busy || $<HTMLDialogElement>('#confirm-dialog').open) return;

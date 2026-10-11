@@ -1,11 +1,11 @@
-# Publication handoff
+# Publication handoff — art and landing upgrade
 
-This update delivers the rebuilt `dist/` export, source, unchanged dependency manifest/lockfile, player guide, design record and local validation evidence. Assets use relative URLs and the finished export was checked under `/preview/`.
+Deliverable: the complete rebuilt `dist/` export, source, unchanged manifest/lockfile, design documentation, player guide and validation evidence. Runtime URLs are relative and were tested under `/preview/`; all navigation uses hashes.
 
-Preferred label: **blackout** if available. Otherwise retain **blackout-mine-the-city-pray-the.site.identitymd.eth**. Availability does not block the submission; `src/config.ts` retains `siteLabel: 'blackout'`.
+Keep the exact label **blackout-mine-the-city-pray-the** and public domain **playblackout.xyz**. The corresponding existing name is **blackout-mine-the-city-pray-the.site.identitymd.eth**. `src/config.ts` now records that exact label; no fallback/new label is requested.
 
-The supplied project record identifies the prior hosted version as `ipfs://bafybeibk3ndymeqog55pa3pxrulkn4xubneuxd4aohllwquz2e7yxz6m6u`. This is historical context, not a claim that the new export is already live.
+The pinned project input identifies the prior version as `ipfs://bafybeifvzbwfdzatfwrhybrjfa5qfnnvrpj74fqip3hoasmw6bzdnxx4ue`. It is historical context, not the CID of this new export.
 
-The IdentityMD job plane publishes the submitted export after completion. No member-site publish command was run. The final CID and live update remain unverified until the plane completes that step. Naming does not require requester input.
+The IdentityMD job plane performs publication after this submission. No direct publish command or on-chain action was run. The final CID, domain update and public X unfurl are not verified in this worker session. The protected legacy package publish command was not used.
 
-The protected `npm run publish` script belongs to an earlier member-site workflow and was not used. On another static host, upload the complete contents of `dist/` without relocating assets or rewriting hash routes. Metadata, favicon and a local 1200×630 social image are included.
+The export includes `index.html`, hashed JS/CSS, three local fonts, logo favicon, 512px app icon, manifest and 1200×630 `og.png`. OG/Twitter image metadata uses the requested public domain; the same HTML metadata applies to all static hash routes. Upload the entire export without relocating assets.

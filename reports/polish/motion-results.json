@@ -1,0 +1,115 @@
+{
+  "runAt": "2026-10-11T11:44:03.639Z",
+  "checks": [
+    "First visit boot ends after one second; logo flicker starts after boot",
+    "Boot is once per session and can be skipped",
+    "9.5s first blackout, 10s/11s subsequent district waves, power restoration and substation lightning",
+    "Three parallax layers have distinct scroll transforms",
+    "City pause freezes loops and suppresses blackout timers",
+    "Tab CRT transition and pack shake, seal break and burst use the real pack action",
+    "Legendary reveal flips the card and triggers a full-screen flash",
+    "Reveal all flips three cards in sequence",
+    "Claim runs a balance count-up and removes its token burst",
+    "Earning XP shows a dismissible level-up badge",
+    "390px and 1440px landing: CLS below 0.01, local fonts, zero axe violations",
+    "Production social image is 1200×630; app icon is 512×512"
+  ],
+  "consoleErrors": [],
+  "failedRequests": [],
+  "performance": [
+    {
+      "width": 390,
+      "cls": 0,
+      "longTasks": [
+        80
+      ],
+      "resources": [
+        {
+          "url": "/preview/assets/pixel-latin.woff2",
+          "bytes": 12780,
+          "durationMs": 12
+        },
+        {
+          "url": "/preview/assets/mono-latin.woff2",
+          "bytes": 15008,
+          "durationMs": 12
+        },
+        {
+          "url": "/preview/assets/mono-semibold-latin.woff2",
+          "bytes": 15920,
+          "durationMs": 13
+        },
+        {
+          "url": "/preview/assets/index-BA8Dinys.css",
+          "bytes": 84818,
+          "durationMs": 14
+        },
+        {
+          "url": "/preview/assets/index-DVHLqvh1.js",
+          "bytes": 131372,
+          "durationMs": 14
+        }
+      ],
+      "domNodes": 3074,
+      "fontsLoaded": true
+    },
+    {
+      "width": 1440,
+      "cls": 0,
+      "longTasks": [
+        68
+      ],
+      "resources": [
+        {
+          "url": "/preview/assets/pixel-latin.woff2",
+          "bytes": 12780,
+          "durationMs": 8
+        },
+        {
+          "url": "/preview/assets/mono-latin.woff2",
+          "bytes": 15008,
+          "durationMs": 7
+        },
+        {
+          "url": "/preview/assets/mono-semibold-latin.woff2",
+          "bytes": 15920,
+          "durationMs": 6
+        },
+        {
+          "url": "/preview/assets/index-DVHLqvh1.js",
+          "bytes": 131372,
+          "durationMs": 7
+        },
+        {
+          "url": "/preview/assets/index-BA8Dinys.css",
+          "bytes": 84818,
+          "durationMs": 7
+        }
+      ],
+      "domNodes": 3074,
+      "fontsLoaded": true
+    }
+  ],
+  "accessibility": [
+    {
+      "route": "landing",
+      "width": 390,
+      "violations": [],
+      "incomplete": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "landing",
+      "width": 1440,
+      "violations": [],
+      "incomplete": [
+        "color-contrast"
+      ]
+    }
+  ],
+  "limitations": [
+    "Headless Chromium only; no listening test, physical device or native screen reader.",
+    "Performance observations are local unthrottled measurements, not field Web Vitals."
+  ]
+}
