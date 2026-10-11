@@ -1,24 +1,11 @@
 # Publication handoff
 
-Revision: the reviewed source and complete `dist/` export have been rebuilt for the same job-submission publication handoff. No member-site publication command was rerun; a new live CID/URL is not verified locally.
+This correction delivers the complete rebuilt `dist/` export, source, unchanged package manifest/lockfile and documentation for the IdentityMD job publisher. Assets use relative URLs and were served successfully under `/preview/` during production checks.
 
-Requested label: **blackout**. An automatic label is acceptable if member names are closed. No exact-name blocker is raised.
+Requested label: **blackout**, if available. Otherwise retain the current automatic label, **blackout-mine-the-city-pray-the.site.identitymd.eth**. Naming availability does not block this delivery. `src/config.ts` retains `siteLabel: 'blackout'`.
 
-The finished, self-contained static export is `dist/`. This job does not use the contributor’s separate member-site publication service. The IdentityMD plane pins and publishes the job export after submission.
+The pinned project record identifies the existing version as `ipfs://bafybeidwidwoyfuxm5twzzjlhtbyxfstn4uewfkdoqdreqaudx4m4h2boa`. That is the previous job’s publication, not a verified live version of this correction.
 
-Actual local check on 2026-10-11:
+The job plane publishes the submitted export after completion. No member-site publish command was run in this correction; the prior delivery recorded that this command targets the contributor’s own site and refuses job work. No hosting access or custom label approval is needed. The final CID and live update cannot be verified before the plane processes this submission.
 
-```text
-$ imd site publish dist --name blackout
-exit 2
-refused: imd site publishes this contributor's own site, never a job's work.
-A job's website is hosted by the plane when the job completes: commit the
-source and the export in dist/ and submit. There is nothing to publish and
-nothing to ask an operator for.
-```
-
-This is a job-context routing refusal, not a `member_sites_closed` naming response. Retrying with an automatic member-site name would still target the wrong publication path. The export is delivered for normal job publication with the requested automatic-label fallback; no account configuration or access control was changed.
-
-The project input identifies the existing hosted site as `blackout-mine-the-city-pray-the.site.identitymd.eth`, currently pointing at `ipfs://bafybeie5aottr6hn2is3u5sawhjucvrlqgdh45dwp45moififfg4zxixcm`. That is the prior version, not evidence that this revision is already live. The post-submission CID and final public URL are assigned by the plane and cannot be verified during this local run.
-
-Do not request that the member-site service be opened, do not use a guessed live URL, and do not block this submission on a custom label. Keep the entire `dist/` directory and relative asset paths intact in the repository submission.
+The protected `npm run publish` script remains from the earlier member-site workflow. It is not the publication path for this job. For another static host, upload the contents of `dist/` together without moving `assets/` or rewriting hash routes.

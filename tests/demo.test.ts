@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DemoAdapter, validState } from '../src/game/DemoAdapter';
 import { config } from '../src/config';
-import { actualSpend, comboBonus, electricityTariff, equippedIds, epochsPerDay, hasCombo, inventoryUsed, itemHash, levelFromXp, nextRandom, packPrice, rollRarity, rollType, roomCombos, roomHashrate, seasonEpochs, totalHashrate, withdrawPreview, withdrawTax } from '../src/game/rules';
+import { actualSpend, auditEligibility, comboBonus, electricityTariff, equippedIds, epochsPerDay, hasCombo, inventoryUsed, itemHash, levelFromXp, nextRandom, overclockCost, packPrice, rollRarity, rollType, roomCombos, roomHashrate, seasonEpochs, totalHashrate, withdrawPreview, withdrawTax } from '../src/game/rules';
 import { ITEM_TYPES, RARITIES } from '../src/game/types';
 import type { EventType, GameState, Item, ItemType, Rarity } from '../src/game/types';
 
@@ -94,12 +94,13 @@ describe('inventory, rooms and combinations', () => {
     await s.fixture(f => { f.xp = config.xp.levels[9]; }); await s.game.nextEpoch();
     expect((await s.game.getFarm()).rooms).toHaveLength(4);
   });
-  it('stacks compute combos and caps total room hash bonuses at 40%', async () => {
-    const s = session(); await equipment(s, ['GPU', 'ASIC', 'FPGA', 'Fan', 'Router', 'Server Rack'], 'Rare');
+  it('replaces Compute Duo with Triple Core and caps total room hash bonuses at 40%', async () => {
+    const s = session(); await equipment(s, ['GPU', 'ASIC', 'FPGA', 'Fan', 'Router', 'Server Rack'], 'Legendary');
     const f = await s.game.getFarm(); const combos = roomCombos(f, f.rooms[0]);
-    expect(combos.filter(c => c.active).map(c => c.id)).toEqual(expect.arrayContaining(['duo', 'triple', 'airflow', 'locked', 'rarity']));
+    expect(combos.filter(c => c.active).map(c => c.id)).toEqual(expect.arrayContaining(['triple', 'airflow', 'locked', 'rarity']));
+    expect(hasCombo(f, f.rooms[0], 'duo')).toBe(false);
     expect(comboBonus(f, f.rooms[0])).toBe(.4);
-    expect(totalHashrate(f)).toBeCloseTo((28 * 3 + 28 * .6 * 3) * 1.4);
+    expect(totalHashrate(f)).toBeCloseTo((250 * 3 + 250 * .6 * 3) * 1.4);
     expect(combos.find(c => c.id === 'stack')?.missing).toEqual(['power item']);
   });
   it('activates Full Stack for all five tags and reports missing-combo hints', async () => {
@@ -110,7 +111,7 @@ describe('inventory, rooms and combinations', () => {
   it('uses the strongest same-rarity set without stacking multiple sets', async () => {
     const s = session(); await equipment(s, ['GPU', 'ASIC', 'FPGA', 'Fan', 'Router', 'Server Rack']);
     await s.fixture(f => f.inventory.slice(3).forEach(i => { i.rarity = 'Epic'; }));
-    const f = await s.game.getFarm(); expect(roomCombos(f, f.rooms[0]).find(c => c.id === 'rarity')?.bonus).toBe(.2);
+    const f = await s.game.getFarm(); expect(roomCombos(f, f.rooms[0]).find(c => c.id === 'rarity')?.bonus).toBe(.1);
   });
   it('reserves three pack spaces, keeps reveals idempotent and blocks removal into a full inventory', async () => {
     const s = session();
@@ -185,10 +186,12 @@ describe('packs and monetary controls', () => {
   it('repairs every installed type, spends with bonus, and bounds overclock', async () => {
     const s = eventSession('calm'); await s.game.place('item-2', 0); await s.game.nextEpoch();
     let f = await s.game.getFarm(); expect(f.inventory.filter(i => equippedIds(f).has(i.id)).every(i => i.durability === 99.5)).toBe(true);
-    const start = f.tokens; await s.game.repair(0); await s.game.payElectricity(); await s.game.overclock(0);
-    f = await s.game.getFarm(); expect(f.tokens).toBeCloseTo(start - actualSpend(12 + 15 + 25)); expect(f.electricity).toBe(100); expect(f.rooms[0].overclock).toBe(1);
+    const start = f.tokens; await s.game.repair(0); await s.game.overclock(0);
+    f = await s.game.getFarm(); expect(f.tokens).toBeCloseTo(start - actualSpend(12 + 25)); expect(f.rooms[0].overclock).toBe(1);
     expect(f.inventory.find(i => i.id === 'item-2')?.durability).toBe(100);
-    await s.game.overclock(0); await s.game.overclock(0); await expect(s.game.overclock(0)).rejects.toThrow('level 3');
+    await s.game.refillDemoFunds();
+    for (let level = 2; level <= 5; level++) await s.game.overclock(0);
+    await expect(s.game.overclock(0)).rejects.toThrow('level 5');
   });
 });
 
@@ -200,11 +203,11 @@ describe('epoch settlement and dispatcher events', () => {
     const mined = f.unclaimed; await s.game.claim(); f = await s.game.getFarm(); expect(f.tokens).toBeCloseTo(350 + mined); expect(f.unclaimed).toBe(0);
     expect((await s.reload().getFarm()).epoch).toBe(1); await expect(s.game.claim()).rejects.toThrow('Nothing');
   });
-  it('gives no repeatable mining reward or active XP to empty or unpowered farms', async () => {
+  it('gives no repeatable mining reward or active XP to empty or broken farms', async () => {
     const s = eventSession('calm'); await s.game.unplace(0, 0); await s.game.nextEpoch();
     let f = await s.game.getFarm(); expect(f.unclaimed).toBe(0); expect(f.xp).toBe(0);
-    await s.game.place('item-1', 0); await s.fixture(state => { state.electricity = 0; }); await s.game.nextEpoch();
-    f = await s.game.getFarm(); expect(f.unclaimed).toBe(0); expect(f.xp).toBe(0); expect(f.inventory[0].durability).toBe(100);
+    await s.game.place('item-1', 0); await s.fixture(state => { state.inventory[0].durability = 0; }); await s.game.nextEpoch();
+    f = await s.game.getFarm(); expect(f.unclaimed).toBe(0); expect(f.xp).toBe(0); expect(f.inventory[0].durability).toBe(0);
   });
   it('outages stop unprotected rooms and Off-grid preserves half mining', async () => {
     const bare = eventSession('outage'); await bare.game.nextEpoch(); expect((await bare.game.getFarm()).lastEpochReward).toBe(0);
@@ -235,11 +238,28 @@ describe('epoch settlement and dispatcher events', () => {
   it('Cold Power and Off-grid electricity discounts stack, with the cheap tariff applied afterward', async () => {
     const s = eventSession('cheap'); await equipment(s, ['GPU', 'Power Supply', 'Liquid Cooling', 'Solar Panel', 'Battery']); await s.game.nextEpoch();
     const f = await s.game.getFarm(); expect(electricityTariff(f, f.rooms[0])).toBeCloseTo(.15 * .65 * .5);
-    expect(f.electricity).toBeCloseTo(100 - 5 * .65);
+    expect(f).not.toHaveProperty('electricity');
   });
-  it('audits debit spendable balance only in the affected district', async () => {
-    const s = eventSession('audit'); await s.game.nextEpoch(); expect((await s.game.getFarm()).tokens).toBe(315);
-    const other = eventSession('audit', 0); await other.game.nextEpoch(); expect((await other.game.getFarm()).tokens).toBe(350);
+  it('audits only eligible top-decile farms in the affected district without debiting balances', async () => {
+    const small = eventSession('audit');
+    await small.fixture(f => { f.tokens = 1_000_000; f.unclaimed = 50; });
+    await small.game.nextEpoch();
+    const exempt = await small.game.getFarm();
+    expect(exempt.tokens).toBe(1_000_000); expect(exempt.unclaimed).toBeCloseTo(50.85);
+    expect(exempt.rewardPoolTokens).toBeCloseTo(.15);
+    expect(exempt.letters[0].body).toContain('Outside the top decile');
+    for (const district of [config.city.startingDistrict, 0]) {
+      const s = eventSession('audit', district);
+      await equipment(s, ['GPU'], 'Mythic');
+      await s.fixture(f => { f.tokens = 0; f.unclaimed = 50; });
+      expect(auditEligibility(await s.game.getFarm()).eligible).toBe(true);
+      await s.game.nextEpoch(); const f = await s.game.getFarm();
+      const audited = district === config.city.startingDistrict;
+      expect(f.tokens).toBe(0); expect(f.unclaimed).toBeCloseTo(50 + 80 * (audited ? .75 : .85));
+      expect(f.rewardPoolTokens).toBeCloseTo(80 * (audited ? .25 : .15));
+      expect(f.lastEpochReward + f.rewardPoolTokens).toBeCloseTo(80);
+      expect((await s.reload().getFarm()).unclaimed).toBeCloseTo(f.unclaimed);
+    }
   });
   it('lobbying lowers bad-event targeting odds, is consumed once, and is not immunity', async () => {
     let hits = 0, harmful = 0;
@@ -354,5 +374,93 @@ describe('persistence, validation and recoverability', () => {
   it('resets all demo progress and restores deterministic opening sequence', async () => {
     const s = session(); const first = await s.game.openPack(); await s.game.reveal(first.id, 0); await s.game.nextEpoch(); await s.game.reset();
     const f = await s.game.getFarm(); expect(f.epoch).toBe(0); expect(f.level).toBe(1); expect(f.inventory).toHaveLength(3); expect(await s.game.openPack()).toEqual(first);
+  });
+});
+
+
+describe('game-design corrections', () => {
+  it.each([['Common', 0], ['Rare', .05], ['Epic', .10], ['Legendary', .20], ['Mythic', .30]] as const)('applies exactly the %s rarity bonus for three working items', async (rarity, bonus) => {
+    const s = session(); await equipment(s, ['GPU', 'Battery', 'Fan'], rarity);
+    let f = await s.game.getFarm();
+    expect(comboBonus(f, f.rooms[0])).toBeCloseTo(bonus);
+    expect(hasCombo(f, f.rooms[0], 'rarity')).toBe(bonus > 0);
+    await s.fixture(f => { f.inventory[2].durability = 0; });
+    f = await s.game.getFarm(); expect(comboBonus(f, f.rooms[0])).toBe(0);
+  });
+  it('selects Epic over a simultaneous Rare set without adding the weaker set', async () => {
+    const s = session(); await equipment(s, ['GPU', 'ASIC', 'FPGA', 'Fan', 'Router', 'Server Rack'], 'Rare');
+    await s.fixture(f => f.inventory.slice(3).forEach(i => { i.rarity = 'Epic'; }));
+    const f = await s.game.getFarm();
+    expect(roomCombos(f, f.rooms[0]).find(c => c.id === 'rarity')).toMatchObject({ name: 'Epic set', bonus: .10, active: true });
+    expect(comboBonus(f, f.rooms[0])).toBeCloseTo(.35);
+  });
+  it('switches Duo to Triple and back as FPGA is installed, broken or removed', async () => {
+    const s = session(); await equipment(s, ['GPU', 'ASIC', 'FPGA']);
+    let f = await s.game.getFarm(); expect(totalHashrate(f)).toBeCloseTo(36);
+    expect(hasCombo(f, f.rooms[0], 'duo')).toBe(false);
+    expect(roomCombos(f, f.rooms[0]).find(c => c.id === 'duo')?.replacedBy).toBe('Triple Core');
+    await s.fixture(f => { f.inventory[2].durability = 0; });
+    f = await s.game.getFarm(); expect(totalHashrate(f)).toBeCloseTo(22);
+    expect(hasCombo(f, f.rooms[0], 'duo')).toBe(true); expect(hasCombo(f, f.rooms[0], 'triple')).toBe(false);
+    await s.game.repair(0); await s.game.unplace(0, 2);
+    expect(totalHashrate(await s.game.getFarm())).toBeCloseTo(22);
+    await s.game.place('item-12', 0); expect(totalHashrate(await s.game.getFarm())).toBeCloseTo(36);
+  });
+  it('charges increasing overclock prices, adds ten percent hash per level, and caps at five', async () => {
+    const s = session(); await s.fixture(f => { f.tokens = 1000; });
+    for (let level = 1; level <= 5; level++) {
+      const before = await s.game.getFarm(); expect(overclockCost(before.rooms[0])).toBe(25 * level);
+      await s.game.overclock(0); const after = await s.game.getFarm();
+      expect(after.tokens).toBeCloseTo(before.tokens - 25 * level / 1.05);
+      expect(totalHashrate(after)).toBeCloseTo(10 * (1 + .1 * level));
+      expect(electricityTariff(after, after.rooms[0])).toBeCloseTo(.15 * (1 + .25 * level));
+      expect((await s.reload().getFarm()).rooms[0].overclock).toBe(level);
+    }
+    const before = await s.game.getFarm(); await expect(s.game.overclock(0)).rejects.toThrow('level 5');
+    expect((await s.game.getFarm()).tokens).toBe(before.tokens);
+  });
+  it('settles extra wear and power through the tariff alone and conserves mining output', async () => {
+    const s = eventSession('cheap'); await equipment(s, ['GPU', 'Power Supply', 'Liquid Cooling', 'Solar Panel', 'Battery']);
+    await s.fixture(f => { f.rooms[0].overclock = 5; f.tokens = 0; f.unclaimed = 50; });
+    const before = await s.game.getFarm(); const gross = totalHashrate(before) * .1;
+    await s.game.nextEpoch(); const f = await s.game.getFarm();
+    const tariff = .15 * .65 * 2.25 * .5;
+    expect(f.lastEpochReward).toBeCloseTo(gross * (1 - tariff));
+    expect(f.rewardPoolTokens).toBeCloseTo(gross * tariff);
+    expect(f.unclaimed).toBeCloseTo(50 + f.lastEpochReward); expect(f.tokens).toBe(0);
+    expect(f.inventory.every(i => i.durability === 98.875)).toBe(true);
+    expect(f).not.toHaveProperty('electricity'); expect(s.game).not.toHaveProperty('payElectricity');
+  });
+  it('rejects unaffordable and empty-room overclock upgrades without changing a room', async () => {
+    const s = session(); await s.fixture(f => { f.tokens = 0; });
+    await expect(s.game.overclock(0)).rejects.toThrow('need');
+    expect((await s.game.getFarm()).rooms[0].overclock).toBe(0);
+    await s.game.refillDemoFunds(); await s.game.unplace(0, 0);
+    await expect(s.game.overclock(0)).rejects.toThrow('working item');
+    expect((await s.game.getFarm()).tokens).toBe(350);
+  });
+  it('uses the citywide decile boundary and stable ties, never balance or season score', async () => {
+    const s = session(); await s.fixture(f => {
+      f.season.farmScore = 999999; f.tokens = 999999;
+      f.season.rivalFarms.forEach((r, i) => { r.hashrate = i < 2 ? 20 : 1; });
+    });
+    expect(auditEligibility(await s.game.getFarm())).toMatchObject({ rank: 3, cutoff: 3, eligible: true });
+    await s.fixture(f => { f.season.rivalFarms[2].hashrate = 10; });
+    expect(auditEligibility(await s.game.getFarm()).eligible).toBe(true);
+    await s.fixture(f => { f.season.rivalFarms[2].hashrate = 10.01; });
+    expect(auditEligibility(await s.game.getFarm())).toMatchObject({ rank: 4, eligible: false });
+    await s.game.unplace(0, 0); expect(auditEligibility(await s.game.getFarm()).eligible).toBe(false);
+  });
+  it('migrates old depleted-reserve saves without resetting funds, hardware or overclock', async () => {
+    const s = session(); await s.game.overclock(0); await revealAll(s.game);
+    const before = await s.game.getFarm();
+    const legacy = { ...before, electricity: 0, season: { ...before.season, rivalFarms: before.season.rivalFarms.map(({hashrate: _hashrate, ...farm}) => farm) } };
+    s.storage.setItem(config.demo.storageKey, JSON.stringify(legacy));
+    const after = await s.reload().getFarm();
+    expect(after.storageWarning).toBe(''); expect(after.tokens).toBe(before.tokens);
+    expect(after.inventory).toEqual(before.inventory); expect(after.pendingPack).toEqual(before.pendingPack);
+    expect(after.rooms).toEqual(before.rooms); expect(after).not.toHaveProperty('electricity');
+    expect(totalHashrate(after)).toBeCloseTo(11); expect(validState(after)).toBe(true);
+    expect(JSON.parse(s.storage.getItem(config.demo.storageKey)!)).not.toHaveProperty('electricity');
   });
 });

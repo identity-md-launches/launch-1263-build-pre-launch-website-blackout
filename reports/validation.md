@@ -1,5 +1,7 @@
 # BLACKOUT validation
 
+> Historical review from the preceding job. Current rules, results and limitations are in [rules-validation.md](rules-validation.md). Prior audit/balance behavior described below has been superseded.
+
 The current revision is documented in [revision-validation.md](revision-validation.md): all six findings reproduced and fixed; strict typecheck/build, 47 engine tests, 14 full browser checks and 18 focused revision checks pass. [revision-results.json](revision-results.json) and [screenshots/revision/](screenshots/revision/) describe the rebuilt export. The review below is retained as earlier-round evidence; its source line numbers, screenshots and first-screen measurements may be historical.
 
 # Earlier BLACKOUT implementation and validation

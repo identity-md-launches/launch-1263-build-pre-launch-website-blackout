@@ -13,7 +13,7 @@ export const EVENT_PROTECTIONS = {
   surge: 'Clean Power: Surge Protector + Power Supply prevents item burn.',
   fire: 'Cold Power: Power Supply + Liquid Cooling is fire immune. Airflow: Fan + Server Rack halves fire damage.',
   theft: 'Locked Rack: Router + Server Rack prevents cable theft.',
-  audit: 'No item combo prevents an audit. Lobbying lowers bad-event odds.',
+  audit: `Only the top ${percent(config.events.auditTopFraction)} of farms by hashrate qualify. An audit sends ${percent(config.events.auditTax)} of that epoch’s mining to the reward pool, never player balances. Lobbying lowers bad-event odds.`,
   green: `All active equipment in the affected district mines ${percent(config.events.greenHashBonus)} more.`,
   cheap: 'The affected district pays half its usual electricity tariff.',
   calm: 'No protection needed. This epoch has no additional disruption.',
@@ -52,26 +52,29 @@ export function roomCombos(state: GameState, room: Room): Combo[] {
   const combination = (id: string, name: string, required: ItemType[], bonus: number, description: string): Combo => ({ id, name, active: required.every(t => types.has(t)), bonus, description, missing: required.filter(t => !types.has(t)) });
   const combos: Combo[] = [
     combination('duo', 'Compute Duo', ['GPU', 'ASIC'], config.combos.computeDuo, `+${percent(config.combos.computeDuo)} room hash`),
-    combination('triple', 'Triple Core', ['GPU', 'ASIC', 'FPGA'], config.combos.tripleCore, `+${percent(config.combos.tripleCore)} room hash`),
+    combination('triple', 'Triple Core', ['GPU', 'ASIC', 'FPGA'], config.combos.tripleCore, `+${percent(config.combos.tripleCore)} room hash · replaces Compute Duo; never stacks`),
     { id: 'stack', name: 'Full Stack', active: tags.size === TAGS.length, bonus: config.combos.fullStack, description: `+${percent(config.combos.fullStack)} room hash · all five tags`, missing: TAGS.filter(t => !tags.has(t)).map(t => `${t} item`) },
     combination('airflow', 'Airflow', ['Fan', 'Server Rack'], config.combos.airflow, `+${percent(config.combos.airflow)} room hash · fire damage halved`),
-    combination('cold', 'Cold Power', ['Power Supply', 'Liquid Cooling'], 0, `Electricity −${percent(config.combos.coldPowerElectricity)} · fire immune`),
-    combination('offgrid', 'Off-grid', ['Solar Panel', 'Battery'], 0, `Electricity −${percent(config.combos.offGridElectricity)} · retain ${percent(config.combos.offGridOutageMultiplier)} mining in outages`),
+    combination('cold', 'Cold Power', ['Power Supply', 'Liquid Cooling'], 0, `Electricity tariff −${percent(config.combos.coldPowerElectricity)} · fire immune`),
+    combination('offgrid', 'Off-grid', ['Solar Panel', 'Battery'], 0, `Electricity tariff −${percent(config.combos.offGridElectricity)} · retain ${percent(config.combos.offGridOutageMultiplier)} mining in outages`),
     combination('clean', 'Clean Power', ['Surge Protector', 'Power Supply'], 0, 'Power surge immune'),
     combination('locked', 'Locked Rack', ['Router', 'Server Rack'], 0, 'Cable theft immune'),
   ];
-  const counts = RARITIES.map(rarity => ({ rarity, count: items.filter(i => i.rarity === rarity).length }));
+  if (config.combos.tripleReplacesDuo && combos.find(c => c.id === 'triple')?.active) {
+    const duo = combos.find(c => c.id === 'duo')!;
+    duo.active = false; duo.replacedBy = 'Triple Core';
+  }
+  const counts = RARITIES.filter(rarity => config.rarity[rarity].setBonus > 0).map(rarity => ({ rarity, count: items.filter(i => i.rarity === rarity).length }));
   const sets = counts.filter(s => s.count >= config.combos.raritySetCount);
   const best = sets.sort((a, b) => config.rarity[b.rarity].setBonus - config.rarity[a.rarity].setBonus)[0];
   const closest = [...counts].sort((a, b) => b.count - a.count)[0];
-  combos.push({ id: 'rarity', name: best ? `${best.rarity} set` : 'Rarity set', active: !!best, bonus: best ? config.rarity[best.rarity].setBonus : 0, description: `${config.combos.raritySetCount}+ of one rarity: +${RARITIES.map(r => config.rarity[r].setBonus * 100).join(' / ')}% hash`, missing: best ? [] : [`${config.combos.raritySetCount - closest.count} more ${closest.rarity} items`] });
+  combos.push({ id: 'rarity', name: best ? `${best.rarity} set` : 'Rarity set', active: !!best, bonus: best ? config.rarity[best.rarity].setBonus : 0, description: `${config.combos.raritySetCount}+ of one rarity: ${counts.map(({rarity}) => `${rarity} +${percent(config.rarity[rarity].setBonus)}`).join(', ')}. Common: no bonus. Only the strongest set applies.`, missing: best ? [] : [`${config.combos.raritySetCount - closest.count} more ${closest.rarity} items`] });
   return combos;
 }
 export const hasCombo = (state: GameState, room: Room, id: string) => roomCombos(state, room).some(c => c.id === id && c.active);
 export const comboBonus = (state: GameState, room: Room) => Math.min(config.combos.hashCap, roomCombos(state, room).reduce((sum, c) => sum + (c.active ? c.bonus : 0), 0));
 export function roomHashrate(state: GameState, room: Room): number {
-  if (state.electricity <= 0) return 0;
-  const base = roomItems(state, room).reduce((sum, item) => sum + itemHash(item) * item.durability / config.electricity.maximum, 0);
+  const base = roomItems(state, room).reduce((sum, item) => sum + itemHash(item) * item.durability / config.mining.maximumDurability, 0);
   let rate = base * (1 + comboBonus(state, room)) * (1 + config.overclock.hashPerLevel * room.overclock);
   const event = activeEvent(state);
   if (event?.district === state.district) {
@@ -82,11 +85,20 @@ export function roomHashrate(state: GameState, room: Room): number {
   return rate;
 }
 export const totalHashrate = (state: GameState) => state.rooms.reduce((sum, room) => sum + roomHashrate(state, room), 0);
+/** Citywide rank at settlement. Round the demo decile up; stable IDs break ties. */
+export function auditEligibility(state: GameState) {
+  const hashrate = totalHashrate(state);
+  const ranking = [{ id: 0, hashrate }, ...state.season.rivalFarms].sort((a, b) => b.hashrate - a.hashrate || a.id - b.id);
+  const rank = ranking.findIndex(farm => farm.id === 0) + 1;
+  const cutoff = Math.ceil(ranking.length * config.events.auditTopFraction);
+  return { rank, cutoff, farmCount: ranking.length, eligible: hashrate > 0 && rank <= cutoff };
+}
 export const electricityReduction = (state: GameState, room: Room) => (hasCombo(state, room, 'cold') ? config.combos.coldPowerElectricity : 0) + (hasCombo(state, room, 'offgrid') ? config.combos.offGridElectricity : 0);
 export function electricityTariff(state: GameState, room: Room) {
   const event = activeEvent(state);
-  return config.electricity.tariff * (1 - electricityReduction(state, room)) * (event?.district === state.district && event.type === 'cheap' ? config.electricity.cheapMultiplier : 1);
+  return config.electricity.tariff * (1 - electricityReduction(state, room)) * (1 + room.overclock * config.overclock.extraPowerPerLevel) * (event?.district === state.district && event.type === 'cheap' ? config.electricity.cheapMultiplier : 1);
 }
+export const overclockCost = (room: Room) => COSTS.overclock * (room.overclock + 1);
 export const actualSpend = (nominal: number) => nominal / (1 + config.economy.spendBonus);
 export const levelFromXp = (xp: number): number => config.xp.levels.filter(threshold => xp >= threshold).length;
 export const epochsPerDay = () => config.epoch.dayHours / config.epoch.hours;

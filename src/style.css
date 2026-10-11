@@ -151,7 +151,10 @@ small,.small{font-size:var(--font-small)}
 .lobby-row{display:flex;gap:20px;justify-content:space-between;align-items:center;margin-top:16px}
 .lobby-row p{max-width:45ch}
 .lobby-row .button{flex-shrink:0}
-.electricity-panel .lobby-row{align-items:flex-start}
+.tariff-list{display:grid;gap:8px;margin-block:16px}
+.tariff-list>div{display:flex;justify-content:space-between;gap:16px}
+.tariff-list dd{margin:0;font-variant-numeric:tabular-nums}
+#confirm-body{white-space:pre-line}
 
 meter,progress{height:8px;width:100%;border:0;background:#28324b;border-radius:0;appearance:none}
 progress{width:110px}
@@ -159,8 +162,6 @@ meter::-webkit-meter-bar{border:0;background:#28324b;border-radius:0;height:8px}
 meter::-webkit-meter-optimum-value,progress::-webkit-progress-value{background:var(--accent)}
 meter::-moz-meter-bar,progress::-moz-progress-bar{background:var(--accent)}
 progress::-webkit-progress-bar{background:#28324b}
-.electricity-panel meter::-webkit-meter-optimum-value{background:var(--highlight)}
-.electricity-panel meter::-moz-meter-bar{background:var(--highlight)}
 .farm-slot meter{height:4px;max-width:88px;margin-top:4px}
 .farm-slot meter::-webkit-meter-bar{height:4px}
 label{display:block;font-size:var(--font-label)}

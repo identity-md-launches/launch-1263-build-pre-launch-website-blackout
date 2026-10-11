@@ -1,7 +1,8 @@
-/** All economic/gameplay figures are beta values; a future adapter reads Params. */
+/** All economic/gameplay figures are beta values, may change; a future adapter reads Params. */
 export const config = {
   siteLabel: 'blackout',
   launchDate: '',
+  launch: { token: 'BLACKOUT game token', through: 'IMD', chain: 'Robinhood Chain', rewardPoolSeed: 'Part of supply', supplySplit: 'Exact split announced at launch' },
   xUrl: 'https://x.com/IMDBlackout',
   chainId: 4663,
   contracts: { token: '', packs: '', farm: '', grid: '', params: '' },
@@ -24,10 +25,10 @@ export const config = {
     tokensPerEth: 10_000, tokenDiscount: 0.10, supplyDropSales: 3,
   },
   rarity: {
-    Common: { odds: 0.70, hash: 10, level: 1, setBonus: 0.05, scrap: 1 },
-    Rare: { odds: 0.22, hash: 28, level: 1, setBonus: 0.10, scrap: 2 },
-    Epic: { odds: 0.067, hash: 80, level: 3, setBonus: 0.20, scrap: 4 },
-    Legendary: { odds: 0.01, hash: 250, level: 5, setBonus: 0.30, scrap: 8 },
+    Common: { odds: 0.70, hash: 10, level: 1, setBonus: 0, scrap: 1 },
+    Rare: { odds: 0.22, hash: 28, level: 1, setBonus: 0.05, scrap: 2 },
+    Epic: { odds: 0.067, hash: 80, level: 3, setBonus: 0.10, scrap: 4 },
+    Legendary: { odds: 0.01, hash: 250, level: 5, setBonus: 0.20, scrap: 8 },
     Mythic: { odds: 0.003, hash: 800, level: 10, setBonus: 0.30, scrap: 16 },
   },
   items: {
@@ -36,22 +37,22 @@ export const config = {
     Fan: { tag: 'cooling' }, 'Liquid Cooling': { tag: 'cooling' }, Router: { tag: 'network' },
     Motherboard: { tag: 'infra' }, 'Server Rack': { tag: 'infra' }, 'Surge Protector': { tag: 'infra' },
   },
-  mining: { nonComputeMultiplier: 0.60, tokensPerHashPerEpoch: 0.10, durabilityPerEpoch: 0.5 },
+  mining: { nonComputeMultiplier: 0.60, tokensPerHashPerEpoch: 0.10, durabilityPerEpoch: 0.5, maximumDurability: 100 },
   rooms: { slots: 6, maximum: 4, secondAfterDays: 3, thirdAtLevel: 7, fourthAtLevel: 10 },
   inventory: { initialSlots: 15, expansionSlots: 5, expansionCost: 60, mergeCount: 3 },
   combos: {
-    hashCap: 0.40, computeDuo: 0.10, tripleCore: 0.20, fullStack: 0.15, airflow: 0.05,
+    hashCap: 0.40, computeDuo: 0.10, tripleCore: 0.20, tripleReplacesDuo: true, fullStack: 0.15, airflow: 0.05,
     airflowFireMultiplier: 0.50, coldPowerElectricity: 0.15, offGridElectricity: 0.20,
     offGridOutageMultiplier: 0.50, raritySetCount: 3,
   },
   xp: { perActiveEpoch: 20, perPack: 20, perTokenSpent: 0.5, levels: [0, 40, 110, 210, 350, 520, 720, 960, 1240, 1560] },
-  electricity: { tariff: 0.15, maximum: 100, drainPerItemPerEpoch: 1, cheapMultiplier: 0.50 },
-  overclock: { maximum: 3, hashPerLevel: 0.25, extraWearPerLevel: 0.25, extraPowerPerLevel: 0.25 },
-  costs: { repair: 12, electricity: 15, overclock: 25, merge: 20, lobby: 10 },
+  electricity: { tariff: 0.15, cheapMultiplier: 0.50 },
+  overclock: { maximum: 5, hashPerLevel: 0.10, extraWearPerLevel: 0.25, extraPowerPerLevel: 0.25 },
+  costs: { repair: 12, overclock: 25, merge: 20, lobby: 10 },
   economy: { spendBonus: 0.05, withdrawStartTax: 0.20, withdrawEndTax: 0.05, withdrawDecayDays: 7 },
   events: {
     weights: { outage: 14, surge: 12, fire: 12, theft: 10, audit: 8, green: 12, cheap: 12, calm: 20 },
-    surgeBurnChance: 0.15, fireDamage: 20, theftHashMultiplier: 0.50, auditTax: 0.10,
+    surgeBurnChance: 0.15, fireDamage: 20, theftHashMultiplier: 0.50, auditTax: 0.10, auditTopFraction: 0.10,
     greenHashBonus: 0.10, lobbyBadEventMultiplier: 0.50, supplyDropTokens: 5,
   },
   city: {

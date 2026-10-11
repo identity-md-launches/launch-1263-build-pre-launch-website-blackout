@@ -1,3 +1,6 @@
+import { config } from './config';
+import { RARITIES } from './game/types';
+
 export interface DocsSection {
   id: string;
   title: string;
@@ -39,8 +42,8 @@ export const docsSections: DocsSection[] = [
     body: `<p>Each room has six slots. Install any types, with no duplicate type in the same room. Active combos apply within that room. Hash bonuses add together up to a +40% cap; electricity savings and event protections are separate.</p>${table('Room unlocks · beta values, may change', ['Room', 'Unlock'], [
       ['1', 'Available at the start'], ['2', 'After 3 in-game days'], ['3', 'Account level 7'], ['4', 'Account level 10']
     ])}${table('Combo guide · beta values, may change', ['Combo', 'Required items', 'Effect'], [
-      ['Compute Duo', 'GPU + ASIC', '+10% room hash'], ['Triple Core', 'GPU + ASIC + FPGA', '+20% room hash'], ['Full Stack', 'At least one of all five tags', '+15% room hash'], ['Airflow', 'Fan + Server Rack', '+5% room hash; fire damage halved'], ['Cold Power', 'Power Supply + Liquid Cooling', 'Electricity −15%; immune to server fire'], ['Off-grid', 'Solar Panel + Battery', 'Electricity −20%; outage loses 50% of output instead of 100%'], ['Clean Power', 'Surge Protector + Power Supply', 'Immune to power surges'], ['Locked Rack', 'Router + Server Rack', 'Immune to cable theft'], ['Rarity set', 'At least three items of the same rarity', 'Common +5%, Rare +10%, Epic +20%, Legendary or Mythic +30%; only the strongest set applies.']
-    ])}<p>Compute Duo and Triple Core can both apply. The Farm combo panel shows active combinations and the items still missing, so you can plan the next slot before installing.</p>`
+      ['Compute Duo', 'GPU + ASIC', '+10% room hash'], ['Triple Core', 'GPU + ASIC + FPGA', '+20% room hash'], ['Full Stack', 'At least one of all five tags', '+15% room hash'], ['Airflow', 'Fan + Server Rack', '+5% room hash; fire damage halved'], ['Cold Power', 'Power Supply + Liquid Cooling', 'Electricity tariff −15%; immune to server fire'], ['Off-grid', 'Solar Panel + Battery', 'Electricity tariff −20%; outage loses 50% of output instead of 100%'], ['Clean Power', 'Surge Protector + Power Supply', 'Immune to power surges'], ['Locked Rack', 'Router + Server Rack', 'Immune to cable theft'], ['Rarity set', 'At least three items of the same rarity', `Common gives no set bonus; ${RARITIES.filter(r => config.rarity[r].setBonus > 0).map(r => `${r} +${config.rarity[r].setBonus * 100}%`).join(', ')}. Only the strongest set applies.`]
+    ])}<p>Triple Core replaces Compute Duo when GPU, ASIC and FPGA are working in the room; they never stack. GPU + ASIC alone still gives Compute Duo’s +10%. The Farm combo panel shows active combinations and the items still missing, so you can plan the next slot before installing.</p>`
   },
   {
     id: 'inventory', title: 'Inventory',
@@ -56,21 +59,21 @@ export const docsSections: DocsSection[] = [
   },
   {
     id: 'mining-balance-withdraw-tax', title: 'Mining, balance, withdraw tax',
-    body: `<p>Working, powered items mine during each epoch. At the epoch boundary, the demo settles mining, costs and the grid event. Mining first appears as unclaimed tokens. Claim moves it into your spendable balance.</p>${table('Balances and spending · beta values, may change', ['Action', 'Rule'], [
+    body: `<p>Working items mine during each epoch. At the epoch boundary, the demo settles mining, costs and the grid event. Mining first appears as unclaimed tokens. Claim moves it into your spendable balance.</p>${table('Balances and spending · beta values, may change', ['Action', 'Rule'], [
       ['Claim', 'Collect completed-epoch mining into your token balance.'], ['Spend in game', 'No withdrawal tax; a 5% purchasing bonus means the nominal cost is divided by 1.05.'], ['Withdraw', 'Tax starts at 20% and falls to 5% over 7 in-game days.'], ['Preview', 'Farm shows the withdrawal tax and net amount before confirmation.']
     ])}<p>Withdrawing in the demo only records a simulated withdrawal. No asset leaves your browser, and demo balances have no cash value.</p>`
   },
   {
     id: 'farm-costs', title: 'Farm costs',
     body: `${table('Keeping a farm running · beta values, may change', ['Cost', 'Rule'], [
-      ['Electricity', 'Base tariff is 15% of mining output, withheld each epoch. Combos and grid events can reduce it.'], ['Durability', 'Active items lose 0.5 durability per epoch before extra damage or overclock wear.'], ['Repair', 'Spend tokens to restore worn hardware. Farm shows the price.'], ['Overclock', 'Spend tokens for more room hash, with higher wear and power use. Inspect the shown effect and cost.'], ['Upgrades', 'Merge, inventory expansion and lobbying use the displayed token price.']
-    ])}<p>The electricity reserve also drains while hardware runs; refill it with tokens. Keep electricity funded and repair damaged equipment. Broken items stop contributing until repaired. All in-game token spending returns to the reward pool at launch; tokens are not burned.</p>`
+      ['Electricity', 'Base tariff is 15% of mining output, withheld each epoch. Combos and events change it; overclock’s extra power use raises it.'], ['Durability', 'Active items lose 0.5 durability per epoch before extra damage or overclock wear.'], ['Repair', 'Spend tokens to restore worn hardware. Farm shows the price.'], ['Overclock', 'Each level adds +10% hash, up to 5 levels (+50%). Cost rises each level. Review the cost, extra wear and power use before confirming.'], ['Upgrades', 'Merge, inventory expansion and lobbying use the displayed token price.']
+    ])}<p>Electricity has no separate reserve or refill. The tariff is withheld only from new mining output, never from stored balances.</p><p>Cold Power and Off-grid reduce the base tariff by 15% and 20% respectively; together they reduce it by 35%. Cheap tariff halves the result.</p><p>Each overclock level adds 25% wear and 25% power use relative to level zero: wear = 0.5 × (1 + 0.25 × level) durability per epoch; tariff = 15% × (1 − combo reductions) × (1 + 0.25 × level) × event multiplier. Overclock levels cost 25, 50, 75, 100 and 125 nominal tokens, divided by 1.05 for the spending bonus.</p><p>Repair damaged equipment. Broken items stop contributing until repaired. All in-game token spending returns to the reward pool at launch; tokens are not burned.</p>`
   },
   {
     id: 'city-and-swarm-events', title: 'The city and swarm events',
     body: `<p>The city has eight districts. Each epoch brings a grid event, and your district determines which local effects reach your farm. Read the dispatcher letter for the effect, damage and the combo that could have protected you.</p>${table('Events and protections', ['Event', 'Effect', 'Protection or response'], [
-      ['Outage', 'Affected rooms lose mining output.', 'Off-grid limits the loss to 50%.'], ['Power surge', 'A hardware item can burn.', 'Clean Power makes the room immune.'], ['Server fire', 'Damages equipment.', 'Cold Power gives immunity; Airflow halves fire damage.'], ['Cable theft', 'Disrupts mining.', 'Locked Rack makes the room immune.'], ['Tax audit', 'Takes 10% of the affected farm’s spendable balance.', 'No item combo; lobbying reduces bad-event odds.'], ['Green wave', '+10% output for affected farms.', 'Benefit automatically while mining.'], ['Cheap tariff', 'Electricity tariff is 50% lower.', 'Benefit automatically while mining.'], ['Calm', 'No extra event penalty.', 'Use the quiet epoch to maintain your farm.'], ['Supply drop', 'A bonus drop triggered by a spike in pack sales.', 'Watch the dispatch panel for your drop.']
-    ])}<p>Lobbying changes the odds, not the outcome. Event protection applies to the room that completes the required combo.</p>`
+      ['Outage', 'Affected rooms lose mining output.', 'Off-grid limits the loss to 50%.'], ['Power surge', 'A hardware item can burn.', 'Clean Power makes the room immune.'], ['Server fire', 'Damages equipment.', 'Cold Power gives immunity; Airflow halves fire damage.'], ['Cable theft', 'Disrupts mining.', 'Locked Rack makes the room immune.'], ['Tax audit', 'Only the top 10% of farms by hashrate are audited: 10% of that epoch’s mining goes to the reward pool. Never takes from player balances.', 'No item combo; lobbying reduces bad-event odds.'], ['Green wave', '+10% output for affected farms.', 'Benefit automatically while mining.'], ['Cheap tariff', 'Electricity tariff is 50% lower.', 'Benefit automatically while mining.'], ['Calm', 'No extra event penalty.', 'Use the quiet epoch to maintain your farm.'], ['Supply drop', 'A bonus drop triggered by a spike in pack sales.', 'Watch the dispatch panel for your drop.']
+    ])}<p>Audit eligibility uses citywide hashrate, not token balances or cumulative season scores. The demo ranks your farm against 23 simulated rivals with stable hashrates. The top 10% rounds up to 3 of 24 farms; ties use ascending farm ID. The existing district targeting still applies: only eligible farms in the audited district contribute. The audit and electricity tariff are each calculated from that epoch’s gross mining, before wear; earlier unclaimed mining stays intact. These demo ranking conventions are beta values, may change. Lobbying changes the odds, not the outcome. Event protection applies to the room that completes the required combo.</p>`
   },
   {
     id: 'how-swarm-runs-grid', title: 'How the swarm runs the grid',
@@ -96,13 +99,13 @@ export const docsSections: DocsSection[] = [
   },
   {
     id: 'token-and-launch', title: 'Token and launch',
-    body: `<p>IMD is planned to launch on Robinhood Chain. 10% of the token supply is allocated to IMD swarm contributors, and part of the supply seeds the game reward pool. The exact supply split will be announced at launch.</p><p>There is no announced launch date here. Follow <a href="https://x.com/IMDBlackout" target="_blank" rel="noopener noreferrer">BLACKOUT on X <span aria-hidden="true">↗</span></a> for official updates. This demo does not deploy, mint or sell a token.</p>`
+    body: `<p>The ${config.launch.token} will launch through ${config.launch.through} on ${config.launch.chain}. ${config.allocations.swarmContributorSupply * 100}% of supply goes to IMD swarm contributor agents; ${config.launch.rewardPoolSeed.toLowerCase()} seeds the game reward pool. ${config.launch.supplySplit}. Beta values, may change.</p><p>There is no announced launch date here. Follow <a href="https://x.com/IMDBlackout" target="_blank" rel="noopener noreferrer">BLACKOUT on X <span aria-hidden="true">↗</span></a> for official updates. This demo does not deploy, mint or sell a token.</p>`
   },
   {
     id: 'where-money-goes', title: 'Where the money goes',
     body: `${table('Planned pack revenue split · beta values, may change', ['Destination', 'Share'], [
       ['Game reward pool', '85%'], ['Team', '13%'], ['Swarm heartbeat', '2%']
-    ])}<p>There are no team tokens. The team’s stated share comes from pack revenue. The swarm heartbeat funds the work needed to keep epochs moving.</p><p>All in-game token spends go back to the reward pool, including electricity, repairs, upgrades and lobbying. There are no token burns. The demo records token spending as simulated accounting only.</p>`
+    ])}<p>There are no team tokens. The team’s stated share comes from pack revenue. The swarm heartbeat funds the work needed to keep epochs moving.</p><p>Electricity tariffs and audit contributions go to the reward pool. All in-game token spends go back to the reward pool, including repairs, upgrades and lobbying. There are no token burns. The demo records token spending as simulated accounting only.</p>`
   },
   {
     id: 'who-controls-what', title: 'Who controls what',

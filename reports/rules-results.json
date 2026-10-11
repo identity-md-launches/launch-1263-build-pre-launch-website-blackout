@@ -1,0 +1,142 @@
+{
+  "runAt": "2026-10-11T08:52:20.298Z",
+  "export": "dist/",
+  "hostingPath": "/preview/",
+  "checks": [
+    "Current landing first screen at 390px keeps product, Play demo and beta qualification visible",
+    "All rarity bonuses and strongest-set selection match the Farm panel",
+    "Compute Duo switches to Triple Core without stacking, then returns after removal",
+    "Overclock preview, keyboard cancel, confirmed cost and tariff at 320px",
+    "Overclock preview, keyboard cancel, confirmed cost and tariff at 390px",
+    "Overclock preview, keyboard cancel, confirmed cost and tariff at 768px",
+    "Overclock preview, keyboard cancel, confirmed cost and tariff at 1440px",
+    "Overclock costs rise through five levels; maximum and insufficient-funds states work",
+    "A changed overclock level requires a new preview without spending twice",
+    "Old empty electricity reserve is removed while saved progress keeps mining",
+    "Audit eligibility follows hashrate rank and preserves all existing balances",
+    "Tariff combines Cold Power, Off-grid, five overclocks and a cheap epoch",
+    "Docs and Packs combo guide display corrected rules and beta labels",
+    "Overclock dialog accessibility and actual opaque text contrast"
+  ],
+  "failures": [],
+  "errors": [],
+  "screenshots": [
+    "reports/screenshots/rules/landing-390.png",
+    "reports/screenshots/rules/combos-390.png",
+    "reports/screenshots/rules/overclock-320.png",
+    "reports/screenshots/rules/overclock-390.png",
+    "reports/screenshots/rules/overclock-768.png",
+    "reports/screenshots/rules/overclock-1440.png",
+    "reports/screenshots/rules/tariff-390.png",
+    "reports/screenshots/rules/audit-desktop.png",
+    "reports/screenshots/rules/launch-docs-390.png"
+  ],
+  "audit": [
+    {
+      "higher": 2,
+      "district": 3,
+      "audit": true,
+      "tokens": 350,
+      "unclaimed": 33.75,
+      "pool": 0.25
+    },
+    {
+      "higher": 3,
+      "district": 3,
+      "audit": false,
+      "tokens": 350,
+      "unclaimed": 33.85,
+      "pool": 0.15
+    },
+    {
+      "higher": 2,
+      "district": 0,
+      "audit": false,
+      "tokens": 350,
+      "unclaimed": 33.85,
+      "pool": 0.15
+    }
+  ],
+  "overclock": [
+    {
+      "width": 320,
+      "body": "Level 0 → 1 of 5. Cost: 23.81 DEMO tokens, including the 5% spending bonus. Cost rises each level.\n\nHash bonus: +0% → +10%.\nWear per item per epoch: 0.500 → 0.625 durability.\nExtra power use: +0% → +25%.\nCurrent electricity tariff: 15% → 18.75% of mining. Combos and events can change this rate.\n\nBeta values, may change.",
+      "dialog": {
+        "width": 280,
+        "scrollWidth": 280,
+        "scrollTop": 0,
+        "scrollHeight": 579,
+        "height": 579
+      }
+    },
+    {
+      "width": 390,
+      "body": "Level 0 → 1 of 5. Cost: 23.81 DEMO tokens, including the 5% spending bonus. Cost rises each level.\n\nHash bonus: +0% → +10%.\nWear per item per epoch: 0.500 → 0.625 durability.\nExtra power use: +0% → +25%.\nCurrent electricity tariff: 15% → 18.75% of mining. Combos and events can change this rate.\n\nBeta values, may change.",
+      "dialog": {
+        "width": 350,
+        "scrollWidth": 350,
+        "scrollTop": 0,
+        "scrollHeight": 509,
+        "height": 509
+      }
+    },
+    {
+      "width": 768,
+      "body": "Level 0 → 1 of 5. Cost: 23.81 DEMO tokens, including the 5% spending bonus. Cost rises each level.\n\nHash bonus: +0% → +10%.\nWear per item per epoch: 0.500 → 0.625 durability.\nExtra power use: +0% → +25%.\nCurrent electricity tariff: 15% → 18.75% of mining. Combos and events can change this rate.\n\nBeta values, may change.",
+      "dialog": {
+        "width": 498,
+        "scrollWidth": 498,
+        "scrollTop": 0,
+        "scrollHeight": 404,
+        "height": 404
+      }
+    },
+    {
+      "width": 1440,
+      "body": "Level 0 → 1 of 5. Cost: 23.81 DEMO tokens, including the 5% spending bonus. Cost rises each level.\n\nHash bonus: +0% → +10%.\nWear per item per epoch: 0.500 → 0.625 durability.\nExtra power use: +0% → +25%.\nCurrent electricity tariff: 15% → 18.75% of mining. Combos and events can change this rate.\n\nBeta values, may change.",
+      "dialog": {
+        "width": 498,
+        "scrollWidth": 498,
+        "scrollTop": 0,
+        "scrollHeight": 404,
+        "height": 404
+      }
+    }
+  ],
+  "contrast": [
+    {
+      "name": "Preview text",
+      "foreground": "rgb(161, 174, 197)",
+      "background": "rgb(9, 14, 29)",
+      "ratio": 8.584797604386319
+    },
+    {
+      "name": "Confirm action",
+      "foreground": "rgb(17, 19, 35)",
+      "background": "rgb(255, 230, 0)",
+      "ratio": 14.519766313190352
+    }
+  ],
+  "accessibility": [
+    {
+      "state": "Overclock confirmation",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "#confirm-body"
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Chromium emulation using the Ubuntu 24.04 fallback build on Ubuntu 26.04. The assigned browser connector could not launch because Google Chrome is absent.",
+    "Valid localStorage fixtures and a paused clock exercise rare combinations and audit boundaries through production controls; no chain data or live ranks.",
+    "No screen reader, physical device, Firefox/Safari, browser-native zoom, or external live publication verification. Contrast measures named opaque pairs only."
+  ],
+  "status": "passed"
+}

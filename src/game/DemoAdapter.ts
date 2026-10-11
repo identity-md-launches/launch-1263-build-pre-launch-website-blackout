@@ -1,5 +1,5 @@
 import { config } from '../config';
-import { actualSpend, COSTS, electricityReduction, electricityTariff, equippedIds, epochsPerDay, EVENT_LABELS, EVENT_PROTECTIONS, findItem, hasCombo, inventoryUsed, levelFromXp, nextRandom, packPrice, rollRarity, rollType, roomHashrate, roomItems, roomUnlocks, seasonEpochs, tokenPackPrice, withdrawPreview } from './rules';
+import { actualSpend, auditEligibility, COSTS, electricityTariff, equippedIds, epochsPerDay, EVENT_LABELS, EVENT_PROTECTIONS, findItem, hasCombo, inventoryUsed, levelFromXp, nextRandom, overclockCost, packPrice, rollRarity, rollType, roomHashrate, roomItems, roomUnlocks, seasonEpochs, tokenPackPrice, withdrawPreview } from './rules';
 import { ITEM_TYPES, RARITIES } from './types';
 import type { EventType, GameAdapter, GameState, GridEvent, Item, Letter, Pack, PackCurrency, RivalFarm, Room } from './types';
 
@@ -11,10 +11,12 @@ const finite = (n: unknown): n is number => typeof n === 'number' && Number.isFi
 const nonnegative = (n: unknown): n is number => finite(n) && n >= 0;
 const integer = (n: unknown): n is number => nonnegative(n) && Number.isInteger(n);
 const safeText = (s: unknown): s is string => typeof s === 'string' && s.length <= 1500 && !/[<>\u0000-\u0008]/.test(s);
-const validItem = (i: Item) => i && /^item-\d+$/.test(i.id) && ITEM_TYPES.includes(i.type) && RARITIES.includes(i.rarity) && nonnegative(i.durability) && i.durability <= config.electricity.maximum;
+const validItem = (i: Item) => i && /^item-\d+$/.test(i.id) && ITEM_TYPES.includes(i.type) && RARITIES.includes(i.rarity) && nonnegative(i.durability) && i.durability <= config.mining.maximumDurability;
+// Stable demo hashrates span the existing simulated rival mining range.
+const rivalHashrate = (id: number) => (config.city.rivalFarmMiningMin + (id - 1) / Math.max(1, config.season.demoFarmCount - 2) * (config.city.rivalFarmMiningMax - config.city.rivalFarmMiningMin)) / config.mining.tokensPerHashPerEpoch;
 /** Farm zero is the player; the remaining farms have stable identities within a season. */
 const createRivals = (playerDistrict: number): RivalFarm[] => Array.from({ length: config.season.demoFarmCount - 1 }, (_, index) => ({
-  id: index + 1, district: (index + playerDistrict + 1) % config.city.districts.length, score: 0,
+  id: index + 1, district: (index + playerDistrict + 1) % config.city.districts.length, score: 0, hashrate: rivalHashrate(index + 1),
 }));
 /** Older v3 saves held district totals only. Preserve their history without resetting a farm. */
 function restoreLegacyRivals(state: GameState) {
@@ -34,8 +36,8 @@ function restoreLegacyRivals(state: GameState) {
 export function validState(s: GameState): boolean {
   try {
     if (!s || s.version !== config.demo.stateVersion || !integer(s.rng) || !s.rng || !integer(s.nextId) || !s.nextId) return false;
-    const numbers = [s.updatedAt, s.createdAt, s.nextEventAt, s.tokens, s.unclaimed, s.electricity, s.ethBalance, s.totalPacks, s.xp, s.epoch, s.gameDays, s.withdrawn, s.totalMined, s.totalSpent, s.rewardPoolTokens, s.freePacks, s.lastEpochReward];
-    if (!numbers.every(nonnegative) || s.electricity > config.electricity.maximum || s.nextEventAt < s.updatedAt || !integer(s.epoch) || s.gameDays !== s.epoch / epochsPerDay() || s.level !== levelFromXp(s.xp)) return false;
+    const numbers = [s.updatedAt, s.createdAt, s.nextEventAt, s.tokens, s.unclaimed, s.ethBalance, s.totalPacks, s.xp, s.epoch, s.gameDays, s.withdrawn, s.totalMined, s.totalSpent, s.rewardPoolTokens, s.freePacks, s.lastEpochReward];
+    if (!numbers.every(nonnegative) || s.nextEventAt < s.updatedAt || !integer(s.epoch) || s.gameDays !== s.epoch / epochsPerDay() || s.level !== levelFromXp(s.xp)) return false;
     if (!integer(s.inventoryCapacity) || s.inventoryCapacity < config.inventory.initialSlots || (s.inventoryCapacity - config.inventory.initialSlots) % config.inventory.expansionSlots) return false;
     if (!Array.isArray(s.inventory) || s.inventory.length > s.inventoryCapacity + config.rooms.maximum * config.rooms.slots || !s.inventory.every(validItem)) return false;
     if (new Set(s.inventory.map(i => i.id)).size !== s.inventory.length || s.inventory.some(i => Number(i.id.slice(5)) >= s.nextId)) return false;
@@ -63,7 +65,7 @@ export function validState(s: GameState): boolean {
     if (!s.market || ![s.market.lastPriceEth, s.market.lastDemandAt, s.market.packsThisEpoch].every(nonnegative) || s.market.lastPriceEth < config.packs.floorEth || s.market.lastPriceEth > config.packs.ceilingEth) return false;
     if (!s.referral || !/^[a-zA-Z0-9-]{1,32}$/.test(s.referral.code) || (s.referral.referredBy !== '' && !/^[a-zA-Z0-9-]{1,32}$/.test(s.referral.referredBy)) || ![s.referral.invitees, s.referral.inviteeMining, s.referral.earned].every(nonnegative)) return false;
     if (!s.season || ![s.season.number, s.season.endsAtEpoch, s.season.farmScore, s.season.pendingFreePacks, s.season.pendingTokens].every(nonnegative) || s.season.endsAtEpoch <= s.epoch || !Array.isArray(s.season.districtScores) || s.season.districtScores.length !== config.city.districts.length || !s.season.districtScores.every(nonnegative) || !safeText(s.season.lastResult)) return false;
-    if (!Array.isArray(s.season.rivalFarms) || s.season.rivalFarms.length !== config.season.demoFarmCount - 1 || !s.season.rivalFarms.every(farm => farm && integer(farm.id) && farm.id > 0 && farm.id < config.season.demoFarmCount && integer(farm.district) && farm.district < config.city.districts.length && nonnegative(farm.score)) || new Set(s.season.rivalFarms.map(farm => farm.id)).size !== s.season.rivalFarms.length) return false;
+    if (!Array.isArray(s.season.rivalFarms) || s.season.rivalFarms.length !== config.season.demoFarmCount - 1 || !s.season.rivalFarms.every(farm => farm && integer(farm.id) && farm.id > 0 && farm.id < config.season.demoFarmCount && integer(farm.district) && farm.district < config.city.districts.length && nonnegative(farm.score) && nonnegative(farm.hashrate)) || new Set(s.season.rivalFarms.map(farm => farm.id)).size !== s.season.rivalFarms.length) return false;
     return true;
   } catch { return false; }
 }
@@ -100,11 +102,11 @@ export class DemoAdapter implements GameAdapter {
     const starterRoom = room(0); starterRoom.slots[0] = 'item-1';
     return {
       version: config.demo.stateVersion, rng: this.seed, nextId: 4, createdAt: at, updatedAt: at, nextEventAt: at + this.interval,
-      tokens: config.demo.startingTokens, ethBalance: config.demo.startingEth, unclaimed: 0, electricity: config.electricity.maximum,
+      tokens: config.demo.startingTokens, ethBalance: config.demo.startingEth, unclaimed: 0,
       inventory: [
-        { id: 'item-1', type: 'GPU', rarity: 'Common', durability: config.electricity.maximum },
-        { id: 'item-2', type: 'Power Supply', rarity: 'Common', durability: config.electricity.maximum },
-        { id: 'item-3', type: 'Fan', rarity: 'Common', durability: config.electricity.maximum },
+        { id: 'item-1', type: 'GPU', rarity: 'Common', durability: config.mining.maximumDurability },
+        { id: 'item-2', type: 'Power Supply', rarity: 'Common', durability: config.mining.maximumDurability },
+        { id: 'item-3', type: 'Fan', rarity: 'Common', durability: config.mining.maximumDurability },
       ],
       inventoryCapacity: config.inventory.initialSlots, rooms: [starterRoom], district: config.city.startingDistrict,
       lobbied: false, pendingPack: null, events: [], totalPacks: 0, storageWarning: '',
@@ -125,6 +127,17 @@ export class DemoAdapter implements GameAdapter {
       try {
         const parsed = JSON.parse(raw) as GameState;
         restoreLegacyRivals(parsed);
+        // Preserve existing farms while retiring the old reserve and adding audit ranks.
+        delete (parsed as GameState & { electricity?: unknown }).electricity;
+        if (Array.isArray(parsed?.season?.rivalFarms)) for (const rival of parsed.season.rivalFarms) {
+          if (rival && !Object.hasOwn(rival, 'hashrate')) rival.hashrate = rivalHashrate(rival.id);
+        }
+        if (Array.isArray(parsed?.events)) for (const event of parsed.events) {
+          if (event?.type === 'audit') event.protection = EVENT_PROTECTIONS.audit;
+        }
+        if (Array.isArray(parsed?.letters)) for (const letter of parsed.letters) {
+          if (letter?.title === 'Tax audit' && typeof letter.body === 'string' && letter.body.includes('spendable balance')) letter.body = `Earlier demo audit. Current rule: ${EVENT_PROTECTIONS.audit} — IMD Grid Dispatch`;
+        }
         if (validState(parsed)) this.state = { ...parsed, storageWarning: '' };
         else { this.state = this.initial(); this.state.storageWarning = 'Your saved demo could not be read. A fresh demo is ready.'; }
       } catch { this.state = this.initial(); this.state.storageWarning = 'Your saved demo could not be read. A fresh demo is ready.'; }
@@ -194,7 +207,7 @@ export class DemoAdapter implements GameAdapter {
       surge: 'Voltage exceeded tolerance. An unprotected item may burn out. Clean Power rooms are cleared for operation.',
       fire: 'A server fire has been reported. Unprotected rooms take durability damage. Do not fan the paperwork.',
       theft: 'Cable inventory does not match yesterday’s cable inventory. Unprotected rooms lose half their hash this epoch.',
-      audit: `A routine inspection collected ${config.events.auditTax * 100}% of the affected farm’s spendable balance. The form contains no appeal box.`,
+      audit: `Routine inspection of the city’s top ${config.events.auditTopFraction * 100}% of farms by hashrate. Eligible farms in the affected district contribute ${config.events.auditTax * 100}% of this epoch’s gross mining to the reward pool. Existing balances and previously unclaimed mining stay intact.`,
       green: `Renewable surplus authorized. The affected district receives ${config.events.greenHashBonus * 100}% more mining this epoch.`,
       cheap: 'Off-peak capacity released. The affected district’s electricity tariff is halved this epoch.',
       calm: 'All readings within tolerance. No intervention required. Do not mistake this for a promise.',
@@ -206,7 +219,6 @@ export class DemoAdapter implements GameAdapter {
     this.state.market.packsThisEpoch = 0;
     if (type === 'supply') this.state.unclaimed += config.events.supplyDropTokens;
     if (district !== this.state.district) return;
-    if (type === 'audit') { const levy = this.state.tokens * config.events.auditTax; this.state.tokens -= levy; this.state.rewardPoolTokens += levy; }
     for (const r of this.state.rooms) {
       const items = roomItems(this.state, r).filter(i => i.durability > 0);
       if (type === 'surge' && !hasCombo(this.state, r, 'clean') && items.length && this.random() < config.events.surgeBurnChance) {
@@ -221,17 +233,24 @@ export class DemoAdapter implements GameAdapter {
   private runEpoch(at: number) {
     this.state.updatedAt = at; this.state.epoch++; this.state.gameDays = this.state.epoch / epochsPerDay();
     this.dispatch(at);
-    let mined = 0, power = 0;
-    const active = this.state.electricity > 0 && this.state.rooms.some(r => roomItems(this.state, r).some(i => i.durability > 0));
+    let mined = 0, auditLevy = 0;
+    const event = this.state.events[0];
+    const audit = event.type === 'audit' && event.district === this.state.district;
+    const eligibility = audit ? auditEligibility(this.state) : null;
+    const active = this.state.rooms.some(r => roomItems(this.state, r).some(i => i.durability > 0));
     for (const r of this.state.rooms) {
       const items = roomItems(this.state, r).filter(i => i.durability > 0);
       const gross = roomHashrate(this.state, r) * config.mining.tokensPerHashPerEpoch;
       const tariff = gross * electricityTariff(this.state, r);
-      mined += gross - tariff; this.state.rewardPoolTokens += tariff;
-      power += items.length * config.electricity.drainPerItemPerEpoch * (1 - electricityReduction(this.state, r)) * (1 + r.overclock * config.overclock.extraPowerPerLevel);
+      const levy = eligibility?.eligible ? gross * config.events.auditTax : 0;
+      auditLevy += levy;
+      mined += gross - tariff - levy; this.state.rewardPoolTokens += tariff + levy;
       if (active) for (const item of items) item.durability = Math.max(0, item.durability - config.mining.durabilityPerEpoch * (1 + r.overclock * config.overclock.extraWearPerLevel));
     }
-    this.state.electricity = Math.max(0, this.state.electricity - power);
+    if (eligibility) {
+      const outcome = eligibility.eligible ? `${auditLevy.toFixed(4)} DEMO tokens withheld from this epoch’s mining for the reward pool.` : 'Outside the top decile; no audit contribution.';
+      this.state.letters[0].body += ` Your hashrate rank: ${eligibility.rank}/${eligibility.farmCount} (demo cutoff: ${eligibility.cutoff}). ${outcome} Beta values, may change.`;
+    }
     this.state.unclaimed += mined; this.state.totalMined += mined; this.state.lastEpochReward = mined;
     if (active) this.state.xp += config.xp.perActiveEpoch;
     this.levelUp();
@@ -281,7 +300,7 @@ export class DemoAdapter implements GameAdapter {
     else throw new Error('Choose simulated ETH, DEMO tokens or an available free pack.');
     // Drop eligibility is evaluated before the XP awarded by this purchase.
     const level = this.state.level;
-    const cards = Array.from({ length: config.packs.items }, (): Item => ({ id: `item-${this.state.nextId++}`, rarity: rollRarity(this.random(), level), type: rollType(this.random()), durability: config.electricity.maximum }));
+    const cards = Array.from({ length: config.packs.items }, (): Item => ({ id: `item-${this.state.nextId++}`, rarity: rollRarity(this.random(), level), type: rollType(this.random()), durability: config.mining.maximumDurability }));
     this.state.totalPacks++; this.state.xp += config.xp.perPack; this.levelUp();
     this.state.market.lastPriceEth = Math.min(config.packs.ceilingEth, currentPrice * (1 + config.packs.demandIncrease));
     this.state.market.lastDemandAt = this.state.updatedAt; this.state.market.packsThisEpoch++;
@@ -326,14 +345,14 @@ export class DemoAdapter implements GameAdapter {
   }
   async repair(roomId: number) {
     this.advance(); const items = roomItems(this.state, this.getRoom(roomId));
-    if (!items.some(i => i.durability < config.electricity.maximum)) throw new Error('No repair needed. This room’s items have full durability.');
-    this.spend(COSTS.repair); items.forEach(i => { i.durability = config.electricity.maximum; }); this.save();
+    if (!items.some(i => i.durability < config.mining.maximumDurability)) throw new Error('No repair needed. This room’s items have full durability.');
+    this.spend(COSTS.repair); items.forEach(i => { i.durability = config.mining.maximumDurability; }); this.save();
   }
   async overclock(roomId: number) {
     this.advance(); const r = this.getRoom(roomId);
     if (r.overclock >= config.overclock.maximum) throw new Error(`This room is already at overclock level ${config.overclock.maximum}.`);
     if (!roomItems(this.state, r).some(i => i.durability > 0)) throw new Error('Install a working item before overclocking this room.');
-    this.spend(COSTS.overclock * (r.overclock + 1)); r.overclock++; this.save();
+    this.spend(overclockCost(r)); r.overclock++; this.save();
   }
   async merge(itemIds: string[]): Promise<Item> {
     this.advance();
@@ -343,7 +362,7 @@ export class DemoAdapter implements GameAdapter {
     const first = items[0]!;
     if (items.some(i => i!.type !== first.type || i!.rarity !== first.rarity) || first.rarity === 'Mythic') throw new Error('Merge three items of the same type and rarity, below Mythic.');
     this.spend(COSTS.merge);
-    const upgraded: Item = { id: `item-${this.state.nextId++}`, type: first.type, rarity: RARITIES[RARITIES.indexOf(first.rarity) + 1], durability: config.electricity.maximum };
+    const upgraded: Item = { id: `item-${this.state.nextId++}`, type: first.type, rarity: RARITIES[RARITIES.indexOf(first.rarity) + 1], durability: config.mining.maximumDurability };
     this.state.inventory = [...this.state.inventory.filter(i => !itemIds.includes(i.id)), upgraded];
     this.save(); return copy(upgraded);
   }
@@ -360,7 +379,6 @@ export class DemoAdapter implements GameAdapter {
     if (this.state.lobbied) throw new Error('Wait for the next dispatch before moving a lobbied farm.');
     this.state.district = id; this.save();
   }
-  async payElectricity() { this.advance(); if (this.state.electricity >= config.electricity.maximum) throw new Error('Your electricity meter is already full.'); this.spend(COSTS.electricity); this.state.electricity = config.electricity.maximum; this.save(); }
   async claimNftStarter() {
     this.advance();
     if (this.state.nftStarterClaimed) throw new Error('This demo farm has already claimed its NFT holder starter pack.');

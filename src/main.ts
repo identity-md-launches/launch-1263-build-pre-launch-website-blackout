@@ -1,6 +1,6 @@
 import { config } from './config';
 import { game } from './game/adapter';
-import { activeEvent, actualSpend, COSTS, DISTRICTS, equippedIds, EVENT_LABELS, findItem, inventoryUsed, itemDetail, packPrice, roomCombos, roomHashrate, roomUnlocks, tokenPackPrice, totalHashrate, withdrawTax } from './game/rules';
+import { activeEvent, actualSpend, COSTS, DISTRICTS, electricityTariff, equippedIds, EVENT_LABELS, findItem, inventoryUsed, itemDetail, overclockCost, packPrice, roomCombos, roomHashrate, roomUnlocks, tokenPackPrice, totalHashrate, withdrawTax } from './game/rules';
 import { RARITIES } from './game/types';
 import type { GameState, Item, PackCurrency, Room } from './game/types';
 import { itemSprite, sprite } from './sprites';
@@ -10,6 +10,7 @@ const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.qu
 const esc = (s: string | number) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
 const num = (n: number, digits = 1) => n.toLocaleString('en-US', { maximumFractionDigits: digits, minimumFractionDigits: digits });
 const pct = (n: number) => `${num(n * 100, n * 100 % 1 ? 1 : 0)}%`;
+const tariffPct = (n: number) => `${(n * 100).toLocaleString('en-US', { maximumFractionDigits: 5 })}%`;
 const xLink = (label = 'Follow on X', cls = '') => `<a class="${cls}" href="${config.xUrl}" target="_blank" rel="noopener noreferrer">${label} <span aria-hidden="true">↗</span></a>`;
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 let state: GameState = await game.getFarm();
@@ -89,7 +90,7 @@ function pageHeading(title: string, description: string, aside = '') {
 }
 function comboList(room: Room, all = false) {
   const combos = roomCombos(state, room);
-  return `<div class="combo-list">${combos.filter(c => all || c.active).map(c => `<div class="combo ${c.active ? 'active' : ''}"><span aria-hidden="true">${c.active ? '✓' : '+'}</span><div><strong>${esc(c.name)}</strong><span>${esc(c.description)}</span>${!c.active ? `<small>Needs: ${esc(c.missing.join(' + '))}</small>` : ''}</div><span class="combo-state">${c.active ? 'Active' : 'Missing'}</span></div>`).join('') || '<p class="muted small">No combos yet. Add compatible hardware to start one.</p>'}</div>`;
+  return `<div class="combo-list">${combos.filter(c => all || c.active).map(c => `<div class="combo ${c.active ? 'active' : ''}"><span aria-hidden="true">${c.active ? '✓' : '+'}</span><div><strong>${esc(c.name)}</strong><span>${esc(c.description)}</span>${c.replacedBy ? `<small>Replaced by ${esc(c.replacedBy)}</small>` : !c.active ? `<small>Needs: ${esc(c.missing.join(' + '))}</small>` : ''}</div><span class="combo-state">${c.active ? 'Active' : c.replacedBy ? 'Replaced' : 'Missing'}</span></div>`).join('') || '<p class="muted small">No combos yet. Add compatible hardware to start one.</p>'}</div>`;
 }
 function roomPanel(room: Room) {
   const combos = roomCombos(state, room).filter(c => c.active);
@@ -97,7 +98,7 @@ function roomPanel(room: Room) {
   return `<article class="mining-room"><div class="room-title"><h3>Room ${String(room.id + 1).padStart(2, '0')}</h3><span>${num(roomHashrate(state, room))} H/s</span></div><div class="room-scene"><div class="room-pipes" aria-hidden="true"></div><div class="room-slots">${room.slots.map((id, index) => {
     const item = findItem(state, id);
     return item ? `<button id="slot-${room.id}-${index}" class="farm-slot filled ${item.rarity.toLowerCase()}" data-unplace="${room.id},${index}" aria-label="Remove ${esc(item.rarity)} ${esc(item.type)} from room ${room.id + 1}, slot ${index + 1}">${itemSprite(item.type, item.rarity)}<strong>${esc(item.type)}</strong><span>${esc(item.rarity)}</span><meter min="0" max="100" value="${item.durability}" aria-label="Durability ${num(item.durability)} percent"></meter><small>${num(item.durability)}% · Remove</small></button>` : `<button id="slot-${room.id}-${index}" class="farm-slot ${selectedItem ? 'compatible' : ''}" data-place="${room.id},${index}" aria-label="${selectedItem ? 'Install selected item in' : 'Choose an item for'} room ${room.id + 1}, slot ${index + 1}"><span class="slot-plus" aria-hidden="true">+</span><strong>Slot ${index + 1}</strong><small>${selectedItem ? 'Install item' : 'Empty'}</small></button>`;
-  }).join('')}</div></div><div class="room-controls"><button id="repair-${room.id}" class="text-button" data-repair="${room.id}">Repair · ${cost(COSTS.repair)}</button><button id="overclock-${room.id}" class="text-button" data-overclock="${room.id}" ${room.overclock >= config.overclock.maximum ? 'disabled' : ''}>Overclock ${room.overclock}/${config.overclock.maximum} · ${cost(COSTS.overclock * (room.overclock + 1))}</button></div><p class="overclock-hint">Each overclock level: +${pct(config.overclock.hashPerLevel)} hash, +${pct(config.overclock.extraWearPerLevel)} wear and power use.</p><div class="room-combos"><div class="subheading"><strong>Room combos</strong><span>+${num(bonus * 100, 0)}% hash / ${pct(config.combos.hashCap)} cap</span></div>${comboList(room)}<details id="combos-${room.id}"><summary>Find missing combos</summary>${comboList(room, true)}</details></div></article>`;
+  }).join('')}</div></div><div class="room-controls"><button id="repair-${room.id}" class="text-button" data-repair="${room.id}">Repair · ${cost(COSTS.repair)}</button><button id="overclock-${room.id}" class="text-button" data-overclock="${room.id}" ${room.overclock >= config.overclock.maximum ? 'disabled' : ''}>Overclock ${room.overclock}/${config.overclock.maximum} · ${room.overclock >= config.overclock.maximum ? 'Max level' : cost(overclockCost(room))}</button></div><p class="overclock-hint">Each overclock level: +${pct(config.overclock.hashPerLevel)} hash, +${pct(config.overclock.extraWearPerLevel)} wear, +${pct(config.overclock.extraPowerPerLevel)} power use (raises the tariff). Beta values, may change.</p><div class="room-combos"><div class="subheading"><strong>Room combos</strong><span>+${num(bonus * 100, 0)}% hash / ${pct(config.combos.hashCap)} cap</span></div>${comboList(room)}<details id="combos-${room.id}"><summary>Find missing combos</summary>${comboList(room, true)}</details></div></article>`;
 }
 function inventoryPanel() {
   const equipped = equippedIds(state);
@@ -136,7 +137,7 @@ function farm() {
   <div class="farm-topline"><div class="level-box"><strong>Level ${state.level}</strong><progress value="${state.xp}" max="${Math.max(nextXp, state.xp, 1)}" aria-label="Account XP"></progress><span>${num(state.xp, 0)}${state.level < config.xp.levels.length ? ` / ${nextXp}` : ''} XP</span></div><div class="epoch-box"><span>Epoch ${state.epoch}</span><strong id="epoch-timer"></strong><span>6h live / 45s demo</span></div></div>
   <div class="farm-stats"><div><span>Farm hashrate</span><strong class="accent" id="total-hash">${num(totalHashrate(state))} <small>H/s</small></strong></div><div><span>Available balance</span><strong id="balance">${num(state.tokens)} <small>DEMO</small></strong></div><div><span>Ready to claim</span><strong id="unclaimed">${num(state.unclaimed)}</strong></div><button id="claim" class="button" ${state.unclaimed <= 0 ? 'disabled' : ''}>Claim tokens →</button></div>
   <div class="farm-layout"><section class="farm-rooms" aria-labelledby="rooms-title"><div class="section-heading"><h2 id="rooms-title">Mining rooms</h2><span>${state.rooms.length} / ${config.rooms.maximum} unlocked</span></div><p class="muted small">Six slots. Any hardware. One of each type per room. Select installed hardware to remove it.</p>${state.rooms.map(roomPanel).join('')}<div class="locked-rooms">${roomUnlocks(state).filter(r => !r.unlocked).map(r => `<div class="locked-room">${sprite('room')}<div><strong>Room ${String(r.id + 1).padStart(2, '0')} · Locked</strong><span>${esc(r.requirement)}</span></div><span aria-hidden="true">🔒</span></div>`).join('')}</div>
-  <div class="panel electricity-panel"><div class="section-heading"><h3>Electricity</h3><strong>${num(state.electricity, 0)}%</strong></div><meter min="0" max="${config.electricity.maximum}" value="${state.electricity}" aria-label="Electricity reserve"></meter><div class="lobby-row"><p class="small muted">${pct(config.electricity.tariff)} of mining pays the base tariff. Combos can lower it. Empty reserves stop mining.</p><button id="electricity" class="button compact" ${state.electricity >= config.electricity.maximum ? 'disabled' : ''}>Refill · ${cost(COSTS.electricity)}</button></div></div>
+  <section class="panel electricity-panel" aria-labelledby="electricity-title"><div class="section-heading"><h3 id="electricity-title">Electricity tariff</h3><strong>${pct(config.electricity.tariff)} base</strong></div><p class="small muted">Withheld from mining output each epoch. Combos and events change the tariff; overclock adds power use. No reserve or refill.</p><dl class="tariff-list">${state.rooms.map(room => `<div><dt>Room ${String(room.id + 1).padStart(2, '0')}</dt><dd>${tariffPct(electricityTariff(state, room))}</dd></div>`).join('')}</dl><p class="small muted">Current rates include room combos, overclock and active events. Beta values, may change.</p></section>
   <section class="panel withdraw-panel"><div class="section-heading"><h2>Withdraw</h2><span id="tax-rate">${pct(withdrawTax(state))} tax</span></div><p class="small muted">Tax falls from ${pct(config.economy.withdrawStartTax)} to ${pct(config.economy.withdrawEndTax)} over ${config.economy.withdrawDecayDays} game days. In-game spending has no tax and ${pct(config.economy.spendBonus)} extra buying power.</p><form id="withdraw-form"><label for="withdraw-amount">Amount in DEMO tokens</label><div class="withdraw-row"><input type="number" inputmode="decimal" id="withdraw-amount" aria-describedby="withdraw-preview" min="0.01" step="0.01" placeholder="10.00" required><button class="button" type="submit">Preview withdrawal</button></div><p class="withdraw-preview" id="withdraw-preview">Enter an amount to see what you receive after tax.</p></form><p class="small muted">Simulated withdrawn: ${num(state.withdrawn)} tokens. No transfer is made.</p></section>
   </section>${inventoryPanel()}</div>${cityPanel()}<div class="community-layout">${seasonPanel()}${referralPanel()}</div>
   <details class="panel demo-tools" id="demo-tools"><summary>Demo controls</summary><p class="small muted">Advance the local clock to explore unlocks, events and seasons. These controls only affect this browser.</p><div class="actions"><button class="button compact" id="next-epoch">Run next epoch</button><button class="button compact" id="advance-day">Advance one game day</button><button class="button compact" id="refill-demo">Refill demo funds</button><button class="text-button danger" id="reset">Reset demo</button></div></details></div>`;
@@ -199,7 +200,7 @@ function render(focusPage = false) {
     const previous = document.getElementById(focused);
     const inventoryAction = ['install','scrap','merge'].includes(focused) || focused.startsWith('item-');
     const replacement = installedSlot ? document.getElementById(installedSlot) : selectedItem ? document.getElementById(`item-${selectedItem}`) : document.getElementById('inventory-filter');
-    const target = previous && !(previous instanceof HTMLButtonElement && previous.disabled) ? previous : inventoryAction ? replacement : null;
+    const target = previous && !(previous instanceof HTMLButtonElement && previous.disabled) ? previous : inventoryAction ? replacement : focused.startsWith('overclock-') ? document.getElementById(focused.replace('overclock-', 'repair-')) : null;
     target?.focus({preventScroll:true});
   }
   updateLive();
@@ -257,12 +258,24 @@ document.addEventListener('click', event => {
   }
   if (target.dataset.unplace) { const [r,i] = target.dataset.unplace.split(',').map(Number); void act(() => game.unplace(r,i),'Hardware returned to inventory.'); return; }
   if (target.dataset.repair) { void act(() => game.repair(Number(target.dataset.repair)),'Room hardware repaired.'); return; }
-  if (target.dataset.overclock) { void act(() => game.overclock(Number(target.dataset.overclock)),'Overclock enabled. More hash, electricity use and wear.'); return; }
+  if (target.dataset.overclock) {
+    const room = state.rooms.find(r => r.id === Number(target.dataset.overclock));
+    if (!room || room.overclock >= config.overclock.maximum) return;
+    const level = room.overclock + 1;
+    const next = { ...room, overclock: level };
+    confirm(`Overclock room ${room.id + 1}?`,
+      `Level ${room.overclock} → ${level} of ${config.overclock.maximum}. Cost: ${cost(overclockCost(room))} DEMO tokens, including the ${pct(config.economy.spendBonus)} spending bonus. Cost rises each level.\n\nHash bonus: +${pct(room.overclock * config.overclock.hashPerLevel)} → +${pct(level * config.overclock.hashPerLevel)}.\nWear per item per epoch: ${num(config.mining.durabilityPerEpoch * (1 + room.overclock * config.overclock.extraWearPerLevel), 3)} → ${num(config.mining.durabilityPerEpoch * (1 + level * config.overclock.extraWearPerLevel), 3)} durability.\nExtra power use: +${pct(room.overclock * config.overclock.extraPowerPerLevel)} → +${pct(level * config.overclock.extraPowerPerLevel)}.\nCurrent electricity tariff: ${tariffPct(electricityTariff(state, room))} → ${tariffPct(electricityTariff(state, next))} of mining. Combos and events can change this rate.\n\nBeta values, may change.`,
+      `Overclock to level ${level}`, async () => {
+        const latest = await game.getFarm();
+        if (latest.rooms.find(r => r.id === room.id)?.overclock !== room.overclock) throw new Error('This room changed in another tab. Open the overclock preview again.');
+        await game.overclock(room.id); notify('Overclock enabled. Room hash, wear and electricity tariff increased.');
+      });
+    return;
+  }
   if (target.dataset.reveal) { void act(() => reveal(Number(target.dataset.reveal)), undefined, false); return; }
   switch (target.id) {
     case 'claim': void act(() => game.claim(),'Mined tokens added to your available balance.'); break;
     case 'install': void act(() => game.place(selectedItem!,Number($<HTMLSelectElement>('#install-room').value)),'Hardware installed. Room combos updated.'); break;
-    case 'electricity': void act(() => game.payElectricity(),'Electricity reserve refilled.'); break;
     case 'lobby': void act(() => game.lobby(),'Lobbying filed for the next epoch.'); break;
     case 'move-district': void act(() => game.selectDistrict(Number($<HTMLSelectElement>('#district-select').value)),'Demo farm moved.'); break;
     case 'expand': void act(() => game.expandInventory(),`Inventory expanded by ${config.inventory.expansionSlots} slots.`); break;

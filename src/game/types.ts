@@ -11,18 +11,18 @@ export interface Pack { id: string; cards: Item[]; revealed: boolean[]; currency
 export interface GridEvent { id: number; type: EventType; district: number; at: number; expiresAt: number; lobbied: boolean; protection: string }
 export interface Letter { id: number; title: string; body: string; at: number }
 export interface Combo {
-  id: string; name: string; active: boolean; bonus: number; description: string; missing: string[];
+  id: string; name: string; active: boolean; bonus: number; description: string; missing: string[]; replacedBy?: string;
 }
 export interface RoomUnlock { id: number; unlocked: boolean; requirement: string }
 export interface ReferralState { code: string; referredBy: string; invitees: number; inviteeMining: number; earned: number }
-export interface RivalFarm { id: number; district: number; score: number }
+export interface RivalFarm { id: number; district: number; score: number; hashrate: number }
 export interface SeasonState {
   number: number; endsAtEpoch: number; districtScores: number[]; farmScore: number; rivalFarms: RivalFarm[];
   pendingFreePacks: number; pendingTokens: number; lastResult: string;
 }
 export interface GameState {
   version: 3; rng: number; nextId: number; updatedAt: number; createdAt: number; nextEventAt: number;
-  tokens: number; unclaimed: number; electricity: number; ethBalance: number;
+  tokens: number; unclaimed: number; ethBalance: number;
   inventory: Item[]; inventoryCapacity: number; rooms: Room[];
   district: number; lobbied: boolean; pendingPack: Pack | null;
   events: GridEvent[]; letters: Letter[]; totalPacks: number; storageWarning: string;
@@ -50,7 +50,6 @@ export interface GameAdapter {
   selectDistrict(id: number): Promise<void>;
   getGridEvents(): Promise<GridEvent[]>;
   getLetters(): Promise<Letter[]>;
-  payElectricity(): Promise<void>;
   claimNftStarter(): Promise<void>;
   nextEpoch(): Promise<void>;
   advanceDay(): Promise<void>;

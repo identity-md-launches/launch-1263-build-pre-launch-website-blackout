@@ -1,5 +1,5 @@
 {
-  "runAt": "2026-10-11T08:24:14.727Z",
+  "runAt": "2026-10-11T08:50:59.928Z",
   "export": "dist/",
   "hostingPath": "/preview/",
   "checks": [
@@ -244,7 +244,7 @@
       "index": 4,
       "before": {
         "hash": "#/docs",
-        "scrollY": 7148
+        "scrollY": 7353
       },
       "after": {
         "hash": "#/docs",
@@ -257,7 +257,7 @@
       "index": 5,
       "before": {
         "hash": "#/docs",
-        "scrollY": 8317
+        "scrollY": 8521
       },
       "after": {
         "hash": "#/docs",
@@ -270,7 +270,7 @@
       "index": 6,
       "before": {
         "hash": "#/docs",
-        "scrollY": 9267
+        "scrollY": 9471
       },
       "after": {
         "hash": "#/docs",
@@ -283,7 +283,7 @@
       "index": 7,
       "before": {
         "hash": "#/docs",
-        "scrollY": 10484
+        "scrollY": 10688
       },
       "after": {
         "hash": "#/docs",
@@ -296,7 +296,7 @@
       "index": 8,
       "before": {
         "hash": "#/docs",
-        "scrollY": 11802
+        "scrollY": 12702
       },
       "after": {
         "hash": "#/docs",
@@ -309,7 +309,7 @@
       "index": 9,
       "before": {
         "hash": "#/docs",
-        "scrollY": 13525
+        "scrollY": 15146
       },
       "after": {
         "hash": "#/docs",
@@ -322,7 +322,7 @@
       "index": 10,
       "before": {
         "hash": "#/docs",
-        "scrollY": 14598
+        "scrollY": 16220
       },
       "after": {
         "hash": "#/docs",
@@ -335,7 +335,7 @@
       "index": 11,
       "before": {
         "hash": "#/docs",
-        "scrollY": 15151
+        "scrollY": 16773
       },
       "after": {
         "hash": "#/docs",
@@ -348,7 +348,7 @@
       "index": 12,
       "before": {
         "hash": "#/docs",
-        "scrollY": 16050
+        "scrollY": 17671
       },
       "after": {
         "hash": "#/docs",
@@ -361,7 +361,7 @@
       "index": 13,
       "before": {
         "hash": "#/docs",
-        "scrollY": 16742
+        "scrollY": 18364
       },
       "after": {
         "hash": "#/docs",
@@ -374,7 +374,7 @@
       "index": 14,
       "before": {
         "hash": "#/docs",
-        "scrollY": 17211
+        "scrollY": 18833
       },
       "after": {
         "hash": "#/docs",
@@ -387,7 +387,7 @@
       "index": 15,
       "before": {
         "hash": "#/docs",
-        "scrollY": 17736
+        "scrollY": 19386
       },
       "after": {
         "hash": "#/docs",
@@ -400,7 +400,7 @@
       "index": 16,
       "before": {
         "hash": "#/docs",
-        "scrollY": 18587
+        "scrollY": 20292
       },
       "after": {
         "hash": "#/docs",
@@ -413,7 +413,7 @@
       "index": 17,
       "before": {
         "hash": "#/docs",
-        "scrollY": 19719
+        "scrollY": 21424
       },
       "after": {
         "hash": "#/docs",
@@ -426,7 +426,7 @@
       "index": 18,
       "before": {
         "hash": "#/docs",
-        "scrollY": 20493
+        "scrollY": 22199
       },
       "after": {
         "hash": "#/docs",
@@ -491,7 +491,7 @@
       "index": 4,
       "before": {
         "hash": "#/docs",
-        "scrollY": 6500
+        "scrollY": 6676
       },
       "after": {
         "hash": "#/docs",
@@ -504,7 +504,7 @@
       "index": 5,
       "before": {
         "hash": "#/docs",
-        "scrollY": 7473
+        "scrollY": 7650
       },
       "after": {
         "hash": "#/docs",
@@ -517,7 +517,7 @@
       "index": 6,
       "before": {
         "hash": "#/docs",
-        "scrollY": 8279
+        "scrollY": 8455
       },
       "after": {
         "hash": "#/docs",
@@ -530,7 +530,7 @@
       "index": 7,
       "before": {
         "hash": "#/docs",
-        "scrollY": 9301
+        "scrollY": 9450
       },
       "after": {
         "hash": "#/docs",
@@ -543,7 +543,7 @@
       "index": 8,
       "before": {
         "hash": "#/docs",
-        "scrollY": 10397
+        "scrollY": 11059
       },
       "after": {
         "hash": "#/docs",
@@ -556,7 +556,7 @@
       "index": 9,
       "before": {
         "hash": "#/docs",
-        "scrollY": 12035
+        "scrollY": 13336
       },
       "after": {
         "hash": "#/docs",
@@ -569,7 +569,7 @@
       "index": 10,
       "before": {
         "hash": "#/docs",
-        "scrollY": 12941
+        "scrollY": 14241
       },
       "after": {
         "hash": "#/docs",
@@ -582,7 +582,7 @@
       "index": 11,
       "before": {
         "hash": "#/docs",
-        "scrollY": 13438
+        "scrollY": 14738
       },
       "after": {
         "hash": "#/docs",
@@ -595,7 +595,7 @@
       "index": 12,
       "before": {
         "hash": "#/docs",
-        "scrollY": 14206
+        "scrollY": 15506
       },
       "after": {
         "hash": "#/docs",
@@ -608,7 +608,7 @@
       "index": 13,
       "before": {
         "hash": "#/docs",
-        "scrollY": 14759
+        "scrollY": 16059
       },
       "after": {
         "hash": "#/docs",
@@ -621,7 +621,7 @@
       "index": 14,
       "before": {
         "hash": "#/docs",
-        "scrollY": 15200
+        "scrollY": 16500
       },
       "after": {
         "hash": "#/docs",
@@ -634,7 +634,7 @@
       "index": 15,
       "before": {
         "hash": "#/docs",
-        "scrollY": 15668
+        "scrollY": 16969
       },
       "after": {
         "hash": "#/docs",
@@ -647,7 +647,7 @@
       "index": 16,
       "before": {
         "hash": "#/docs",
-        "scrollY": 16406
+        "scrollY": 17762
       },
       "after": {
         "hash": "#/docs",
@@ -660,7 +660,7 @@
       "index": 17,
       "before": {
         "hash": "#/docs",
-        "scrollY": 17334
+        "scrollY": 18690
       },
       "after": {
         "hash": "#/docs",
@@ -673,7 +673,7 @@
       "index": 18,
       "before": {
         "hash": "#/docs",
-        "scrollY": 17996
+        "scrollY": 19353
       },
       "after": {
         "hash": "#/docs",
@@ -738,11 +738,11 @@
       "index": 4,
       "before": {
         "hash": "#/docs",
-        "scrollY": 3955
+        "scrollY": 4006
       },
       "after": {
         "hash": "#/docs",
-        "scrollY": 3955,
+        "scrollY": 4006,
         "focus": "docs-contents-title"
       }
     },
@@ -751,11 +751,11 @@
       "index": 5,
       "before": {
         "hash": "#/docs",
-        "scrollY": 4662
+        "scrollY": 4713
       },
       "after": {
         "hash": "#/docs",
-        "scrollY": 4662,
+        "scrollY": 4713,
         "focus": "docs-contents-title"
       }
     },
@@ -764,11 +764,11 @@
       "index": 6,
       "before": {
         "hash": "#/docs",
-        "scrollY": 5344
+        "scrollY": 5395
       },
       "after": {
         "hash": "#/docs",
-        "scrollY": 5344,
+        "scrollY": 5395,
         "focus": "docs-contents-title"
       }
     },
@@ -777,11 +777,11 @@
       "index": 7,
       "before": {
         "hash": "#/docs",
-        "scrollY": 6028
+        "scrollY": 6051
       },
       "after": {
         "hash": "#/docs",
-        "scrollY": 6028,
+        "scrollY": 6051,
         "focus": "docs-contents-title"
       }
     },
@@ -790,11 +790,11 @@
       "index": 8,
       "before": {
         "hash": "#/docs",
-        "scrollY": 6731
+        "scrollY": 7054
       },
       "after": {
         "hash": "#/docs",
-        "scrollY": 6731,
+        "scrollY": 7054,
         "focus": "docs-contents-title"
       }
     },
@@ -803,11 +803,11 @@
       "index": 9,
       "before": {
         "hash": "#/docs",
-        "scrollY": 7817
+        "scrollY": 8433
       },
       "after": {
         "hash": "#/docs",
-        "scrollY": 7817,
+        "scrollY": 8433,
         "focus": "docs-contents-title"
       }
     },
@@ -816,11 +816,11 @@
       "index": 10,
       "before": {
         "hash": "#/docs",
-        "scrollY": 8345
+        "scrollY": 8961
       },
       "after": {
         "hash": "#/docs",
-        "scrollY": 8345,
+        "scrollY": 8961,
         "focus": "docs-contents-title"
       }
     },
@@ -829,11 +829,11 @@
       "index": 11,
       "before": {
         "hash": "#/docs",
-        "scrollY": 8345
+        "scrollY": 8961
       },
       "after": {
         "hash": "#/docs",
-        "scrollY": 8345,
+        "scrollY": 8961,
         "focus": "docs-contents-title"
       }
     },
@@ -842,11 +842,11 @@
       "index": 12,
       "before": {
         "hash": "#/docs",
-        "scrollY": 9302
+        "scrollY": 9919
       },
       "after": {
         "hash": "#/docs",
-        "scrollY": 9302,
+        "scrollY": 9919,
         "focus": "docs-contents-title"
       }
     },
@@ -855,11 +855,11 @@
       "index": 13,
       "before": {
         "hash": "#/docs",
-        "scrollY": 9314
+        "scrollY": 9931
       },
       "after": {
         "hash": "#/docs",
-        "scrollY": 9314,
+        "scrollY": 9931,
         "focus": "docs-contents-title"
       }
     },
@@ -868,11 +868,11 @@
       "index": 14,
       "before": {
         "hash": "#/docs",
-        "scrollY": 10018
+        "scrollY": 10635
       },
       "after": {
         "hash": "#/docs",
-        "scrollY": 10018,
+        "scrollY": 10635,
         "focus": "docs-contents-title"
       }
     },
@@ -881,11 +881,11 @@
       "index": 15,
       "before": {
         "hash": "#/docs",
-        "scrollY": 10018
+        "scrollY": 10635
       },
       "after": {
         "hash": "#/docs",
-        "scrollY": 10018,
+        "scrollY": 10635,
         "focus": "docs-contents-title"
       }
     },
@@ -894,11 +894,11 @@
       "index": 16,
       "before": {
         "hash": "#/docs",
-        "scrollY": 10971
+        "scrollY": 11616
       },
       "after": {
         "hash": "#/docs",
-        "scrollY": 10971,
+        "scrollY": 11616,
         "focus": "docs-contents-title"
       }
     },
@@ -907,11 +907,11 @@
       "index": 17,
       "before": {
         "hash": "#/docs",
-        "scrollY": 11633
+        "scrollY": 12277
       },
       "after": {
         "hash": "#/docs",
-        "scrollY": 11633,
+        "scrollY": 12277,
         "focus": "docs-contents-title"
       }
     },
@@ -920,11 +920,11 @@
       "index": 18,
       "before": {
         "hash": "#/docs",
-        "scrollY": 12029
+        "scrollY": 12673
       },
       "after": {
         "hash": "#/docs",
-        "scrollY": 11916,
+        "scrollY": 12561,
         "focus": "docs-contents-title"
       }
     }
@@ -972,25 +972,25 @@
       "width": 320,
       "selection": {
         "x": 33,
-        "y": 23.6875,
+        "y": 23.8125,
         "width": 254,
         "height": 261.75
       },
       "grid": {
         "x": 33,
-        "y": 285.4375,
+        "y": 285.5625,
         "width": 254,
         "height": 504.859375
       },
       "install": {
         "x": 173,
-        "y": 131.0625,
+        "y": 131.1875,
         "width": 114,
         "height": 44
       },
       "selected": {
         "x": 33,
-        "y": 285.4375,
+        "y": 285.5625,
         "width": 79.328125,
         "height": 168.859375
       }
@@ -999,25 +999,25 @@
       "width": 390,
       "selection": {
         "x": 33,
-        "y": 24.359375,
+        "y": 24.109375,
         "width": 324,
         "height": 242.5625
       },
       "grid": {
         "x": 33,
-        "y": 266.921875,
+        "y": 266.671875,
         "width": 324,
         "height": 489
       },
       "install": {
         "x": 243,
-        "y": 112.546875,
+        "y": 112.296875,
         "width": 114,
         "height": 44
       },
       "selected": {
         "x": 33,
-        "y": 266.921875,
+        "y": 266.671875,
         "width": 102.65625,
         "height": 153
       }
@@ -1026,25 +1026,25 @@
       "width": 768,
       "selection": {
         "x": 45,
-        "y": 23.96875,
+        "y": 23.71875,
         "width": 678,
         "height": 223.375
       },
       "grid": {
         "x": 45,
-        "y": 247.34375,
+        "y": 247.09375,
         "width": 678,
         "height": 300
       },
       "install": {
         "x": 609,
-        "y": 112.15625,
+        "y": 111.90625,
         "width": 114,
         "height": 44
       },
       "selected": {
         "x": 45,
-        "y": 247.34375,
+        "y": 247.09375,
         "width": 129.1875,
         "height": 140
       }

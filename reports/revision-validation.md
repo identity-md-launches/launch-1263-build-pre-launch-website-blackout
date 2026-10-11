@@ -1,5 +1,7 @@
 # Revision validation
 
+> Historical review from the preceding job. Current rules, results and limitations are in [rules-validation.md](rules-validation.md). Prior audit/balance behavior described below has been superseded.
+
 Complete for the stated revision scope. All six independent-review findings reproduced against the accepted `dist/` export before edits. Changes are limited to the affected labels, return/focus handlers, inventory ordering and mobile card minimum. Pixel art, palette, demo mechanics, saves and adapter architecture are retained.
 
 The pinned Better Interface workflow and all six domain core principles were read and applied. [Before measurements](revision-before.json), [regression results](revision-results.json) and the root [.imd-responses.json](../.imd-responses.json) record this revision. The earlier review in [validation.md](validation.md) remains historical evidence; its old screenshots and coordinates do not describe the newly rebuilt export.

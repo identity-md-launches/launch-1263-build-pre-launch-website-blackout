@@ -105,7 +105,7 @@ try {
     await expect(page.locator('.farm-slot.filled')).toHaveCount(3);
     assert.equal(await page.locator('.farm-slot.compatible').count(), 0);
     assert.equal(await page.evaluate(() => document.activeElement?.id), 'slot-0-2');
-    await expect(page.locator('.combo.active').first()).toContainText('Common set');
+    await expect(page.locator('.combo.active')).toHaveCount(0);
     await page.locator('#combos-0 summary').click(); await expect(page.locator('#combos-0')).toContainText('Needs: ASIC');
     await demoTools(page); const before = await saved(page);
     await click(page, '#next-epoch'); await expect.poll(async () => (await saved(page)).epoch).toBe(before.epoch + 1);
@@ -113,8 +113,10 @@ try {
     await click(page, '#claim'); await expect(page.locator('#claim')).toBeDisabled();
     assert.equal((await saved(page)).unclaimed, 0);
     await click(page, '[data-repair="0"]'); assert.ok((await saved(page)).inventory.every(item => item.durability === 100));
-    await click(page, '[data-overclock="0"]'); await expect(page.locator('[data-overclock="0"]')).toContainText('1/3');
-    await click(page, '#electricity'); await expect(page.locator('#electricity')).toBeDisabled(); assert.equal((await saved(page)).electricity, 100);
+    await click(page, '[data-overclock="0"]'); await expect(page.locator('#confirm-body')).toContainText('Extra power use');
+    await click(page, '#accept-confirm'); await expect(page.locator('[data-overclock="0"]')).toContainText('1/5');
+    await expect(page.locator('#electricity')).toHaveCount(0); assert.ok(!Object.hasOwn(await saved(page), 'electricity'));
+    await expect(page.locator('.electricity-panel')).toContainText('18.75%');
     await click(page, '#lobby'); await expect(page.locator('#lobby')).toBeDisabled();
     const epoch = (await saved(page)).epoch; await click(page, '#next-epoch');
     await expect.poll(async () => (await saved(page)).epoch).toBe(epoch + 1);

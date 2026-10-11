@@ -71,13 +71,13 @@ Each room has six slots. Install any types, with no duplicate type in the same r
 | Triple Core | GPU + ASIC + FPGA | +20% room hash |
 | Full Stack | At least one of all five tags | +15% room hash |
 | Airflow | Fan + Server Rack | +5% room hash; fire damage halved |
-| Cold Power | Power Supply + Liquid Cooling | Electricity −15%; immune to server fire |
-| Off-grid | Solar Panel + Battery | Electricity −20%; outage loses 50% of output instead of 100% |
+| Cold Power | Power Supply + Liquid Cooling | Electricity tariff −15%; immune to server fire |
+| Off-grid | Solar Panel + Battery | Electricity tariff −20%; outage loses 50% of output instead of 100% |
 | Clean Power | Surge Protector + Power Supply | Immune to power surges |
 | Locked Rack | Router + Server Rack | Immune to cable theft |
-| Rarity set | At least three items of the same rarity | Common +5%, Rare +10%, Epic +20%, Legendary or Mythic +30%; only the strongest set applies |
+| Rarity set | At least three items of the same rarity | Common gives no set bonus; Rare +5%, Epic +10%, Legendary +20%, Mythic +30%. Only the strongest set applies |
 
-Compute Duo and Triple Core can both apply. The Farm combo panel shows active combinations and the items still missing, so you can plan the next slot before installing.
+Triple Core replaces Compute Duo when GPU, ASIC and FPGA are working in the room; they never stack. GPU + ASIC alone still gives Compute Duo’s +10%. The Farm combo panel shows active combinations and the items still missing, so you can plan the next slot before installing.
 
 ## Inventory
 
@@ -108,7 +108,7 @@ A rare pull does not bypass its equip gate. Keep a locked item until you reach t
 
 ## Mining, balance, withdraw tax
 
-Working, powered items mine during each epoch. At the epoch boundary, the demo settles mining, costs and the grid event. Mining first appears as unclaimed tokens. Claim moves it into your spendable balance.
+Working items mine during each epoch. At the epoch boundary, the demo settles mining, costs and the grid event. Mining first appears as unclaimed tokens. Claim moves it into your spendable balance.
 
 | Action | Beta rule |
 | --- | --- |
@@ -123,13 +123,19 @@ Withdrawing in the demo only records a simulated withdrawal. No asset leaves you
 
 | Cost | Beta rule |
 | --- | --- |
-| Electricity | Base tariff is 15% of mining output, withheld each epoch. Combos and grid events can reduce it. |
+| Electricity | Base tariff is 15% of mining output, withheld each epoch. Combos and events change it; overclock’s extra power use raises it. |
 | Durability | Active items lose 0.5 durability per epoch before extra damage or overclock wear. |
 | Repair | Spend tokens to restore worn hardware. Farm shows the price. |
-| Overclock | Spend tokens for more room hash, with higher wear and power use. Inspect the shown effect and cost. |
+| Overclock | Each level adds +10% hash, up to 5 levels (+50%). Cost rises each level. Review the cost, extra wear and power use before confirming. |
 | Upgrades | Merge, inventory expansion and lobbying use the displayed token price. |
 
-The electricity reserve also drains while hardware runs; refill it with tokens. Keep electricity funded and repair damaged equipment. Broken items stop contributing until repaired. All in-game token spending returns to the reward pool at launch; tokens are not burned.
+Electricity has no separate reserve or refill. The tariff is withheld only from new mining output, never from stored balances.
+
+Cold Power and Off-grid reduce the base tariff by 15% and 20% respectively; together they reduce it by 35%. Cheap tariff halves the result.
+
+Each overclock level adds 25% wear and 25% power use relative to level zero: wear = 0.5 × (1 + 0.25 × level) durability per epoch; tariff = 15% × (1 − combo reductions) × (1 + 0.25 × level) × event multiplier. Overclock levels cost 25, 50, 75, 100 and 125 nominal tokens, divided by 1.05 for the spending bonus.
+
+Repair damaged equipment. Broken items stop contributing until repaired. All in-game token spending returns to the reward pool at launch; tokens are not burned.
 
 ## The city and swarm events
 
@@ -141,13 +147,13 @@ The city has eight districts. Each epoch brings a grid event, and your district 
 | Power surge | A hardware item can burn. | Clean Power makes the room immune. |
 | Server fire | Damages equipment. | Cold Power gives immunity; Airflow halves fire damage. |
 | Cable theft | Disrupts mining. | Locked Rack makes the room immune. |
-| Tax audit | Takes 10% of the affected farm’s spendable balance. | No item combo; lobbying reduces bad-event odds. |
+| Tax audit | Only the top 10% of farms by hashrate are audited: 10% of that epoch’s mining goes to the reward pool. Never takes from player balances. | No item combo; lobbying reduces bad-event odds. |
 | Green wave | +10% output for affected farms. | Benefit automatically while mining. |
 | Cheap tariff | Electricity tariff is 50% lower. | Benefit automatically while mining. |
 | Calm | No extra event penalty. | Use the quiet epoch to maintain your farm. |
 | Supply drop | A bonus drop triggered by a spike in pack sales. | Watch the dispatch panel for your drop. |
 
-Lobbying changes the odds, not the outcome. Event protection applies to the room that completes the required combo.
+Audit eligibility uses citywide hashrate, not token balances or cumulative season scores. The demo ranks your farm against 23 simulated rivals with stable hashrates. The top 10% rounds up to 3 of 24 farms; ties use ascending farm ID. The existing district targeting still applies: only eligible farms in the audited district contribute. The audit and electricity tariff are each calculated from that epoch’s gross mining, before wear; earlier unclaimed mining stays intact. These demo ranking conventions are beta values, may change. Lobbying changes the odds, not the outcome. Event protection applies to the room that completes the required combo.
 
 ## How the swarm runs the grid
 
@@ -189,7 +195,7 @@ A demo claim does not prove NFT ownership or reserve a launch pack. The launch c
 
 ## Token and launch
 
-IMD is planned to launch on Robinhood Chain. 10% of the token supply is allocated to IMD swarm contributors, and part of the supply seeds the game reward pool. The exact supply split will be announced at launch.
+The BLACKOUT game token will launch through IMD on Robinhood Chain. 10% of supply goes to IMD swarm contributor agents; part of supply seeds the game reward pool. The exact split will be announced at launch. Beta values, may change.
 
 There is no announced launch date here. Follow [BLACKOUT on X](https://x.com/IMDBlackout) for official updates. This demo does not deploy, mint or sell a token.
 
@@ -203,7 +209,7 @@ There is no announced launch date here. Follow [BLACKOUT on X](https://x.com/IMD
 
 There are no team tokens. The team’s stated share comes from pack revenue. The swarm heartbeat funds the work needed to keep epochs moving.
 
-All in-game token spends go back to the reward pool, including electricity, repairs, upgrades and lobbying. There are no token burns. The demo records token spending as simulated accounting only.
+Electricity tariffs and audit contributions go to the reward pool. All in-game token spends go back to the reward pool, including repairs, upgrades and lobbying. There are no token burns. The demo records token spending as simulated accounting only.
 
 ## Who controls what
 
