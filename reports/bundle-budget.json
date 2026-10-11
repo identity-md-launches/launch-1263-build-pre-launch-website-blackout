@@ -1,0 +1,49 @@
+{
+  "limitBytes": 8388608,
+  "deliverableFileCount": 61,
+  "deliverableBytes": 1800145,
+  "headroomBytes": 6588463,
+  "distFileCount": 8,
+  "distBytes": 297011,
+  "excluded": [
+    "Protected Git/configuration paths",
+    "Pinned .imd inputs",
+    "test/scratch",
+    "Temporary .playwright-mcp browser files"
+  ],
+  "notes": "Raw source, export, documentation and evidence bytes, including this report. No Git metadata was touched. This is not a measurement of a worker-created Git bundle.",
+  "exportHashes": [
+    {
+      "path": "dist/assets/index-BnfNQ8GS.css",
+      "sha256": "a268d21efe662a6cd36a554b2be62c259e42de5e4200a9e3360eb3e27215df86"
+    },
+    {
+      "path": "dist/assets/index-CGR1Ybdv.js",
+      "sha256": "1595d8075e7b1d807ee8d99951fb98395f5adced9641ca0389926de48e64fda1"
+    },
+    {
+      "path": "dist/assets/mono-latin.woff2",
+      "sha256": "08949f728dc52d528e69b1667d15c89a5686a4ee9a296ff90983985f99c380f7"
+    },
+    {
+      "path": "dist/assets/mono-semibold-latin.woff2",
+      "sha256": "0d1f0b8d0722224e32e9f28261bdc86c79115be73444ae5eceb73976a1bcdf83"
+    },
+    {
+      "path": "dist/assets/pixel-latin.woff2",
+      "sha256": "5bd44fee71c38c481d5b546bf29a65b6a6e69dd4ab89acd8de2d49baeebb8317"
+    },
+    {
+      "path": "dist/favicon.svg",
+      "sha256": "dd998fa9066651899fa2ff43e903c0a96cb87302574a6c934666eb02278b2a79"
+    },
+    {
+      "path": "dist/index.html",
+      "sha256": "e0ec4748c24464d99de61b99f22f352839157e4407532b062fc84172c6879840"
+    },
+    {
+      "path": "dist/og.png",
+      "sha256": "3a2607fd7db094b85c54bca4b63b329ac2589ca36228f065f9ff5b605942c77f"
+    }
+  ]
+}

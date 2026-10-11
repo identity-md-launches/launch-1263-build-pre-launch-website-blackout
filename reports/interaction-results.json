@@ -1,0 +1,346 @@
+{
+  "runAt": "2026-10-11T07:53:12.145Z",
+  "export": "dist/",
+  "hostingPath": "/preview/",
+  "checks": [
+    "Landing metadata, local assets and primary action in the 390px first viewport",
+    "Static hash routes load directly and reload with shared localStorage progress",
+    "Install/remove hardware, active/missing combos, upkeep, claims and epoch dispatch",
+    "A timed 45-second epoch mines and delivers a dispatcher letter without real-time waiting",
+    "ETH/token packs, dynamic prices, ordered reveals and unfinished-pack persistence",
+    "Full inventory recovery, equip lock, expansion, merge and scrap confirmation",
+    "Withdraw preview, invalid input recovery and explicit confirmation",
+    "NFT practice credit, free pack, referral dashboard and clipboard fallback",
+    "Game-day unlocks, seven-day withdrawal floor, season settlement and reward claim",
+    "Docs contents, all required chapters, contextual deep links and keyboard navigation",
+    "Responsive reflow on all pages at 320, 390, 768 and 1440 CSS pixels",
+    "Automated WCAG A/AA audit of landing, farm, packs, docs and confirmation",
+    "Reduced motion, normal pack animation, Mythic flash and offline loaded interactions",
+    "No console errors, page errors, failed requests or HTTP 4xx/5xx responses"
+  ],
+  "failures": [],
+  "consoleErrors": [],
+  "failedRequests": [],
+  "firstScreen": {
+    "#hero-title": {
+      "x": 16,
+      "y": 154.375,
+      "width": 358,
+      "height": 48
+    },
+    ".hero-description": {
+      "x": 16,
+      "y": 282.375,
+      "width": 358,
+      "height": 19.1875
+    },
+    ".hero-actions .primary": {
+      "x": 16,
+      "y": 321.5625,
+      "width": 358,
+      "height": 48
+    }
+  },
+  "overflow": [
+    {
+      "route": "home",
+      "width": 320,
+      "viewport": 320,
+      "document": 320,
+      "offenders": []
+    },
+    {
+      "route": "farm",
+      "width": 320,
+      "viewport": 320,
+      "document": 320,
+      "offenders": []
+    },
+    {
+      "route": "packs",
+      "width": 320,
+      "viewport": 320,
+      "document": 320,
+      "offenders": []
+    },
+    {
+      "route": "docs",
+      "width": 320,
+      "viewport": 320,
+      "document": 320,
+      "offenders": []
+    },
+    {
+      "route": "home",
+      "width": 390,
+      "viewport": 390,
+      "document": 390,
+      "offenders": []
+    },
+    {
+      "route": "farm",
+      "width": 390,
+      "viewport": 390,
+      "document": 390,
+      "offenders": []
+    },
+    {
+      "route": "packs",
+      "width": 390,
+      "viewport": 390,
+      "document": 390,
+      "offenders": []
+    },
+    {
+      "route": "docs",
+      "width": 390,
+      "viewport": 390,
+      "document": 390,
+      "offenders": []
+    },
+    {
+      "route": "home",
+      "width": 768,
+      "viewport": 768,
+      "document": 768,
+      "offenders": []
+    },
+    {
+      "route": "farm",
+      "width": 768,
+      "viewport": 768,
+      "document": 768,
+      "offenders": []
+    },
+    {
+      "route": "packs",
+      "width": 768,
+      "viewport": 768,
+      "document": 768,
+      "offenders": []
+    },
+    {
+      "route": "docs",
+      "width": 768,
+      "viewport": 768,
+      "document": 768,
+      "offenders": []
+    },
+    {
+      "route": "home",
+      "width": 1440,
+      "viewport": 1440,
+      "document": 1440,
+      "offenders": []
+    },
+    {
+      "route": "farm",
+      "width": 1440,
+      "viewport": 1440,
+      "document": 1440,
+      "offenders": []
+    },
+    {
+      "route": "packs",
+      "width": 1440,
+      "viewport": 1440,
+      "document": 1440,
+      "offenders": []
+    },
+    {
+      "route": "docs",
+      "width": 1440,
+      "viewport": 1440,
+      "document": 1440,
+      "offenders": []
+    },
+    {
+      "route": "docs",
+      "width": 390,
+      "textEnlargement": "200%",
+      "viewport": 390,
+      "document": 390
+    }
+  ],
+  "accessibility": [
+    {
+      "route": "home",
+      "passes": 21,
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "#hero-title"
+            ],
+            [
+              "#hero-title > span"
+            ],
+            [
+              ".primary.button[href$=\"#/farm\"] > span"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "route": "farm",
+      "passes": 30,
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".primary[href$=\"#/packs\"] > span[aria-hidden=\"true\"]"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "route": "packs",
+      "passes": 25,
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".subheading > span:nth-child(1)"
+            ],
+            [
+              ".badge"
+            ],
+            [
+              ".live-price > span:nth-child(1)"
+            ],
+            [
+              "#pack-price"
+            ],
+            [
+              "strong > small"
+            ],
+            [
+              ".live-price > .small.muted"
+            ],
+            [
+              "legend"
+            ],
+            [
+              "label:nth-child(2)"
+            ],
+            [
+              "label:nth-child(3)"
+            ],
+            [
+              "#pack-payment"
+            ],
+            [
+              ".small.muted:nth-child(7)"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "route": "docs",
+      "passes": 26,
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".primary.button[href$=\"#/farm\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              "#docs-what-is-blackout > .docs-back[href$=\"#/docs\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              "#docs-how-to-start > .docs-back[href$=\"#/docs\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              "#docs-packs-and-prices > .docs-back[href$=\"#/docs\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              "#docs-items-and-rarity > .docs-back[href$=\"#/docs\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              "#docs-rooms-and-combos > .docs-back[href$=\"#/docs\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              "#docs-inventory > .docs-back[href$=\"#/docs\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              "#docs-levels > .docs-back[href$=\"#/docs\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              "#docs-mining-balance-withdraw-tax > .docs-back[href$=\"#/docs\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              "#docs-farm-costs > .docs-back[href$=\"#/docs\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              "#docs-city-and-swarm-events > .docs-back[href$=\"#/docs\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              "#docs-how-swarm-runs-grid > .docs-back[href$=\"#/docs\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              "#docs-lobbying > .docs-back[href$=\"#/docs\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              "#docs-weekly-season > .docs-back[href$=\"#/docs\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              "#docs-referrals > .docs-back[href$=\"#/docs\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              "#docs-nft-holder-pack > .docs-back[href$=\"#/docs\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              "#docs-token-and-launch > .docs-back[href$=\"#/docs\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              "#docs-where-money-goes > .docs-back[href$=\"#/docs\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              "#docs-who-controls-what > .docs-back[href$=\"#/docs\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              "#docs-risks > .docs-back[href$=\"#/docs\"] > span[aria-hidden=\"true\"]"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "route": "confirmation",
+      "passes": 14,
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "#confirm-body"
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "setup": [
+    "Fresh browser context for each scenario.",
+    "The browser clock is paused; epoch/day controls and a controlled 45-second clock advance exercise time without waiting.",
+    "Full-inventory, late-season prize and rarity-animation scenarios use valid localStorage fixtures, then exercise production UI controls."
+  ],
+  "limitations": [
+    "Chromium emulation only; no physical mobile device, real screen-reader session or browser-native zoom test.",
+    "The game, referrals, NFT eligibility and season competition are local simulations. No chain or wallet transactions are tested.",
+    "axe checks and DOM geometry are automated evidence, not a complete accessibility or visual review."
+  ],
+  "status": "passed"
+}

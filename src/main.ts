@@ -1,344 +1,312 @@
 import { config } from './config';
-import { presentationFor } from './presentation';
 import { game } from './game/adapter';
-import { activeEvent, COSTS, DISTRICTS, equippedIds, EVENT_LABELS, findItem, itemDetail, itemName, roomHashrate, totalHashrate } from './game/rules';
-import { ITEM_TYPES, RARITIES } from './game/types';
-import type { GameState, Item, ItemType, Pack, Room, Slot } from './game/types';
+import { activeEvent, actualSpend, COSTS, DISTRICTS, equippedIds, EVENT_LABELS, findItem, inventoryUsed, itemDetail, packPrice, roomCombos, roomHashrate, roomUnlocks, tokenPackPrice, totalHashrate, withdrawTax } from './game/rules';
+import { RARITIES } from './game/types';
+import type { GameState, Item, PackCurrency, Room } from './game/types';
 import { itemSprite, sprite } from './sprites';
+import { renderDocs } from './docs';
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
 const esc = (s: string | number) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
-const number = (n: number, digits = 1) => n.toLocaleString('en-US', {maximumFractionDigits:digits, minimumFractionDigits:digits});
-const presentation = presentationFor(game.mode);
-const badge = `<span class="badge mode-badge">${presentation.badge}</span>`;
+const num = (n: number, digits = 1) => n.toLocaleString('en-US', { maximumFractionDigits: digits, minimumFractionDigits: digits });
+const pct = (n: number) => `${num(n * 100, n * 100 % 1 ? 1 : 0)}%`;
 const xLink = (label = 'Follow on X', cls = '') => `<a class="${cls}" href="${config.xUrl}" target="_blank" rel="noopener noreferrer">${label} <span aria-hidden="true">↗</span></a>`;
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 let state: GameState = await game.getFarm();
 let selectedItem: string | null = null;
-let filter: ItemType | 'All' = 'All';
+let filter = 'All';
+let currency: PackCurrency = 'eth';
 let busy = false;
-let currentPack: Pack | null = state.pendingPack;
-let sound = false;
-const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-let motion = !reducedMotion.matches;
-let scanlines = true;
-let lastEvent = state.events[0]?.id ?? 0;
-let lastRoomMarkup = '';
-let lastInventoryMarkup = '';
-let legendaryReturn: HTMLElement | null = null;
+let opening = false;
+let newlyRevealed: string | null = null;
+const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
+let motion = !motionPreference.matches;
+let confirmAction: (() => Promise<unknown>) | null = null;
+let confirmReturn: HTMLElement | null = null;
+const isDemo = game.mode === 'demo';
+const route = () => location.hash.replace(/^#\/?/, '').split('/')[0] || 'home';
+const lock = (item: Item) => state.level < config.rarity[item.rarity].level;
+const cost = (n: number) => num(actualSpend(n), 2);
+const capacity = () => state.inventoryCapacity - inventoryUsed(state);
 
 $('#app').innerHTML = `
-  <a class="skip-link" href="#main">Skip to content</a>
-  <header class="site-header wrap">
-    <a class="brand" href="#" aria-label="BLACKOUT home">${sprite('mascot')}<span>BLACKOUT</span></a>
-    <nav aria-label="Main navigation"><a href="#packs">${presentation.navLabel}</a><a href="#farm">Your farm</a><a href="#grid">The grid</a><a href="#how">How it works</a></nav>
-    <div class="header-end"><span class="mode-label"><i aria-hidden="true"></i> ${presentation.modeLabel}</span>${xLink('X', 'header-x')}</div>
-  </header>
-  <main id="main">
-    <section class="hero" aria-labelledby="hero-title">
-      <div class="city-art">${sprite('city')}</div>
-      <div class="hero-content wrap">
-        <h1 id="hero-title" aria-label="BLACKOUT">BLACK<span class="flicker">O</span>UT</h1>
-        <p class="tagline">Mine the city.<br class="mobile-break"> Pray the grid stays on.</p>
-        <p class="hero-description">A pixel-art idle mining game.</p>
-        <div class="hero-actions"><a class="button primary" href="#packs">${sprite('bolt')}${presentation.openPackInvitation}<span aria-hidden="true">↗</span></a>${xLink('Follow on X', 'button secondary')}</div>
-        <p class="hero-note">${presentation.heroDisclosure}</p>
-      </div>
-      <div class="scene-caption"><span>Robinhood Chain · Coming soon</span><span>Sector 04 / Swarm territory</span></div>
-    </section>
-      <section id="packs" class="section wrap" aria-labelledby="pack-title">
-        <div class="section-heading"><div><h2 id="pack-title"><span class="section-number">01</span> Your next big pull.</h2><p>${presentation.packDescription}</p></div><span class="section-meta">${presentation.packTerms}</span></div>
-        <div class="pack-lab panel">
-          <div class="pack-stage">
-            <div class="pack-stage-top"><span class="badge">Supply drop / 001</span>${badge}</div>
-            <div class="pack-orbit"><div class="orbit-line"></div><span class="spark spark-a">+</span><span class="spark spark-b">+</span><span class="spark spark-c">·</span><button id="open-pack-art" class="pack-sprite-button" aria-label="${presentation.openPackInvitation}">${sprite('pack', 'big-pack')}</button><div class="pack-shadow"></div></div>
-            <p class="pack-instruction" id="pack-instruction">Select the pack to break the seal.</p>
-            <button class="button primary" id="open-pack">${presentation.openPack} <span aria-hidden="true">→</span></button>
-            <span class="muted small">${presentation.inventoryNote}</span>
-          </div>
-          <div class="reveal-area"><div class="panel-heading"><h3>The reveal</h3><span id="pack-count" class="muted small">Your hardware awaits</span></div><div id="cards" class="cards"></div><div class="reveal-bottom"><p id="reveal-help" role="status">Open a pack, then select each card to reveal it.</p><button id="reveal-all" class="button secondary" disabled>Reveal all</button></div><div class="odds" ${presentation.demo ? '' : 'hidden'}><span>Demo rarity odds</span><div><span class="common">● Common <b>70%</b></span><span class="rare">◆ Rare <b>22%</b></span><span class="epic">✦ Epic <b>7%</b></span><span class="legendary">ϟ Legendary <b>1%</b></span></div></div><details class="type-odds" ${presentation.demo ? '' : 'hidden'}><summary>What’s inside a pack?</summary><p>Each card independently rolls its rarity and type: GPU 60%, Cooling 20%, Power supply 12%, Room 8%. All packs use the same demo odds. Your starter GPU is separate.</p></details></div>
-        </div>
-      </section>
-    <div class="grid-ticker"><div class="wrap"><span><span class="status-dot" aria-hidden="true"></span> Grid status: <strong id="ticker-status">operational</strong></span><span>Operator: <strong>IMD swarm</strong></span><span>Next dispatch: <strong id="ticker-time">00:45</strong></span></div></div>
-    <div class="wrap main-content">
-      <div class="demo-notice"><span>${badge} ${presentation.storageDisclosure}</span><div class="preferences"><button id="motion-toggle" aria-pressed="${motion}">${motion ? 'Pause' : 'Enable'} motion</button><button id="scanline-toggle" aria-pressed="true">CRT on</button><button id="sound-toggle" aria-pressed="false">Sound off</button></div></div>
-      <p id="storage-warning" class="warning" role="status" ${state.storageWarning ? '' : 'hidden'}>${esc(state.storageWarning)}</p>
-      <section id="farm" class="section" aria-labelledby="farm-title">
-        <div class="section-heading"><div><h2 id="farm-title"><span class="section-number">02</span> Your farm</h2><p>Install your hardware. Let the fans do the work.</p></div><span class="section-meta">District 04 · Your farm</span></div>
-        <div class="farm-stats"><div><span>Live hashrate</span><strong class="hash-value"><span id="total-hash">0.0</span> <small>H/s</small></strong></div><div><span>Token balance ${badge}</span><strong id="token-balance">150.0</strong></div><div><span>Mined, unclaimed ${badge}</span><strong id="unclaimed">0.0</strong></div><button class="button secondary" id="claim">${presentation.claim}</button></div>
-        <div class="farm-layout"><div class="farm-panel panel"><div class="panel-heading"><h3>Your mining rooms</h3><span class="online-indicator" id="farm-status">Ready to install</span></div><p class="farm-hint">Select an inventory item, then a matching slot. Drag-and-drop works too.</p><div id="rooms"></div><div class="electricity"><div><span>Electricity reserve</span><strong id="electricity-value">100%</strong></div><meter id="electricity-meter" min="0" max="100" value="100" aria-label="Electricity reserve">100%</meter><button class="text-button" id="electricity">Refill meter · 15 ${presentation.currency}</button></div></div>
-          <div class="inventory-panel panel"><div class="panel-heading"><h3>Inventory</h3><span id="inventory-count" class="badge">1 item</span></div><div class="inventory-filters" role="group" aria-label="Filter inventory">${(['All',...ITEM_TYPES] as const).map(t=>`<button data-filter="${t}" aria-pressed="${t==='All'}">${t==='PSU'?'Power':t}</button>`).join('')}</div><div id="inventory" class="inventory"></div><div class="inventory-actions"><p id="selection-help">A starter GPU is waiting. Select it to get mining.</p><button class="button secondary" id="install" disabled>Install selected item</button><button class="text-button" id="merge" disabled>Merge 3 matching · 20 ${presentation.currency}</button><p class="small muted">Merge uses three spare items of the same type and rarity to make one of the next rarity.</p></div></div>
-        </div>
-        <details class="farm-rules"><summary>${presentation.upkeepTitle}</summary><div class="rule-columns"><p><strong>GPUs:</strong> Common 10, Rare 28, Epic 80, Legendary 250 H/s at full durability. Cooling adds 2%, 5%, 10%, or 20% by rarity.</p><p><strong>Rooms:</strong> Two base GPU slots, one Cooling and one Power supply slot. Power supplies add 1, 2, 3, or 4 GPU slots. A Room key unlocks a second room.</p><p><strong>Upkeep:</strong> Electricity and durability fall while mining. Overclock adds 25% speed per level, up to level 3, with more wear and power use. ${presentation.upkeepNote}</p></div></details>
-      </section>
-      <section id="grid" class="section" aria-labelledby="grid-title">
-        <div class="section-heading"><div><h2 id="grid-title"><span class="section-number">03</span> The city has a mood.</h2><p>Eight districts. One power grid. An operator with no favorites.</p></div><span class="section-meta">Dispatch every 45 seconds</span></div>
-        <div class="grid-layout"><div class="map-panel panel"><div class="panel-heading"><h3>City power grid</h3><span id="grid-countdown" class="badge">Next: 45s</span></div><div id="districts" class="district-map" role="list" aria-label="Eight city districts"></div><div class="map-legend"><span><i class="legend-online"></i> Online</span><span><i class="legend-farm"></i> Your farm</span><span><i class="legend-dark"></i> Offline</span></div><div class="lobby-row"><div><strong id="lobby-status">A word with dispatch?</strong><p>Lobbying lowers your district’s odds of a harmful event. It guarantees nothing.</p></div><button class="button secondary" id="lobby">Lobby the grid<br><span class="small">10 ${presentation.currency}</span></button></div></div>
-        <div class="terminal panel"><div class="terminal-bar"><span><i></i><i></i><i></i></span><span>imd://grid-dispatch</span>${sprite('tower')}</div><div class="terminal-content"><div class="terminal-label">Dispatcher letter <span id="letter-number">#000</span></div><div id="latest-letter" aria-live="polite" aria-atomic="true"></div><div class="terminal-cursor" aria-hidden="true">▌</div><details class="letter-log"><summary>Past dispatches <span id="log-count">(0)</span></summary><div id="letter-log"></div></details><p class="terminal-foot">The swarm sees the grid.<br>The grid sees your meter.</p></div></div></div>
-      </section>
-      <section id="how" class="section" aria-labelledby="how-title"><div class="section-heading"><div><h2 id="how-title"><span class="section-number">04</span> Keep the lights on.</h2></div></div><div class="how-steps">${[
-        ['pack','Open packs','Find GPUs, Cooling, Power supplies and Room keys. Better hardware changes everything.'],
-        ['gpu','Build & mine','Install your gear. GPUs mine while your room has power and working hardware.'],
-        ['bolt','Pay the meter','Electricity and repairs keep you running. At launch, these costs burn the game token.'],
-        ['tower','Survive the swarm','Surges, heat waves, blackouts, tax audits. The grid has its own schedule.'],
-        ['merge','Upgrade & merge','Overclock your room or merge three matching items. Upgrade costs burn the token.']
-      ].map(([art,title,body],i)=>`<article class="how-step"><div class="step-art">${sprite(art as Parameters<typeof sprite>[0])}<span>0${i+1}</span></div><h3>${title}</h3><p>${body}</p></article>`).join('')}</div><div class="fairness-note">${sprite('tower')}<div><h3>Who controls the blackout?</h3><p>${presentation.gridFairness}</p></div></div></section>
-      <section class="extras section" aria-labelledby="extras-title"><div class="section-heading"><div><h2 id="extras-title">At launch</h2><p>On the roadmap for launch.</p></div><span class="badge">Coming later</span></div><div class="extras-grid"><article>${sprite('pack')}<div><h3>IMD holders get a head start.</h3><p>A free starter pack for IMD NFT holders at launch.</p></div></article><article>${sprite('gpu')}<div><h3>Bring your neighbors.</h3><p>Invite friends and earn a share of their mining at launch.</p></div></article><article>${sprite('tower')}<div><h3>Pass the inspection.</h3><p>A weekly swarm inspection. The best farm gets a bonus.</p></div></article></div></section>
-      <section class="launch-panel" aria-labelledby="launch-title"><div>${sprite('mascot')}<div><h2 id="launch-title">The city is booting up.</h2><p>Coming soon on Robinhood Chain</p></div></div><div class="launch-action"><span id="launch-countdown">Date TBA</span>${xLink('Follow the launch', 'button primary')}</div></section>
-    </div>
-  </main>
-  <footer class="wrap"><div class="footer-top"><a class="brand" href="#">${sprite('mascot')}<span>BLACKOUT</span></a><span>A city run by the IMD swarm.</span>${xLink()}</div><div class="footer-bottom"><p>This is a game, not an investment. At launch, rewards will depend on new players and trading volume, and early players earn more. Only spend what you would spend on a game. ${presentation.valueDisclosure}</p><button id="reset" class="text-button" ${presentation.canReset ? '' : 'hidden'}>Reset demo progress</button></div><p class="footer-fine">${presentation.footerDisclosure}</p></footer>
-  <div id="notice" class="notice" role="status" aria-live="polite"><span id="notice-text"></span><button id="dismiss-notice" aria-label="Dismiss notification">×</button></div>
-  <dialog id="confirm-dialog" class="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-body"><h2 id="confirm-title"></h2><p id="confirm-body"></p><div class="dialog-actions"><button id="cancel-confirm" class="button secondary">Cancel</button><button id="accept-confirm" class="button primary"></button></div></dialog>
-  <dialog id="legendary-dialog" class="legendary-dialog" aria-labelledby="legendary-title"><div class="legendary-flash" aria-hidden="true"></div><div class="legendary-content"><span class="badge">An anomaly in the grid</span><h2 id="legendary-title">LEGENDARY</h2><div id="legendary-art"></div><p id="legendary-name"></p><p>The swarm noticed that one.</p><button id="close-legendary" class="button primary">Keep the power</button></div></dialog>
-`;
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header wrap">
+  <a class="brand" href="#/" aria-label="BLACKOUT home">${sprite('mascot')}<span>BLACKOUT</span></a>
+  <nav aria-label="Main navigation"><a href="#/farm" data-route="farm">Farm</a><a href="#/packs" data-route="packs">Open packs</a><a href="#/docs" data-route="docs">Docs</a></nav>
+  <span class="mode-label"><i aria-hidden="true"></i>${isDemo ? 'DEMO MODE' : 'CHAIN MODE'}</span>
+</header>
+<div class="demo-strip"><div class="wrap">${isDemo ? 'No wallet. No real money. Progress saved in this browser.' : 'Farm state is provided by the connected game adapter.'}<span>Beta values, may change</span></div></div>
+<div id="storage-warning" class="wrap warning" hidden></div>
+<main id="main" tabindex="-1"></main>
+<footer class="site-footer wrap"><a class="footer-brand" href="#/">BLACKOUT</a><p>A city worth keeping alive.<br><span class="muted">Launching soon on Robinhood Chain.</span></p><div><a href="#/docs">Read the docs</a>${xLink()}<button class="text-button" id="motion-toggle" ${motionPreference.matches ? 'disabled' : ''} aria-pressed="${motion}">Animation: ${motion ? 'on' : 'off'}</button></div><p class="footer-fine">Demo items and tokens have no real value. Launch contracts are not deployed.</p></footer>
+<div class="notice" id="notice" hidden><p id="notice-text"></p><button id="dismiss-notice" aria-label="Dismiss message">×</button></div>
+<dialog id="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-body"><div class="dialog-inner"><h2 id="confirm-title"></h2><p id="confirm-body"></p><div class="actions"><button class="button" id="cancel-confirm">Cancel</button><button class="button primary" id="accept-confirm">Confirm</button></div></div></dialog>
+<p id="live-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+<div class="mythic-flash" aria-hidden="true"></div>`;
 
-function notify(message: string) { $('#notice-text').textContent = message; $('#notice').classList.add('visible'); }
-function tone(rare = false) {
-  if (!sound) return;
+function notify(message: string, error = false) {
+  $('#notice').hidden = false;
+  $('#notice').classList.toggle('error', error);
+  $('#notice-text').textContent = message;
+  $('#live-status').textContent = message;
+}
+function confirm(title: string, body: string, label: string, action: () => Promise<unknown>) {
+  confirmReturn = document.activeElement as HTMLElement;
+  $('#confirm-title').textContent = title;
+  $('#confirm-body').textContent = body;
+  $('#accept-confirm').textContent = label;
+  confirmAction = action;
+  $('#confirm-dialog').classList.remove('working');
+  $<HTMLDialogElement>('#confirm-dialog').showModal();
+  $('#cancel-confirm').focus();
+}
+function closeConfirm() {
+  $<HTMLDialogElement>('#confirm-dialog').close();
+  confirmAction = null;
+  confirmReturn?.focus();
+}
+async function act(action: () => Promise<unknown>, message?: string, renderAfter = true) {
+  if (busy) return;
+  busy = true;
   try {
-    const ctx = new AudioContext(); const oscillator = ctx.createOscillator(); const gain = ctx.createGain();
-    oscillator.type = 'square'; oscillator.frequency.setValueAtTime(rare ? 880 : 330, ctx.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(rare ? 1320 : 660, ctx.currentTime + .13);
-    gain.gain.setValueAtTime(.025, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(.0001, ctx.currentTime + .18);
-    oscillator.connect(gain); gain.connect(ctx.destination); oscillator.start(); oscillator.stop(ctx.currentTime + .2);
-    oscillator.onended = () => { void ctx.close(); };
-  } catch { sound = false; $('#sound-toggle').textContent = 'Sound off'; $('#sound-toggle').setAttribute('aria-pressed','false'); }
+    await action(); if (renderAfter) { state = await game.getFarm(); render(); }
+    if (message) notify(message);
+  } catch (error) { notify(error instanceof Error ? error.message : 'Unable to update the farm. Reload and try again.', true); }
+  finally { busy = false; }
 }
-function setMotion() { document.documentElement.classList.toggle('motion-paused',!motion); $('#motion-toggle').textContent = `${motion ? 'Pause' : 'Enable'} motion`; $('#motion-toggle').setAttribute('aria-pressed',String(motion)); }
-setMotion();
-document.documentElement.classList.toggle('scanlines',scanlines);
-reducedMotion.addEventListener('change', () => { if (reducedMotion.matches) { motion = false; setMotion(); } });
-
-function renderCards() {
-  $('#cards').innerHTML = Array.from({length:3},(_,i)=> {
-    const revealed = currentPack?.revealed[i];
-    const item = currentPack?.cards[i];
-    return revealed && item ? `<div class="item-card revealed ${item.rarity.toLowerCase()}" data-rarity="${item.rarity}"><div class="card-rarity">${esc(item.rarity)} <span aria-hidden="true">${['●','◆','✦','ϟ'][RARITIES.indexOf(item.rarity)]}</span></div><div class="card-art">${itemSprite(item.type)}${Array.from({length:2+RARITIES.indexOf(item.rarity)*4},(_,n)=>`<i class="card-particle" style="--i:${n}"></i>`).join('')}</div><h4>${itemName(item)}</h4><p>${itemDetail(item)}</p><span class="card-added">✓ In inventory</span></div>` : `<button class="item-card card-back" data-reveal="${i}" ${currentPack?'':'disabled'} aria-label="Reveal card ${i+1}"><span class="card-corner">0${i+1}</span>${sprite('bolt')}<span>${currentPack?'Reveal card':'Unrevealed'}</span></button>`;
-  }).join('');
-  const count = currentPack?.revealed.filter(Boolean).length ?? 0;
-  $('#pack-count').textContent = currentPack ? `${count} / 3 revealed` : 'Your hardware awaits';
-  $('#reveal-all').toggleAttribute('disabled',!currentPack || count === 3 || busy);
-  $('#open-pack').textContent = currentPack && count < 3 ? 'Finish revealing your cards' : `${presentation.openPack} →`;
-  $('#open-pack').toggleAttribute('disabled',busy || (!!currentPack && count < 3));
-  $('#open-pack-art').toggleAttribute('disabled',busy || (!!currentPack && count < 3));
-  $('#reveal-help').textContent = count === 3 ? 'All three items are in your inventory. Install them in your farm below.' : currentPack ? `${count ? `${count} of 3 cards revealed.` : 'Pack opened.'} Select a card to reveal it, or reveal all three.` : 'Open a pack, then select each card to reveal it.';
+function hero() {
+  return `<section class="landing-hero" aria-labelledby="hero-title"><div class="hero-city">${sprite('city')}</div><div class="hero-copy wrap">
+    <h1 id="hero-title">BLACK<span>O</span>UT</h1><p class="tagline">Open packs. Mine the city.<br>Pray the grid stays on.</p><p class="hero-description">A pixel-art idle mining game.</p>
+    <div class="hero-actions"><a class="button primary" href="#/farm">Play demo <span aria-hidden="true">→</span></a><a class="button" href="#/docs">Read docs</a>${xLink('Follow on X', 'button quiet')}</div>
+    <span class="launch-badge">${sprite('bolt')} Launching soon on Robinhood Chain</span>
+  </div><div class="city-caption wrap"><span>Eight districts. One unreliable grid.</span><span>Operated by the IMD swarm</span></div></section>
+  <section class="landing-steps wrap" aria-label="How to play"><div>${sprite('pack')}<p><strong>Crack a pack.</strong><br>Find hardware. Chase rare pulls.</p></div><div>${sprite('gpu')}<p><strong>Build your farm.</strong><br>Mix six items. Find your combos.</p></div><div>${sprite('tower')}<p><strong>Weather the swarm.</strong><br>The city changes every epoch.</p></div></section>
+  <div class="landing-note wrap"><p>The power is temporary. Your next move is yours.</p><a href="#/docs/what-is-blackout">Meet BLACKOUT <span aria-hidden="true">↗</span></a></div>`;
 }
-
-function itemTile(item: Item, equipped: Set<string>) {
-  const used=equipped.has(item.id);
-  return `<button class="inventory-item ${item.rarity.toLowerCase()} ${selectedItem===item.id?'selected':''}" data-item="${item.id}" draggable="${!used}" aria-pressed="${selectedItem===item.id}" aria-label="${item.rarity} ${itemName(item)}, ${itemDetail(item)}${used?', installed':''}">${itemSprite(item.type)}<span><strong>${itemName(item)}</strong><span class="rarity-name">${item.rarity}</span><small>${itemDetail(item)}</small></span><span class="item-state">${used?'Installed':selectedItem===item.id?'Selected':'+'}</span></button>`;
+function pageHeading(title: string, description: string, aside = '') {
+  return `<div class="page-heading"><div><h1>${title}</h1><p>${description}</p></div>${aside}</div>`;
 }
-function renderInventory() {
+function comboList(room: Room, all = false) {
+  const combos = roomCombos(state, room);
+  return `<div class="combo-list">${combos.filter(c => all || c.active).map(c => `<div class="combo ${c.active ? 'active' : ''}"><span aria-hidden="true">${c.active ? '✓' : '+'}</span><div><strong>${esc(c.name)}</strong><span>${esc(c.description)}</span>${!c.active ? `<small>Needs: ${esc(c.missing.join(' + '))}</small>` : ''}</div><span class="combo-state">${c.active ? 'Active' : 'Missing'}</span></div>`).join('') || '<p class="muted small">No combos yet. Add compatible hardware to start one.</p>'}</div>`;
+}
+function roomPanel(room: Room) {
+  const combos = roomCombos(state, room).filter(c => c.active);
+  const bonus = Math.min(config.combos.hashCap, combos.reduce((sum, c) => sum + c.bonus, 0));
+  return `<article class="mining-room"><div class="room-title"><h3>Room ${String(room.id + 1).padStart(2, '0')}</h3><span>${num(roomHashrate(state, room))} H/s</span></div><div class="room-scene"><div class="room-pipes" aria-hidden="true"></div><div class="room-slots">${room.slots.map((id, index) => {
+    const item = findItem(state, id);
+    return item ? `<button id="slot-${room.id}-${index}" class="farm-slot filled ${item.rarity.toLowerCase()}" data-unplace="${room.id},${index}" aria-label="Remove ${esc(item.rarity)} ${esc(item.type)} from room ${room.id + 1}, slot ${index + 1}">${itemSprite(item.type, item.rarity)}<strong>${esc(item.type)}</strong><span>${esc(item.rarity)}</span><meter min="0" max="100" value="${item.durability}" aria-label="Durability ${num(item.durability)} percent"></meter><small>${num(item.durability)}% · Remove</small></button>` : `<button id="slot-${room.id}-${index}" class="farm-slot ${selectedItem ? 'compatible' : ''}" data-place="${room.id},${index}" aria-label="${selectedItem ? 'Install selected item in' : 'Choose an item for'} room ${room.id + 1}, slot ${index + 1}"><span class="slot-plus" aria-hidden="true">+</span><strong>Slot ${index + 1}</strong><small>${selectedItem ? 'Install item' : 'Empty'}</small></button>`;
+  }).join('')}</div></div><div class="room-controls"><button id="repair-${room.id}" class="text-button" data-repair="${room.id}">Repair · ${cost(COSTS.repair)}</button><button id="overclock-${room.id}" class="text-button" data-overclock="${room.id}" ${room.overclock >= config.overclock.maximum ? 'disabled' : ''}>Overclock ${room.overclock}/${config.overclock.maximum} · ${cost(COSTS.overclock * (room.overclock + 1))}</button></div><p class="overclock-hint">Each overclock level: +${pct(config.overclock.hashPerLevel)} hash, +${pct(config.overclock.extraWearPerLevel)} wear and power use.</p><div class="room-combos"><div class="subheading"><strong>Room combos</strong><span>+${num(bonus * 100, 0)}% hash / ${pct(config.combos.hashCap)} cap</span></div>${comboList(room)}<details id="combos-${room.id}"><summary>Find missing combos</summary>${comboList(room, true)}</details></div></article>`;
+}
+function inventoryPanel() {
   const equipped = equippedIds(state);
-  const visible = state.inventory.filter(i => filter==='All'||i.type===filter);
-  const markup = visible.length ? visible.map(i=>itemTile(i,equipped)).join('') : `<p class="empty-state">No items of this type yet.<br>${presentation.emptyInventory}</p>`;
-  if (markup !== lastInventoryMarkup) { $('#inventory').innerHTML = markup; lastInventoryMarkup=markup; }
-  $('#inventory-count').textContent = `${state.inventory.length} item${state.inventory.length===1?'':'s'}`;
-  document.querySelectorAll<HTMLButtonElement>('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.filter===filter)));
-  const selected = findItem(state,selectedItem);
-  const installed = !!selected && equipped.has(selected.id);
-  $('#selection-help').textContent = selected ? `${selected.rarity} ${itemName(selected)} selected.${installed?' Remove it from its slot to move it.':' Select a matching slot or use Install.'}` : 'Select a spare item to install it in your farm.';
-  $('#install').toggleAttribute('disabled',!selected||installed);
-  const matches = selected ? state.inventory.filter(i=>i.type===selected.type&&i.rarity===selected.rarity&&!equipped.has(i.id)) : [];
-  $('#merge').toggleAttribute('disabled',!selected || selected.rarity==='Legendary' || matches.length<3);
-  $('#merge').textContent = selected ? `Merge 3 matching (${matches.length} spare) · 20 ${presentation.currency}` : `Merge 3 matching · 20 ${presentation.currency}`;
+  const spares = state.inventory.filter(i => !equipped.has(i.id));
+  const shown = spares.filter(i => filter === 'All' || config.items[i.type].tag === filter);
+  const selected = state.inventory.find(i => i.id === selectedItem && !equipped.has(i.id));
+  if (!selected) selectedItem = null;
+  const emptySlots = Math.max(0, state.inventoryCapacity - inventoryUsed(state));
+  const matching = selected ? spares.filter(i => i.type === selected.type && i.rarity === selected.rarity) : [];
+  return `<aside class="panel inventory-panel" aria-labelledby="inventory-title"><div class="section-heading"><h2 id="inventory-title">Inventory</h2><span>${inventoryUsed(state)} / ${state.inventoryCapacity}</span></div><p class="muted small">Select an item, then an empty room slot.</p><label class="filter-label" for="inventory-filter">Show items <select id="inventory-filter">${['All', 'compute', 'power', 'cooling', 'network', 'infra'].map(t => `<option ${t === filter ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+    <div class="inventory">${shown.map(i => `<button id="item-${i.id}" class="inventory-item ${i.rarity.toLowerCase()} ${selectedItem === i.id ? 'selected' : ''}" data-item="${i.id}" aria-pressed="${selectedItem === i.id}">${itemSprite(i.type, i.rarity)}<strong>${esc(i.type)}</strong><span>${esc(i.rarity)}</span><small>${lock(i) ? `🔒 Level ${config.rarity[i.rarity].level}` : itemDetail(i)}</small></button>`).join('')}${filter === 'All' ? Array.from({length:emptySlots}, (_, i) => `<div class="inventory-empty" aria-hidden="true"><span>+</span><small>${String(spares.length + i + 1).padStart(2, '0')}</small></div>`).join('') : ''}</div>
+    ${!shown.length && filter !== 'All' ? '<p class="empty-state">No items with this tag. Choose All or open a pack.</p>' : ''}
+    ${state.pendingPack && !state.pendingPack.revealed.every(Boolean) ? '<p class="small warning">Slots reserved for your unopened cards. <a href="#/packs">Finish revealing the pack.</a></p>' : ''}
+    <div class="inventory-selection" id="item-selection">${selected ? `<h3>${esc(selected.rarity)} ${esc(selected.type)}</h3><p class="small muted">${itemDetail(selected)} · ${num(selected.durability)}% durability · ${config.items[selected.type].tag}</p>${lock(selected) ? `<p class="warning small">🔒 Equip at level ${config.rarity[selected.rarity].level}. You are level ${state.level}.</p>` : `<div class="install-row"><label for="install-room">Room</label><select id="install-room">${state.rooms.map(r => `<option value="${r.id}">${String(r.id + 1).padStart(2, '0')}</option>`).join('')}</select><button id="install" class="button primary compact">Install item</button></div>`}<div class="actions"><button id="merge" class="button compact" ${matching.length < config.inventory.mergeCount || selected.rarity === 'Mythic' ? 'disabled' : ''}>Merge ${config.inventory.mergeCount} · ${cost(COSTS.merge)}</button><button id="scrap" class="text-button">Scrap · +${config.rarity[selected.rarity].scrap}</button></div><p class="small muted">Merge needs ${config.inventory.mergeCount} spare items of the same type and rarity. ${matching.length} available.</p>` : '<p class="muted small">Select hardware to install, merge or scrap it. All items are soulbound.</p>'}</div>
+    <button class="button full" id="expand">Expand +${config.inventory.expansionSlots} slots · ${cost(config.inventory.expansionCost)} tokens</button><p class="small muted">Costs include the ${pct(config.economy.spendBonus)} in-game spending bonus. No spend tax.</p><a class="text-link" href="#/packs">Find more hardware →</a>
+  </aside>`;
 }
-function slotMarkup(r: Room, slot: Exclude<Slot,'room'>, index = 0) {
-  const id = slot==='gpu' ? r.gpu[index] : r[slot];
-  const item = findItem(state,id);
-  const label = slot==='gpu' ? `GPU ${index+1}` : slot==='psu'?'Power supply':'Cooling';
-  const selected = findItem(state,selectedItem);
-  const compatible = selected && selected.type === ({gpu:'GPU',cooling:'Cooling',psu:'PSU'}[slot]);
-  return `<button class="farm-slot ${item?'filled '+item.rarity.toLowerCase():''} ${!item&&compatible?'compatible':''}" data-slot="${slot}" data-room="${r.id}" data-index="${index}" aria-label="${item?`Remove ${item.rarity} ${itemName(item)} from`:'Install in'} room ${r.id+1} ${label}">${item?itemSprite(item.type):`<span class="slot-plus" aria-hidden="true">+</span>`}<span>${item?`${item.rarity} ${label}`:label}</span>${item&&slot==='gpu'?`<meter min="0" max="100" value="${item.durability}" data-durability="${item.id}" aria-label="${item.rarity} GPU durability">${Math.round(item.durability)}%</meter><span class="slot-action">Remove</span>`:item?'<span class="slot-action">Remove</span>':'<span class="slot-action">Empty slot</span>'}</button>`;
-}
-function renderRooms() {
-  const markup = state.rooms.map(r=>`<div class="mining-room"><div class="room-title"><span>Room 0${r.id+1}</span><span><span data-room-hash="${r.id}">${number(roomHashrate(state,r))}</span> H/s</span></div><div class="room-scene"><div class="room-pipes" aria-hidden="true"></div><div class="gpu-slots">${r.gpu.map((_,i)=>slotMarkup(r,'gpu',i)).join('')}</div><div class="utility-slots">${slotMarkup(r,'cooling')}${slotMarkup(r,'psu')}</div></div><div class="room-controls"><button class="text-button" data-repair="${r.id}">Repair GPUs · 12 ${presentation.currency}</button><button class="text-button" data-overclock="${r.id}" ${r.overclock>=3?'disabled':''}>${r.overclock>=3?'Overclock maxed · Lv. 3':`Overclock · Lv. ${r.overclock} → ${r.overclock+1} · ${COSTS.overclock*(r.overclock+1)} ${presentation.currency}`}</button></div></div>`).join('') + (state.rooms.length===1?`<button class="locked-room" data-slot="room" data-room="1" data-index="0">${sprite('room')}<span><strong>Room 02 is locked</strong><span>Select a Room key to unlock it.</span></span><span aria-hidden="true">+</span></button>`:'');
-  // Rebuild only after actions; the one-second loop updates numbers in place to preserve focus.
-  if (markup!==lastRoomMarkup) { $('#rooms').innerHTML=markup; lastRoomMarkup=markup; }
-}
-function renderGrid() {
+function cityPanel() {
   const event = activeEvent(state);
-  $('#districts').innerHTML = DISTRICTS.map((d,i)=> {
-    const affected = event?.district===i;
-    const offline = affected&&event.type==='blackout';
-    return `<div class="district ${i===state.district?'your-district':''} ${offline?'district-offline':''} ${affected?'district-affected':''}" role="listitem"><div><span>0${i+1}</span><span class="district-state">${offline?'Offline':affected?EVENT_LABELS[event.type]:'Online'}</span></div><div class="district-buildings" aria-hidden="true">${sprite('district')}</div><strong>${d}</strong>${i===state.district?`<span class="farm-pin">${state.lobbied?'✓ Lobbied':'⌂ Your farm'}</span>`:''}</div>`;
-  }).join('');
-  $('#lobby-status').textContent = state.lobbied?'Request logged for the next event.':'A word with dispatch?';
-  $('#lobby').toggleAttribute('disabled',state.lobbied);
-  $('#lobby').innerHTML = state.lobbied ? 'District lobbied ✓' : `Lobby the grid<br><span class="small">10 ${presentation.currency}</span>`;
-  const letter=state.letters[0];
-  $('#letter-number').textContent = `#${String(letter.id).padStart(3,'0')}`;
-  $('#latest-letter').innerHTML = `<h3>${esc(letter.title)}</h3><p>${esc(letter.body)}</p><time datetime="${new Date(letter.at).toISOString()}">${new Date(letter.at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'})} · Local grid time</time>`;
-  $('#log-count').textContent = `(${Math.max(0,state.letters.length-1)})`;
-  $('#letter-log').innerHTML = state.letters.slice(1).map(l=>`<article><strong>#${String(l.id).padStart(3,'0')} · ${esc(l.title)}</strong><p>${esc(l.body)}</p></article>`).join('') || '<p>No earlier letters. Dispatch arrives every 45 seconds.</p>';
+  const latest = state.letters[0];
+  return `<section class="city-section" aria-labelledby="city-title"><div class="section-heading"><h2 id="city-title">The city never sleeps.</h2><span>8 districts / one grid</span></div><div class="city-layout"><div class="panel map-panel"><div class="section-heading"><h3>District status</h3><span class="badge">${esc(DISTRICTS[state.district])}</span></div><div class="district-map">${DISTRICTS.map((name, i) => `<div class="district ${i === state.district ? 'your-district' : ''} ${(event?.type === 'supply' || event?.district === i) ? 'district-affected' : ''}"><div><span>${String(i + 1).padStart(2, '0')}</span><span>${i === state.district ? 'Your farm' : 'Grid'}</span></div>${sprite('district')}<strong>${name}</strong><small>${(event?.type === 'supply' || event?.district === i) ? EVENT_LABELS[event.type] : 'Online'}</small></div>`).join('')}</div><div class="lobby-row"><div><h3>${state.lobbied ? 'Lobbying filed' : 'Give your district a voice.'}</h3><p class="muted small">Lower the odds of a bad event targeting your district next epoch. No guaranteed protection.</p></div><button class="button compact" id="lobby" ${state.lobbied ? 'disabled' : ''}>Lobby · ${cost(COSTS.lobby)}</button></div><details id="district-choice"><summary>Move demo district</summary><label for="district-select">Choose district</label><select id="district-select">${DISTRICTS.map((name, i) => `<option value="${i}" ${i === state.district ? 'selected' : ''}>${name}</option>`).join('')}</select><button class="button compact" id="move-district">Move farm</button></details></div>
+    <div class="panel terminal"><div class="terminal-bar"><span><i></i><i></i><i></i></span><span>Grid dispatch / incoming</span>${sprite('tower')}</div><div class="terminal-content"><div class="subheading"><span>Current event</span><span>${event ? event.type === 'supply' ? 'Citywide' : `District ${event.district + 1}` : 'Standing by'}</span></div><h3 class="event-title">${event ? EVENT_LABELS[event.type] : 'Calm'}</h3><p class="event-protection">${esc(event?.protection || 'Build room combos before the next event arrives.')}</p><article id="latest-letter"><h3>${esc(latest?.title || 'Connection established')}</h3><p>${esc(latest?.body || 'Resident. Your meter is ready. Keep the grid productive. — IMD Grid Dispatch')}</p></article><details id="letter-history"><summary>Dispatcher letters (${state.letters.length})</summary><div class="letter-log">${state.letters.slice(1).map(l => `<article><strong>${esc(l.title)}</strong><p>${esc(l.body)}</p></article>`).join('') || '<p class="muted small">New letters arrive every epoch.</p>'}</div></details><a href="#/docs/city-and-swarm-events">Read the event protections →</a></div></div></div></section>`;
 }
-function updateCounters() {
-  const rate=totalHashrate(state);
-  $('#total-hash').textContent=number(rate);
-  $('#token-balance').textContent=number(state.tokens);
-  $('#unclaimed').textContent=number(state.unclaimed);
-  $('#claim').toggleAttribute('disabled',state.unclaimed<.01);
-  $('#electricity-value').textContent=`${number(state.electricity,0)}%`;
-  $('#electricity-meter').setAttribute('value',String(state.electricity));
-  $('#electricity').toggleAttribute('disabled',state.electricity>=100);
-  $('#farm-status').textContent = rate>0?'● Mining':equippedIds(state).size?'○ Mining paused':'Ready to install';
-  const secs = Math.max(0,Math.ceil((state.nextEventAt-Date.now())/1000));
-  $('#grid-countdown').textContent=`Next: ${secs}s`;
-  $('#ticker-time').textContent=`00:${String(secs).padStart(2,'0')}`;
-  const event=activeEvent(state);
-  $('#ticker-status').textContent=event?`${EVENT_LABELS[event.type].toLowerCase()} / district ${String(event.district+1).padStart(2,'0')}`:'operational';
-  state.rooms.forEach(r=> { const el=document.querySelector(`[data-room-hash="${r.id}"]`); if(el)el.textContent=number(roomHashrate(state,r)); });
-  state.inventory.forEach(i=>document.querySelector(`[data-durability="${i.id}"]`)?.setAttribute('value',String(i.durability)));
-  const date: string = config.launchDate;
-  if(date) {
-    const timestamp = Date.parse(date);
-    const seconds = Math.max(0,Math.floor((timestamp-Date.now())/1000));
-    $('#launch-countdown').textContent = Number.isFinite(timestamp) ? seconds ? `${Math.floor(seconds/86400)}d ${Math.floor(seconds/3600)%24}h ${Math.floor(seconds/60)%60}m ${seconds%60}s` : 'Launch window reached · Follow X for status' : 'Date TBA';
-  }
-  $('#storage-warning').hidden=!state.storageWarning;
-  $('#storage-warning').textContent=state.storageWarning;
+function seasonPanel() {
+  const remaining = Math.max(0, state.season.endsAtEpoch - state.epoch);
+  const rows = state.season.districtScores.map((score, id) => ({score, id})).sort((a, b) => b.score - a.score);
+  return `<section class="panel season-panel"><div class="section-heading"><h2>Weekly season</h2><span>Season ${state.season.number}</span></div><p class="muted small">${remaining} epochs left · ${num(remaining * config.epoch.hours / config.epoch.dayHours, 1)} game days</p><div class="season-timer"><span id="season-countdown"></span><small>demo time remaining</small></div><p class="small">Best district: free packs. Lottery: ${config.season.lotteryFarms} farms. Best farm: a token prize.</p><p class="small muted">Local simulation with computer-controlled farms.</p><ol class="leaderboard">${rows.map(r => `<li class="${r.id === state.district ? 'is-you' : ''}"><span>${esc(DISTRICTS[r.id])}${r.id === state.district ? ' · You' : ''}</span><strong>${num(r.score, 0)}</strong></li>`).join('')}</ol><p class="small muted">${esc(state.season.lastResult || 'Keep your farm active to climb the district standings.')}</p><button id="season-claim" class="button full" ${!state.season.pendingFreePacks && !state.season.pendingTokens ? 'disabled' : ''}>Claim season rewards · ${state.season.pendingFreePacks} packs / ${num(state.season.pendingTokens, 0)} tokens</button></section>`;
 }
-async function refresh(full = true) {
-  const previous=activeEvent(state)?.id;
-  state=await game.getFarm();
-  if(selectedItem&&!findItem(state,selectedItem)) selectedItem=null;
-  if(full) { renderRooms(); renderInventory(); renderGrid(); }
-  else if(previous!==activeEvent(state)?.id || lastEvent!==(state.events[0]?.id??0)) renderGrid();
-  if(lastEvent!==(state.events[0]?.id??0)) {
-    lastEvent=state.events[0]?.id??0;
-    if(state.events[0]) notify(`New dispatcher letter: ${EVENT_LABELS[state.events[0].type]}. District ${state.events[0].district+1}.`);
-  }
-  updateCounters();
+function referralPanel() {
+  const url = new URL(location.href); url.hash = '/farm'; url.searchParams.set('ref', state.referral.code);
+  return `<div class="side-extras"><section class="panel"><h2>Bring your neighbors.</h2><p class="muted">Referrals earn ${pct(config.referral.miningShare)} of invitees’ mining.</p><label for="referral-link">Your referral link</label><div class="copy-row"><input id="referral-link" value="${esc(url.href)}" readonly><button id="copy-referral" class="button compact">Copy link</button></div><dl class="mini-stats"><div><dt>Invitees</dt><dd>${state.referral.invitees}</dd></div><div><dt>Mining</dt><dd>${num(state.referral.inviteeMining)}</dd></div><div><dt>You earned</dt><dd>${num(state.referral.earned)}</dd></div></dl><p class="small muted">${state.referral.referredBy ? `Referred by ${esc(state.referral.referredBy)}.` : 'Demo referrals stay in this browser; there is no shared backend.'}</p><button id="simulate-referral" class="text-button">Simulate an invitee epoch</button></section><section class="panel nft-panel">${sprite('pack')}<div><h2>Identity MD holder?</h2><p>One free starter pack at launch.</p><p class="small muted">Try the holder benefit locally. No NFT or wallet check is made in demo.</p><button class="button compact" id="nft-starter" ${state.nftStarterClaimed ? 'disabled' : ''}>${state.nftStarterClaimed ? 'Demo holder pack claimed' : 'Try free holder pack'}</button></div></section></div>`;
 }
-async function action(fn: () => Promise<unknown>, message?: string) {
-  if(busy)return;
-  const previousPack = currentPack;
-  const trigger = document.activeElement as HTMLElement;
-  const attributes = ['data-slot','data-room','data-index','data-repair','data-overclock','data-item'];
-  const focusSelector = trigger.id ? `#${trigger.id}` : attributes.filter(a=>trigger.hasAttribute(a)).map(a=>`[${a}="${trigger.getAttribute(a)}"]`).join('');
-  busy=true;
-  try { await fn(); await refresh(); if(message)notify(message); }
-  catch(error) { notify(error instanceof Error?error.message:'Something went wrong. Try the action again.'); }
-  finally {
-    busy=false;
-    if(previousPack!==currentPack)renderCards();
-    if(!trigger.isConnected && focusSelector) (document.querySelector<HTMLElement>(focusSelector)??$('#rooms button')).focus({preventScroll:true});
+function farm() {
+  const nextXp = config.xp.levels[state.level] ?? state.xp;
+  return `<div class="wrap inner-page">${pageHeading('Your farm.', 'Keep the rigs running. Give the grid a reason to stay on.', `<a class="button primary" href="#/packs">Open packs <span aria-hidden="true">→</span></a>`)}
+  <div class="farm-topline"><div class="level-box"><strong>Level ${state.level}</strong><progress value="${state.xp}" max="${Math.max(nextXp, state.xp, 1)}" aria-label="Account XP"></progress><span>${num(state.xp, 0)}${state.level < config.xp.levels.length ? ` / ${nextXp}` : ''} XP</span></div><div class="epoch-box"><span>Epoch ${state.epoch}</span><strong id="epoch-timer"></strong><span>6h live / 45s demo</span></div></div>
+  <div class="farm-stats"><div><span>Farm hashrate</span><strong class="accent" id="total-hash">${num(totalHashrate(state))} <small>H/s</small></strong></div><div><span>Available balance</span><strong id="balance">${num(state.tokens)} <small>DEMO</small></strong></div><div><span>Ready to claim</span><strong id="unclaimed">${num(state.unclaimed)}</strong></div><button id="claim" class="button" ${state.unclaimed <= 0 ? 'disabled' : ''}>Claim tokens →</button></div>
+  <div class="farm-layout"><section class="farm-rooms" aria-labelledby="rooms-title"><div class="section-heading"><h2 id="rooms-title">Mining rooms</h2><span>${state.rooms.length} / ${config.rooms.maximum} unlocked</span></div><p class="muted small">Six slots. Any hardware. One of each type per room. Select installed hardware to remove it.</p>${state.rooms.map(roomPanel).join('')}<div class="locked-rooms">${roomUnlocks(state).filter(r => !r.unlocked).map(r => `<div class="locked-room">${sprite('room')}<div><strong>Room ${String(r.id + 1).padStart(2, '0')} · Locked</strong><span>${esc(r.requirement)}</span></div><span aria-hidden="true">🔒</span></div>`).join('')}</div>
+  <div class="panel electricity-panel"><div class="section-heading"><h3>Electricity</h3><strong>${num(state.electricity, 0)}%</strong></div><meter min="0" max="${config.electricity.maximum}" value="${state.electricity}" aria-label="Electricity reserve"></meter><div class="lobby-row"><p class="small muted">${pct(config.electricity.tariff)} of mining pays the base tariff. Combos can lower it. Empty reserves stop mining.</p><button id="electricity" class="button compact" ${state.electricity >= config.electricity.maximum ? 'disabled' : ''}>Refill · ${cost(COSTS.electricity)}</button></div></div>
+  <section class="panel withdraw-panel"><div class="section-heading"><h2>Withdraw</h2><span id="tax-rate">${pct(withdrawTax(state))} tax</span></div><p class="small muted">Tax falls from ${pct(config.economy.withdrawStartTax)} to ${pct(config.economy.withdrawEndTax)} over ${config.economy.withdrawDecayDays} game days. In-game spending has no tax and ${pct(config.economy.spendBonus)} extra buying power.</p><form id="withdraw-form"><label for="withdraw-amount">Amount in DEMO tokens</label><div class="withdraw-row"><input type="number" inputmode="decimal" id="withdraw-amount" aria-describedby="withdraw-preview" min="0.01" step="0.01" placeholder="10.00" required><button class="button" type="submit">Preview withdrawal</button></div><p class="withdraw-preview" id="withdraw-preview">Enter an amount to see what you receive after tax.</p></form><p class="small muted">Simulated withdrawn: ${num(state.withdrawn)} tokens. No transfer is made.</p></section>
+  </section>${inventoryPanel()}</div>${cityPanel()}<div class="community-layout">${seasonPanel()}${referralPanel()}</div>
+  <details class="panel demo-tools" id="demo-tools"><summary>Demo controls</summary><p class="small muted">Advance the local clock to explore unlocks, events and seasons. These controls only affect this browser.</p><div class="actions"><button class="button compact" id="next-epoch">Run next epoch</button><button class="button compact" id="advance-day">Advance one game day</button><button class="button compact" id="refill-demo">Refill demo funds</button><button class="text-button danger" id="reset">Reset demo</button></div></details></div>`;
+}
+function packCards() {
+  const pack = state.pendingPack;
+  return `<div class="cards" id="cards">${Array.from({length:config.packs.items}, (_, i) => {
+    const item = pack?.cards[i]; const revealed = !!pack?.revealed[i];
+    if (item && revealed) return `<article class="item-card revealed ${item.rarity.toLowerCase()} ${newlyRevealed === item.id ? 'just-revealed' : ''}"><div class="card-rarity"><span>${item.rarity}</span><span>${String(i + 1).padStart(2, '0')}</span></div><div class="card-art">${itemSprite(item.type, item.rarity)}${Array.from({length:2 + RARITIES.indexOf(item.rarity) * 3}, (_, k) => `<i class="card-particle" style="--i:${k}" aria-hidden="true"></i>`).join('')}</div><h3>${item.type}</h3><p>${itemDetail(item)}</p><span class="card-added">${lock(item) ? `🔒 Equip at level ${config.rarity[item.rarity].level}` : 'Added to inventory'}</span></article>`;
+    const next = pack && i === pack.revealed.findIndex(r => !r);
+    return `<button class="item-card card-back" id="reveal-${i}" data-reveal="${i}" ${!pack || !next || opening ? 'disabled' : ''} aria-label="Reveal card ${i + 1}"><span class="card-corner">${String(i + 1).padStart(2, '0')}</span>${sprite('bolt')}<span>${pack ? next ? 'Reveal card' : 'Up next' : 'Unknown hardware'}</span></button>`;
+  }).join('')}</div>`;
+}
+function packs() {
+  const pending = state.pendingPack && !state.pendingPack.revealed.every(Boolean);
+  const full = capacity() < config.packs.items;
+  if (currency === 'free' && !state.freePacks) currency = 'eth';
+  return `<div class="wrap inner-page">${pageHeading('Open packs.', 'Three pieces of hardware. A whole new plan.')}
+  <div class="pack-lab panel"><div class="pack-stage ${opening ? 'opening' : ''}"><div class="subheading"><span>Hardware pack</span><span class="badge">3 soulbound items</span></div><div class="pack-orbit"><div class="orbit-line"></div><span class="spark spark-a">+</span><span class="spark spark-b">+</span><div class="pack-sprite" id="pack-art">${sprite('pack', 'big-pack')}<div class="pack-seal" aria-hidden="true"></div></div><div class="light-burst" aria-hidden="true"></div></div>
+  <div class="live-price"><span>Live pack price <i aria-hidden="true"></i></span><strong><span id="pack-price">${num(packPrice(state), 5)}</span> <small>ETH</small></strong><span class="small muted">Simulated · ${num(config.packs.floorEth, 3)} floor / ${num(config.packs.ceilingEth, 3)} ceiling</span></div>
+  <fieldset class="currency-picker"><legend>Pay with demo funds</legend><label><input name="currency" type="radio" value="eth" ${currency === 'eth' ? 'checked' : ''}> ETH</label><label><input name="currency" type="radio" value="tokens" ${currency === 'tokens' ? 'checked' : ''}> Tokens · −${pct(config.packs.tokenDiscount)}</label>${state.freePacks ? `<label><input name="currency" type="radio" value="free" ${currency === 'free' ? 'checked' : ''}> Free (${state.freePacks})</label>` : ''}</fieldset>
+  <button id="open-pack" class="button primary full" ${pending || full || opening ? 'disabled' : ''}>${opening ? 'Breaking the seal…' : pending ? 'Reveal your cards →' : full ? 'Make inventory space' : 'Open demo pack →'}</button><p id="pack-payment" class="small muted">${paymentText()}</p><p class="small muted">${num(state.ethBalance, 3)} demo ETH · ${num(state.tokens)} tokens<br>${capacity()} inventory slots free · ${state.freePacks} free packs</p>${full && !pending ? '<a href="#/farm" class="warning small">Scrap, merge or expand inventory to open a pack.</a>' : ''}</div>
+  <div class="reveal-area"><div class="section-heading"><h2>Break the seal.</h2><span>Pack ${String(state.pendingPack ? state.totalPacks : state.totalPacks + 1).padStart(3, '0')}</span></div><p id="reveal-help" class="muted">${pending ? 'Your pack is ready. Reveal each card or reveal them all.' : state.pendingPack ? 'Hardware secured. Install it, combine it, make it work.' : 'Open a pack, then reveal your hardware one card at a time.'}</p>${packCards()}<div class="reveal-bottom"><p class="small muted">${pending ? 'Your cards are saved if you leave this page.' : 'Items mine better together. Find a combo.'}</p>${pending ? `<button class="button compact" id="reveal-all" ${opening ? 'disabled' : ''}>Reveal all</button>` : '<a class="button compact" href="#/farm">Build your farm →</a>'}</div><div class="odds"><h3>Know your odds.</h3><div>${RARITIES.map(r => `<span class="${r.toLowerCase()}"><b>${r}</b> ${pct(config.rarity[r].odds)}</span>`).join('')}</div><p class="small muted">Mythic drops begin at level ${config.rarity.Mythic.level}. Before then, Mythic rolls become Common (${pct(config.rarity.Common.odds + config.rarity.Mythic.odds)}). Each item type has equal odds.</p></div></div></div>
+  <div class="pack-explainer"><section class="panel"><h2>A living price.</h2><p>Demand pushes the price up. Quiet epochs bring it down. Token packs cost ${pct(config.packs.tokenDiscount)} less, with another ${pct(config.economy.spendBonus)} in-game buying bonus.</p><p class="muted small">No purchase quantity limit. Each pack needs ${config.packs.items} free inventory slots. Prices and balances here are simulated.</p><button class="text-button" id="refill-demo">Refill demo funds</button></section><section class="panel"><h2>Build a combo.</h2><p>Hardware gets stronger in the right company. Six slots. No duplicate types. Up to +${pct(config.combos.hashCap)} room hash.</p><details id="pack-combo-guide"><summary>Open the combo guide</summary>${comboList({id:0,slots:[],overclock:0}, true)}</details><a href="#/docs/items-and-rarity">Explore all 12 item types →</a></section></div></div>`;
+}
+function paymentText() {
+  return currency === 'tokens' ? `${cost(tokenPackPrice(state))} DEMO tokens charged · includes 5% spending bonus` : currency === 'free' ? 'Uses one free pack credit. No funds charged.' : `${num(packPrice(state), 5)} simulated ETH. No real payment.`;
+}
+function timerText(seconds: number) {
+  const n = Math.max(0, Math.ceil(seconds)); return `${String(Math.floor(n / 60)).padStart(2, '0')}:${String(n % 60).padStart(2, '0')}`;
+}
+function updateLive() {
+  const remaining = Math.max(0, state.nextEventAt - Date.now());
+  const timer = document.querySelector('#epoch-timer'); if (timer) timer.textContent = timerText(remaining / 1000);
+  const season = document.querySelector('#season-countdown'); if (season) season.textContent = timerText(((state.season.endsAtEpoch - state.epoch - 1) * config.demo.eventIntervalMs + remaining) / 1000);
+  const price = document.querySelector('#pack-price'); if (price) price.textContent = num(packPrice({...state, updatedAt:Date.now()}), 5);
+  const payment = document.querySelector('#pack-payment'); if (payment) payment.textContent = paymentText();
+  $('#storage-warning').hidden = !state.storageWarning; $('#storage-warning').textContent = state.storageWarning;
+}
+function render(focusPage = false) {
+  const focused = document.activeElement?.id;
+  const installedSelection = selectedItem ? state.rooms.find(room => room.slots.includes(selectedItem)) : undefined;
+  const installedSlot = installedSelection ? `slot-${installedSelection.id}-${installedSelection.slots.indexOf(selectedItem)}` : null;
+  if (selectedItem && (installedSelection || !findItem(state, selectedItem))) selectedItem = null;
+  const opened = [...document.querySelectorAll<HTMLDetailsElement>('main details[open]')].map(d => d.id);
+  const preservedInputs = ['withdraw-amount','install-room','district-select'].map(id => ({id,value:(document.getElementById(id) as HTMLInputElement | null)?.value}));
+  const page = route();
+  document.body.dataset.page = page;
+  document.body.classList.toggle('motion-off', !motion);
+  document.querySelectorAll('[data-route]').forEach(a => a.getAttribute('data-route') === page ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
+  $('#main').innerHTML = page === 'home' ? hero() : page === 'farm' ? farm() : page === 'packs' ? packs() : page === 'docs' ? `<div class="wrap inner-page docs-page">${renderDocs()}</div>` : `<div class="wrap inner-page">${pageHeading('This district is off-grid.', 'That page does not exist.')}<a class="button primary" href="#/">Back to BLACKOUT</a></div>`;
+  newlyRevealed = null;
+  document.title = `${page === 'home' ? 'BLACKOUT — Open packs. Mine the city.' : `${page === 'farm' ? 'Farm' : page === 'packs' ? 'Open packs' : 'Player guide'} — BLACKOUT`}`;
+  document.querySelectorAll<HTMLElement>('main details[id] > summary').forEach(el => { el.id = `${el.parentElement!.id}-summary`; });
+  opened.forEach(id => { const d = document.getElementById(id) as HTMLDetailsElement; if (d) d.open = true; });
+  preservedInputs.forEach(({id,value}) => { const el = document.getElementById(id) as HTMLInputElement | null; if (el && value !== undefined) el.value = value; });
+  if (document.querySelector('#withdraw-amount')) previewWithdrawal();
+  if (focusPage) { $('#main').focus({preventScroll:true}); window.scrollTo(0,0); }
+  else if (focused) {
+    const previous = document.getElementById(focused);
+    const inventoryAction = ['install','scrap','merge'].includes(focused) || focused.startsWith('item-');
+    const replacement = installedSlot ? document.getElementById(installedSlot) : selectedItem ? document.getElementById(`item-${selectedItem}`) : document.getElementById('inventory-filter');
+    const target = previous && !(previous instanceof HTMLButtonElement && previous.disabled) ? previous : inventoryAction ? replacement : null;
+    target?.focus({preventScroll:true});
   }
+  updateLive();
+}
+function previewWithdrawal() {
+  const field = $<HTMLInputElement>('#withdraw-amount');
+  field.removeAttribute('aria-invalid');
+  const n = Number(field.value); const tax = withdrawTax(state);
+  $('#withdraw-preview').textContent = n > 0 && Number.isFinite(n) ? `Tax ${num(n * tax, 2)} (${pct(tax)}) · You receive ${num(n * (1 - tax), 2)} DEMO tokens.` : 'Enter an amount to see what you receive after tax.';
+}
+async function reveal(index: number) {
+  const pack = state.pendingPack; if (!pack) return;
+  const item = await game.reveal(pack.id, index); state = await game.getFarm(); newlyRevealed = item.id; render();
+  if (item.rarity === 'Mythic' && motion) { document.body.classList.remove('mythic-pull'); void document.body.offsetWidth; document.body.classList.add('mythic-pull'); }
+  notify(`${item.rarity} ${item.type} added to your inventory.${lock(item) ? ` Equip at level ${config.rarity[item.rarity].level}.` : ''}`);
+  const next = state.pendingPack?.revealed.findIndex(r => !r) ?? -1;
+  if (next >= 0) document.getElementById(`reveal-${next}`)?.focus({preventScroll:true});
+  else document.querySelector<HTMLElement>('#open-pack')?.focus({preventScroll:true});
 }
 async function openPack() {
-  if(busy||(currentPack&&!currentPack.revealed.every(Boolean)))return;
-  let opened = false;
-  busy=true;
-  $('#open-pack-art').classList.add('shaking');
-  $('#open-pack').textContent='Breaking the seal…';
-  $('#open-pack').setAttribute('disabled',''); $('#open-pack-art').setAttribute('disabled','');
+  if (busy) return; busy = true;
   try {
-    currentPack=await game.openPack();
-    if(motion&&!reducedMotion.matches) await new Promise(resolve=>setTimeout(resolve,550));
-    tone();
-    $('.pack-orbit').classList.add('bursting');
-    setTimeout(()=>$('.pack-orbit').classList.remove('bursting'),700);
-    opened = true;
-    $('#notice').classList.remove('visible');
-  } catch(e) { notify(e instanceof Error?e.message:'Unable to open this pack. Try again.'); }
-  finally {
-    busy=false; $('#open-pack-art').classList.remove('shaking'); renderCards();
-    if(opened) {
-      $('#cards').scrollIntoView({block:'center',behavior:motion&&!reducedMotion.matches?'smooth':'instant'});
-      document.querySelector<HTMLButtonElement>('[data-reveal]')?.focus({preventScroll:true});
-    }
-  }
-}
-function showLegendary(item: Item) {
-  legendaryReturn=document.querySelector<HTMLElement>('[data-reveal]')??$('#open-pack');
-  $('#legendary-art').innerHTML=itemSprite(item.type);
-  $('#legendary-name').textContent=`${itemName(item)} · ${itemDetail(item)}`;
-  $('#legendary-dialog').classList.toggle('no-flash',!motion||reducedMotion.matches);
-  if(!$<HTMLDialogElement>('#legendary-dialog').open)$<HTMLDialogElement>('#legendary-dialog').showModal();
-  tone(true);
-}
-async function reveal(indices: number[]) {
-  if(!currentPack||busy)return;
-  busy=true;
-  let legendary: Item|undefined;
-  try {
-    for(const index of indices) {
-      if(currentPack.revealed[index])continue;
-      const item=await game.reveal(currentPack.id,index);
-      currentPack.revealed[index]=true;
-      if(item.rarity==='Legendary')legendary=item;
-    }
-    tone(); await refresh();
-  } catch(e) { notify(e instanceof Error?e.message:'Unable to reveal this card. Try again.'); }
-  finally {
-    busy=false; renderCards();
-    if(legendary)showLegendary(legendary);
-    else (document.querySelector<HTMLButtonElement>('[data-reveal]') ?? $<HTMLButtonElement>('#open-pack')).focus({preventScroll:true});
-  }
-}
-async function installSelected() {
-  const item=findItem(state,selectedItem);
-  if(!item) { notify('Select an inventory item first.'); return; }
-  if(item.type==='Room') { await game.place(item.id,1,'room'); return; }
-  const slot = ({GPU:'gpu',Cooling:'cooling',PSU:'psu'} as const)[item.type];
-  const available=state.rooms.find(r=>slot==='gpu'?r.gpu.some(id=>!id):!r[slot]);
-  if(!available)throw new Error('No empty matching slot. Remove an installed item or add a Power supply or Room first.');
-  await game.place(item.id,available.id,slot,slot==='gpu'?available.gpu.indexOf(null):0);
-}
-let confirmAction: (()=>Promise<unknown>)|null = null;
-let confirmReturn: HTMLElement|null=null;
-function confirm(title:string,body:string,label:string,fn:()=>Promise<unknown>) {
-  confirmAction=fn; confirmReturn=document.activeElement as HTMLElement;
-  $('#confirm-title').textContent=title; $('#confirm-body').textContent=body; $('#accept-confirm').textContent=label;
-  $<HTMLDialogElement>('#confirm-dialog').showModal(); $('#cancel-confirm').focus();
+    await game.openPack(currency); state = await game.getFarm(); opening = motion; render();
+    if (opening) await delay(850);
+    opening = false; render();
+    if (route() === 'packs') { $('#cards').scrollIntoView({behavior:motion ? 'smooth' : 'instant',block:'center'}); $('#reveal-0').focus({preventScroll:true}); }
+    notify('Seal broken. Three cards are ready to reveal.');
+  } catch (error) { opening = false; notify(error instanceof Error ? error.message : 'Unable to open pack. Try again.', true); }
+  finally { busy = false; }
 }
 
-document.addEventListener('click',event=> {
-  const target=(event.target as Element).closest<HTMLElement>('button');
-  if(!target||target.hasAttribute('disabled'))return;
-  const data=target.dataset;
-  if(data.reveal!==undefined) { void reveal([Number(data.reveal)]); return; }
-  if(data.filter) { filter=data.filter as typeof filter; renderInventory(); return; }
-  if(data.item) { selectedItem=data.item; renderInventory(); renderRooms(); document.querySelector<HTMLButtonElement>(`[data-item="${data.item}"]`)?.focus({preventScroll:true}); return; }
-  if(data.slot) {
-    const slot=data.slot as Slot, r=state.rooms[Number(data.room)], index=Number(data.index);
-    const occupied=slot!=='room'&&(slot==='gpu'?r.gpu[index]:r[slot]);
-    void action(()=>occupied?game.unplace(r.id,slot as Exclude<Slot,'room'>,index):game.place(selectedItem??'',Number(data.room),slot,index),occupied?'Item returned to inventory.':'Hardware installed.'); return;
+document.addEventListener('click', event => {
+  const target = (event.target as HTMLElement).closest<HTMLElement>('button, a'); if (!target) return;
+  if (target.classList.contains('skip-link')) { event.preventDefault(); $('#main').focus(); $('#main').scrollIntoView(); return; }
+  if (target.id === 'dismiss-notice') { $('#notice').hidden = true; return; }
+  if (target.id === 'cancel-confirm') { closeConfirm(); return; }
+  if (target.id === 'accept-confirm') { const action = confirmAction; closeConfirm(); if (action) void act(action); return; }
+  if (target.id === 'motion-toggle') { if (motionPreference.matches) return; motion = !motion; target.setAttribute('aria-pressed',String(motion)); target.textContent = `Animation: ${motion ? 'on' : 'off'}`; document.body.classList.toggle('motion-off',!motion); return; }
+  if (busy) return;
+  if (target.dataset.item) { selectedItem = target.dataset.item; render(); return; }
+  if (target.dataset.place) {
+    if (!selectedItem) { notify('Select a spare item in your inventory first.'); $('#inventory-title').scrollIntoView({block:'center',behavior:motion ? 'smooth' : 'instant'}); return; }
+    const [r, i] = target.dataset.place.split(',').map(Number); void act(() => game.place(selectedItem!,r,i), 'Hardware installed. Room combos updated.'); return;
   }
-  if(data.repair) { void action(()=>game.repair(Number(data.repair)),`GPUs repaired. 12 ${presentation.currency} spent.`); return; }
-  if(data.overclock) { void action(()=>game.overclock(Number(data.overclock)),'Overclock upgraded. Speed, power use and wear increased.'); return; }
-  const handlers: Record<string,()=>void> = {
-    'open-pack':()=>void openPack(), 'open-pack-art':()=>void openPack(), 'reveal-all':()=>void reveal([0,1,2]),
-    install:()=>void action(installSelected,'Item installed in your farm.'), claim:()=>void action(()=>game.claim(),presentation.claimed),
-    electricity:()=>void action(()=>game.payElectricity(),`Electricity refilled. 15 ${presentation.currency} spent.`), lobby:()=>void action(()=>game.lobby(),'District lobbied for the next event. No outcome is guaranteed.'),
-    'motion-toggle':()=>{motion=!motion;setMotion();}, 'scanline-toggle':()=>{scanlines=!scanlines;document.documentElement.classList.toggle('scanlines',scanlines);target.textContent=`CRT ${scanlines?'on':'off'}`;target.setAttribute('aria-pressed',String(scanlines));},
-    'sound-toggle':()=>{sound=!sound;target.textContent=`Sound ${sound?'on':'off'}`;target.setAttribute('aria-pressed',String(sound));tone();},
-    'dismiss-notice':()=>$('#notice').classList.remove('visible'),
-    reset:()=>{ if(presentation.canReset) confirm('Reset your demo?','This removes all packs, inventory and farm progress saved in this browser. You’ll start again with a starter GPU and 150 DEMO tokens.','Reset demo',async()=>{await game.reset();currentPack=null;selectedItem=null;filter='All';lastEvent=0;notify('Demo reset. Your starter GPU is ready.');}); },
-    merge:()=> {
-      const item=findItem(state,selectedItem); if(!item)return;
-      const equipped=equippedIds(state);
-      const ids=state.inventory.filter(i=>i.type===item.type&&i.rarity===item.rarity&&!equipped.has(i.id)).slice(0,3).map(i=>i.id);
-      confirm('Merge your hardware?',`Spend 20 ${presentation.currency} and consume three spare ${item.rarity} ${itemName(item)} items to receive one ${RARITIES[RARITIES.indexOf(item.rarity)+1]} item of the same type.`,'Merge 3 items',async()=>{const upgraded=await game.merge(ids);selectedItem=upgraded.id;notify(`Merged into a ${upgraded.rarity} ${itemName(upgraded)}.`);});
-    },
-    'cancel-confirm':()=>$<HTMLDialogElement>('#confirm-dialog').close(),
-    'accept-confirm':()=>{const fn=confirmAction;$<HTMLDialogElement>('#confirm-dialog').close();if(fn)void action(fn);},
-    'close-legendary':()=>$<HTMLDialogElement>('#legendary-dialog').close()
-  };
-  handlers[target.id]?.();
+  if (target.dataset.unplace) { const [r,i] = target.dataset.unplace.split(',').map(Number); void act(() => game.unplace(r,i),'Hardware returned to inventory.'); return; }
+  if (target.dataset.repair) { void act(() => game.repair(Number(target.dataset.repair)),'Room hardware repaired.'); return; }
+  if (target.dataset.overclock) { void act(() => game.overclock(Number(target.dataset.overclock)),'Overclock enabled. More hash, electricity use and wear.'); return; }
+  if (target.dataset.reveal) { void act(() => reveal(Number(target.dataset.reveal)), undefined, false); return; }
+  switch (target.id) {
+    case 'claim': void act(() => game.claim(),'Mined tokens added to your available balance.'); break;
+    case 'install': void act(() => game.place(selectedItem!,Number($<HTMLSelectElement>('#install-room').value)),'Hardware installed. Room combos updated.'); break;
+    case 'electricity': void act(() => game.payElectricity(),'Electricity reserve refilled.'); break;
+    case 'lobby': void act(() => game.lobby(),'Lobbying filed for the next epoch.'); break;
+    case 'move-district': void act(() => game.selectDistrict(Number($<HTMLSelectElement>('#district-select').value)),'Demo farm moved.'); break;
+    case 'expand': void act(() => game.expandInventory(),`Inventory expanded by ${config.inventory.expansionSlots} slots.`); break;
+    case 'next-epoch': void act(() => game.nextEpoch(),'Epoch settled. Read the latest dispatcher letter.'); break;
+    case 'advance-day': void act(() => game.advanceDay(),'Advanced one game day: four epochs settled.'); break;
+    case 'refill-demo': void act(() => game.refillDemoFunds(),'Demo funds refilled. No real funds added.'); break;
+    case 'season-claim': void act(() => game.claimSeasonRewards(),'Season rewards collected.'); break;
+    case 'nft-starter': void act(() => game.claimNftStarter(),'Free demo holder pack added. Use Free on the Open packs page.'); break;
+    case 'simulate-referral': void act(() => game.simulateInviteeEpoch(),'One invitee mining epoch simulated. Referral reward added.'); break;
+    case 'copy-referral': {
+      const field = $<HTMLInputElement>('#referral-link');
+      const fallback = () => { field.focus(); field.select(); notify('Select and copy the referral link from the field.'); };
+      if (navigator.clipboard?.writeText) void navigator.clipboard.writeText(field.value).then(() => notify('Referral link copied.'), fallback); else fallback();
+      break;
+    }
+    case 'open-pack': void openPack(); break;
+    case 'reveal-all': void act(async () => { for (let i = 0; i < config.packs.items; i++) { if (!state.pendingPack?.revealed[i]) { await reveal(i); if (motion) await delay(400); } } if (route() === 'packs') $('#cards').scrollIntoView({block:'center',behavior:motion ? 'smooth' : 'instant'}); }, undefined, false); break;
+    case 'merge': {
+      const selected = findItem(state,selectedItem); if (!selected) break;
+      const ids = state.inventory.filter(i => !equippedIds(state).has(i.id) && i.type === selected.type && i.rarity === selected.rarity).slice(0,config.inventory.mergeCount).map(i => i.id);
+      confirm('Merge this hardware?',`Consume ${config.inventory.mergeCount} ${selected.rarity} ${selected.type} items and ${cost(COSTS.merge)} DEMO tokens for one item of the next rarity. This cannot be undone.`, 'Merge items', async () => { const item = await game.merge(ids); selectedItem = item.id; notify(`${item.rarity} ${item.type} created.`); }); break;
+    }
+    case 'scrap': {
+      const item = findItem(state,selectedItem); if (!item) break;
+      confirm('Scrap this item?',`Permanently remove ${item.rarity} ${item.type} for ${config.rarity[item.rarity].scrap} DEMO tokens.`, 'Scrap item', async () => { await game.scrap(item.id); selectedItem = null; notify('Item scrapped. Tokens added to your balance.'); }); break;
+    }
+    case 'reset': confirm('Reset your demo?', 'Delete this browser’s farm, items, balance and progress, then start with a fresh farm. This cannot be undone.', 'Reset demo', async () => { await game.reset(); selectedItem = null; notify('A fresh farm is ready.'); }); break;
+  }
 });
-$<HTMLDialogElement>('#confirm-dialog').addEventListener('close',()=>confirmReturn?.focus({preventScroll:true}));
-$<HTMLDialogElement>('#legendary-dialog').addEventListener('close',()=>{ const destination=legendaryReturn?.isConnected?legendaryReturn:$('#open-pack');destination.focus({preventScroll:true}); });
-document.addEventListener('dragstart',event=> {
-  const item=(event.target as Element).closest<HTMLElement>('[data-item]');
-  if(item&&event.dataTransfer) { event.dataTransfer.setData('text/plain',item.dataset.item!);event.dataTransfer.effectAllowed='move'; }
+document.addEventListener('change', event => {
+  const el = event.target as HTMLInputElement;
+  if (el.id === 'inventory-filter') { filter = el.value; render(); }
+  if (el.name === 'currency') { currency = el.value as PackCurrency; render(); }
 });
-document.addEventListener('dragover',event=> { if((event.target as Element).closest('[data-slot]')) { event.preventDefault(); if(event.dataTransfer)event.dataTransfer.dropEffect='move'; } });
-document.addEventListener('drop',event=> {
-  const slot=(event.target as Element).closest<HTMLElement>('[data-slot]');
-  if(!slot||!event.dataTransfer)return;
-  event.preventDefault(); const itemId=event.dataTransfer.getData('text/plain');
-  void action(()=>game.place(itemId,Number(slot.dataset.room),slot.dataset.slot as Slot,Number(slot.dataset.index)),'Hardware installed.');
+document.addEventListener('input', event => { if ((event.target as HTMLElement).id === 'withdraw-amount') previewWithdrawal(); });
+document.addEventListener('submit', event => {
+  if ((event.target as HTMLElement).id !== 'withdraw-form') return;
+  event.preventDefault(); const n = Number($<HTMLInputElement>('#withdraw-amount').value);
+  if (!Number.isFinite(n) || n <= 0 || n > state.tokens) { const message = `Enter an amount from 0.01 to ${num(state.tokens,2)} DEMO tokens.`; notify(message,true); $('#withdraw-amount').setAttribute('aria-invalid','true'); $('#withdraw-preview').textContent = message; $('#withdraw-amount').focus(); return; }
+  confirm('Withdraw demo tokens?',`Withdraw ${num(n,2)} tokens. Tax: ${num(n * withdrawTax(state),2)}. You receive ${num(n * (1-withdrawTax(state)),2)} DEMO tokens in the simulated withdrawal counter. No transfer is made.`, 'Withdraw in demo', async () => { await game.withdraw(n); notify('Demo withdrawal recorded. No real transfer was made.'); });
 });
-renderCards();renderRooms();renderInventory();renderGrid();updateCounters();
-setInterval(()=>{if(!busy)void refresh(false).catch(()=>notify(presentation.updateError));},1000);
+$<HTMLDialogElement>('#confirm-dialog').addEventListener('cancel', () => { confirmAction = null; });
+$<HTMLDialogElement>('#confirm-dialog').addEventListener('close', () => { confirmReturn?.focus(); });
+window.addEventListener('hashchange', () => {
+  if (location.hash === '#main') { $('#main').focus(); return; }
+  render(true);
+  const section = location.hash.split('/')[2];
+  if (route() === 'docs' && section) { const el = document.getElementById(`docs-${section}`); el?.scrollIntoView(); el?.setAttribute('tabindex','-1'); el?.focus({preventScroll:true}); }
+});
+motionPreference.addEventListener('change', () => { motion = !motionPreference.matches; $<HTMLButtonElement>('#motion-toggle').disabled = motionPreference.matches; $('#motion-toggle').setAttribute('aria-pressed',String(motion)); $('#motion-toggle').textContent = `Animation: ${motion ? 'on' : 'off'}`; document.body.classList.toggle('motion-off',!motion); });
+const ref = new URL(location.href).searchParams.get('ref'); if (ref) { try { await game.captureReferral(ref); state = await game.getFarm(); } catch { /* Invalid referral links never block the demo. */ } }
+render();
+if (route() === 'docs' && location.hash.split('/')[2]) document.getElementById(`docs-${location.hash.split('/')[2]}`)?.scrollIntoView();
+setInterval(async () => {
+  if (busy || $<HTMLDialogElement>('#confirm-dialog').open) return;
+  try { const next = await game.getFarm(); const changed = JSON.stringify({...next,updatedAt:0}) !== JSON.stringify({...state,updatedAt:0}); state = next; if (changed && (route() === 'farm' || route() === 'packs')) render(); updateLive(); }
+  catch { /* Actions expose a recoverable error; do not repeat notices every clock tick. */ }
+}, 1000);

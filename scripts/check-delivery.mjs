@@ -16,7 +16,7 @@ async function walk(directory) {
   }
 }
 await walk(root);
-for(const required of ['dist/index.html','dist/og.png','dist/favicon.svg','package.json','package-lock.json','DESIGN.md','README.md','artifacts/validation.md']) {
+for(const required of ['dist/index.html','dist/og.png','dist/favicon.svg','package.json','package-lock.json','DESIGN.md','README.md','reports/validation.md', 'docs.md', 'CHANGELOG.md', 'reports/publication.md']) {
   if(!files.includes(required))throw new Error(`Missing required deliverable: ${required}`);
 }
 const html=await readFile('dist/index.html','utf8');
@@ -28,7 +28,7 @@ for(const [,url] of html.matchAll(/(?:src|href)="([^"]+)"/g)) {
 }
 const png=await readFile('dist/og.png');
 if(png.readUInt32BE(16)!==1200||png.readUInt32BE(20)!==630)throw new Error('OG dimensions must be 1200×630');
-const reportPath='artifacts/bundle-budget.json';
+const reportPath='reports/bundle-budget.json';
 if(!files.includes(reportPath))files.push(reportPath);
 let report={};
 await writeFile(reportPath,'{}\n');

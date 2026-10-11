@@ -2,88 +2,174 @@
 
 ## Overview
 
-BLACKOUT is a pre-launch pixel-art idle mining game for players who want to try the core loop before contracts exist. The implemented page combines a rooftop city illustration with a playable pack lab, mining rooms, inventory and eight-district grid. Cyan marks primary actions and powered hardware; yellow marks demo status and grid events; magenta distinguishes Epic gear and illustration accents. The dark control tower and its red eye are visible in the middle of the city.
+BLACKOUT is a pre-launch pixel-art idle mining game. The landing page introduces the city and directs people to play the demo, read the guide or follow the project. Farm, Open Packs and Docs are separate hash routes, sharing browser-saved demo progress. The shipped interface requires no wallet and uses no real funds.
 
-The page uses square edges, pixel illustrations, generous separation between sections and denser equipment panels. Marketing headings stay short. Instructions sit beside the controls they explain. Rarity, selection, grid status and disabled states all have textual cues as well as color.
+The retained visual language is a cyberpunk night city: dark navy surfaces, crisp pixel hardware, cyan light, yellow actions and magenta accents. The landing page gives the city illustration space; Farm uses denser equipment and status panels; Docs uses a restrained reading column. Rarity, locks, selected items, district events and combo states have text as well as color.
 
-Source of truth: `src/style.css` for tokens and layout; `src/main.ts` for markup and interaction patterns; `src/presentation.ts` for adapter-mode copy; `src/sprites.ts` for every game illustration; `src/game/` for rules and state. This document describes the final implementation, not a proposal.
+The canonical implementation is [src/style.css](src/style.css), [src/main.ts](src/main.ts), [src/sprites.ts](src/sprites.ts) and [src/docs.ts](src/docs.ts). This document records their implemented patterns. It is not a proposed redesign or an assertion that launch contracts exist.
 
 ## Colors
 
-Tokens are defined in `src/style.css:4`. Primitives are hex sRGB; semantic aliases are used by components. The art registry also contains its own fixed pixel palette.
+`src/style.css` defines hex sRGB primitives and semantic aliases in `:root`. The site has one dark presentation with `color-scheme: dark`.
 
-| Semantic token | Value | Use |
+| Token | Implemented value | Role |
 | --- | --- | --- |
-| `--bg` | `#05060f` | Page background, dark text on primary actions |
-| `--surface` | `#090e1d` | Panels, secondary buttons |
-| `--surface-raised` | `#0e1428` | Badges and raised controls |
-| `--hover` | `#141d33` | Hover surface family |
-| `--border` | `#354664` | Structural panel boundaries |
-| `--text` | `#edf2ff` | Primary text |
-| `--muted` | `#a1aec5` | Supporting copy and labels |
-| `--accent` | `#39e6ff` | Primary actions, power and selected hardware |
-| `--highlight`, `--focus` | `#ffe600` | Demo labels, grid notices, focus outline |
+| `--navy-950` / `--bg` | `#05060f` | Page background |
+| `--navy-900` / `--surface` | `#090e1d` | Panels and demo strip |
+| `--navy-850` / `--surface-raised` | `#0e1428` | Standard button surfaces and table headers |
+| `--navy-800` / `--hover` | `#141d33` | Available surface alias; individual hover rules also use component colors |
+| `--navy-600` / `--border` | `#354664` | Structural borders |
+| `--border-control` | `#65748f` | Interactive borders and table scrollbars |
+| `--gray-100` / `--text` | `#edf2ff` | Main text |
+| `--gray-400` / `--muted` | `#a1aec5` | Supporting copy, empty inventory slots and labels |
+| `--cyan-400` / `--accent` | `#39e6ff` | Brand, links, selected items, active combinations and positive counters |
+| `--yellow-400` / `--highlight` / `--focus` | `#ffe600` | Main action fill, demo/epoch notices, warnings and focus |
+| `--magenta-400` | `#ff3df2` | Epic gear and illustration accents |
+| `--danger` | `#ff869c` | Destructive text and notification error border |
 | `--common` | `#bdc8dd` | Common rarity |
 | `--rare` | `#39e6ff` | Rare rarity |
 | `--epic` | `#ff3df2` | Epic rarity |
 | `--legendary` | `#ffe600` | Legendary rarity |
+| `--mythic` | `#ff6475` | Mythic rarity |
 
-The repeated brand hues deliberately serve both the requested rarity palette and art. Labels and symbols disambiguate them. The city uses `#030c39`, `#05060f`, `#070b24`, muted purple facades, cyan and yellow windows, magenta neon and a red tower eye. Sprite colors are illustrative, not a parallel interface theme.
+Component-specific values remain in CSS: primary action text `#111323`, primary hover fill `#fff168`, form fill `#080e1e`, docs prose/table text `#c5cfe0`, dispatcher prose `#b5c7d3`, notification fill `#101f30` and Mythic flash `#ff365955`. The art registry has its own fixed pixel palette and rarity palettes; those illustration colors are not additional interface themes.
 
-Measured solid pairs are recorded in `artifacts/smoke-results.json`: primary text/page 18.04:1; muted/raised surface 8.16:1; primary button text/fill 13.41:1; Common/raised 10.85:1; Epic/raised 6.27:1; Legendary/raised 14.42:1. These measurements do not certify every animated or illustrated background; see the validation limitations.
+No contrast ratios are asserted here. The production interaction report records zero axe violations in its five audited states, but also records incomplete color-contrast checks. Gradients, illustrations and every possible state are not certified by that result. See [reports/validation.md](reports/validation.md) for review evidence and limits.
 
 ## Typography
 
-Local WOFF2 files are bundled in `public/assets/` and copied into the export. No font CDN is used at runtime.
+Local WOFF2 fonts live in `public/assets/` and are copied to `dist/assets/`; runtime does not depend on a font CDN. Font declarations use `font-display: swap` and normal style.
 
-| Family | Files / weights | Role |
+| CSS family | Local files and available weights | Use |
 | --- | --- | --- |
-| `Pixel` (Press Start 2P), monospace fallback | `pixel-latin.woff2`, normal 400 | BLACKOUT wordmark and section headings |
-| `Mono` (IBM Plex Mono), Courier New / monospace fallback | `mono-latin.woff2` 400; `mono-semibold-latin.woff2` 600 | Body, controls, numbers and component headings |
+| `Pixel`, monospace fallback | `pixel-latin.woff2`, Press Start 2P 400 | Brand, main headings and section headings |
+| `Mono`, `Courier New`, monospace fallback | `mono-latin.woff2`, IBM Plex Mono 400; `mono-semibold-latin.woff2`, IBM Plex Mono 600 | Body, controls, supporting headings and counters |
 
-Six size roles: `--font-small` 0.75rem, `--font-label` 0.875rem, `--font-body` 1rem, `--font-title` 1.25rem, `--font-display` 2rem, `--font-logo` 4rem. At 640px and below the logo role is 2rem, capped at 9vw to preserve its single-word mark on narrow or enlarged-text layouts. Other text remains scalable. Section headings step down to the body role on small screens.
+The root is 16px, weight 400, line-height 1.6. The six semantic sizes are the entire size scale:
 
-Body line-height is 1.6; pixel headings use 1.7–1.8 to accommodate their heavy glyphs; logo uses 1.3. Terminal prose uses 1.85. Supporting text stays at 12px or above at the default root size. Most longer prose is constrained to roughly 65 characters; the wide fairness panel has a 100-character maximum. Heading wrapping is balanced, paragraph wrapping uses `pretty`, and headings can break long words under text enlargement. Changing numbers use tabular numerals. No letter spacing is added to small labels.
+| Token | Size | Typical role |
+| --- | --- | --- |
+| `--font-small` | `.75rem` / 12px | Captions, compact controls, item details, demo labels |
+| `--font-label` | `.875rem` / 14px | Standard controls, supporting copy and table text |
+| `--font-body` | `1rem` / 16px | Body, docs prose, component headings |
+| `--font-title` | `1.25rem` / 20px | Section headings and compact counters |
+| `--font-display` | `2rem` / 32px | Inner-page headings, larger counters and mobile wordmark |
+| `--font-logo` | `4rem` / 64px | Desktop landing wordmark |
+
+`h1` and `h2` use Pixel 400 with line-height 1.6; the desktop wordmark uses 1.25. `h3` and `h4` use Mono 600 with line-height 1.5. Strong text uses weight 600. Responsive rules move headings to existing size roles rather than add sizes. The mobile wordmark uses 2rem/1.5; mobile page headings use 1.25rem/1.65.
+
+Page introductions have a 65ch maximum. Docs has a 75ch body column, 70ch paragraph maximum and 1.75 prose line-height. Dispatcher prose is limited to 58ch at 1.85 line-height. Tables use 1.65. Headings use balanced wrapping; paragraphs use `pretty`; long text can break. There is no added letter spacing. Navigation and landing action capitals are CSS presentation, not the stored copy.
+
+Timers, balances, room hash, prices, season counters and referral values use tabular numerals in their corresponding selectors. Forms default to 1rem; some filter, room-select and read-only fields use the label role. Text remains selectable. The root applies macOS font smoothing once. The production test verified both local font families were loaded.
 
 ## Layout
 
-`.wrap` is at most 1200px wide. Desktop gutters are 32px, intermediate gutters 20px, and phone gutters 16px. The spacing vocabulary is 4, 8, 12, 16, 24, 32, 48 and 80px; the main section offset is 64px on desktop and 48px on phones. Related controls usually use 8–12px gaps; panel padding is 16–28px.
+`.wrap` aligns the shared header, page content and footer to a maximum 1200px width, with 32px side gutters at desktop sizes. `.inner-page` supplies 40px top and 64px bottom padding. `.page-heading`, `.section-heading`, `.subheading`, `.panel`, `.actions` and `.full` are the reusable layout patterns.
 
-The desktop pack lab splits 38/62 between pack and reveal. Farm panels split 1.4/1; grid and terminal split 1.2/1. Pack cards use an adaptive grid with a 4.9rem minimum so enlarged text can reduce the column count. The inventory scrolls within a visibly bounded panel and retains the item count and filters above it.
+Spacing tokens are `--space-1` through `--space-8`: 4, 8, 12, 16, 24, 32, 48 and 80px. Components currently use equivalent literal pixel spacing as well as these declared tokens. Related controls usually have 8–12px gaps; major grids use 24px. Standard panels have 24px padding; room and table details use smaller insets. Pages do not use a universal card grid for every kind of content.
 
-Breakpoints are 1100, 860 and 640 CSS pixels. At 1100px the farm claim action moves below the counters and the district map becomes two columns. At 860px navigation links give way to the brand and mode label; controls remain reachable through the page and hero action. At 640px the pack lab, farm and grid become single columns; steps and launch content stack. Two GPU slots fit side by side, expanded rooms use two columns on phones, and the eight districts stay in a two-column map. Header content can wrap under text enlargement.
+| Pattern | Desktop arrangement |
+| --- | --- |
+| Landing | Centered copy over a clipped city scene; three explanatory steps below |
+| Farm | `1.5fr / 1fr` rooms and inventory; stats above |
+| Room | Six slots in three equal columns and two rows |
+| Inventory | Three equal columns of spare item buttons |
+| City | `1.2fr / 1fr` district map and dispatcher; map starts with four columns |
+| Community | Two equal columns for season and referral/NFT sections |
+| Pack lab | 360px pack stage plus remaining-width reveal area |
+| Reveal cards | Three equal columns with 12px gaps |
+| Docs | 240px sticky contents column plus reading column; 56px gap |
 
-The hero is 624px minimum on desktop. At 640px and below it has no minimum height, uses 24px bottom content padding and a caption in normal flow, with a clipped decorative city illustration. The pack section follows the hero before status and preferences. On phones, `#packs` is a flex column and `.pack-lab` uses `display: contents`; `.pack-stage` moves before the section introduction while the heading remains first in the semantic section. The pack orbit is at least 180px tall, its button at least 170px tall, and its sprite is 120px wide. At 390×844 and scrollY=0, the opening button was measured at y=779–827; the sprite control also fits wholly within the first screen. The 320, 390, 768, 1024 and 1440px layouts and 200% text enlargement at 390px were checked for document overflow. Native browser zoom and physical devices were not tested.
+Content grids use `minmax(0, …)` and panels use `min-width: 0` to permit wrapping. Docs tables scroll within labeled, keyboard-focusable regions. The letter history has a bounded 320px scroll area. Inventory itself remains in normal page flow. The page’s main navigation is available on every inner route.
 
 ## Elevation & Depth
 
-Panels use visible structural borders, not rounded floating cards. The primary button has a 3px offset dark cyan shadow. Neon glow belongs to the wordmark, sprite LEDs, selected hardware and rarity art. Notifications are fixed above the page with a dark shadow and explicit dismissal. Pack opening and reveal success use the inline `#reveal-help` live status region so notifications do not cover the three reveal controls. Native dialogs use the browser top layer; their backdrop darkens and blurs the page. Legendary gets a full-screen dark/gold radial treatment.
+Structural borders and tonal layers define the interface. Standard buttons have a `3px 3px 0 #0006` shadow; primary buttons use `4px 4px 0 #6a561e`. Selected inventory adds a one-pixel cyan shadow. Rooms combine a tiled background, pipe details, a five-pixel floor border and an inset floor shadow.
 
-CRT scanlines apply only to the city, pack stage and room scene; their pseudo-elements do not receive pointer events. A visible toggle removes them. The dark city sky is continuous above and inside the SVG, avoiding an image boundary through the hero copy.
+The wordmark has offset colored shadows. Rarity cards have a 28px inset glow, and their art has a rarity-dependent drop shadow. The city has a dark overlay behind text. Its illustration is clipped inside the hero; decorative SVG elements do not intercept controls.
+
+Dismissible notifications sit at z-index 30 with a `0 8px 40px #0009` shadow. The decorative Mythic screen flash is pointer-transparent at z-index 50. The skip link uses z-index 100 when focused. Native confirmation dialogs use the browser top layer; their `#01030bbf` backdrop has 3px blur. Dialogs are at most 500px wide and 85vh high.
 
 ## Shapes
 
-Interface corners are square. Cards, slots, panels and buttons use one-pixel borders. Slots distinguish empty (dashed), compatible (cyan tinted), and installed (rarity border) states. Decorative pixels are rectangles and stepped polygons; SVG uses `shape-rendering="crispEdges"` and all sprites use `image-rendering: pixelated`.
+Panels, buttons, fields, cards and hardware use square corners. Inputs, meters and progress bars explicitly have zero border radius. Structural borders are generally one pixel. Empty room slots use dashed borders; installed slots use solid rarity borders; selected spare items use a cyan outline treatment. Empty inventory tiles are decorative dashed placeholders.
+
+Artwork uses rectangles, stepped paths and crisp SVG edges. `.sprite` applies `image-rendering: pixelated`; generated SVG has `shape-rendering="crispEdges"`. Standard sprite dimensions come from the art registry, and the item collection uses an 80×64 viewBox. Native radio inputs keep browser-native interaction and shape.
 
 ## Components
 
-- **Buttons:** `.button.primary`, `.button.secondary`, `.text-button` in `src/style.css`; native `<button>` for actions and `<a>` for navigation in `src/main.ts`. Main actions are at least 48px high; phone settings and filters are at least 44px. Hover styling is pointer-gated. Focus uses a 3px yellow outline with 5px offset and a forced-colors override.
-- **Pack lab:** `openPack`, `renderCards`, `reveal` in `src/main.ts`. The pack is a labeled native button. Opening is guarded against duplicate clicks; committed cards persist. Each card can be revealed independently or together. Rarity is named, symbolized, colored and illustrated. Opening scrolls the cards into the center of the viewport, then focuses the first reveal button without another scroll. Scroll is immediate for reduced or paused motion. A staged flip, glow and particles scale the moment. Common/Rare/Epic/Legendary set `--sprite-glow` to 7/10/14/20px and `--card-glow` to 8/12/18/26%; the inset blur stays 28px and sprite alpha stays 25%. Particle counts remain 2/6/10/14. The full-screen Legendary dialog returns focus to the next unrevealed card, or to the pack button.
-- **Farm:** `renderRooms`, `slotMarkup`, `updateCounters`. The pixel room uses real buttons for every slot. Selection plus slot activation, Install, and drag/drop all call the same adapter. Empty-slot instructions, matching-slot highlighting, durability meters and Remove labels make state explicit. Frequent numeric updates happen in place so keyboard focus survives the timer. Action redraws restore focus by slot identity.
-- **Inventory:** `renderInventory`, `itemTile`. Filter buttons expose `aria-pressed`; each item has a full accessible name, rarity text and an installed/selected marker. Empty filtered lists suggest opening a pack. Three matching spare items can be merged after confirmation. Errors remain in a dismissible live status panel.
-- **Grid and terminal:** `renderGrid`. Eight semantic list items show district number, name and explicit Online/Offline/event text. The current district has a farm label. Lobbying is visibly consumed by the next event. New dispatcher letters enter a polite live region; previous letters use native `<details>` with a bounded log.
-- **Confirmations:** `confirm`, native `<dialog>`, Cancel first. Reset and merge name their consequences. Escape cancels and returns focus. The destructive change never occurs merely by opening a dialog.
-- **Sprites:** `sprite` and `itemSprite` in `src/sprites.ts`. Registry names: `gpu`, `cooling`, `psu`, `room`, `pack`, `mascot`, `city`, `tower`, `bolt`, `coin`, `merge`, `district`. Matching SVG/PNG/WebP files in root `assets/` replace generated art on rebuild, without component edits. See `assets/README.md`.
-- **Mode presentation:** `presentationFor(game.mode)` supplies demo/chain status, storage and value disclosures, badges, action labels, cost units and feedback through the same components. Demo odds and reset are hidden in chain mode; the reset handler is guarded as well. This is a presentation boundary only; the shipped adapter remains `DemoAdapter`.
-- **Preferences:** CRT, motion and sound controls are native pressed-state buttons. Sound is synthesized locally and starts off on every load. Motion keyframes exist only within `prefers-reduced-motion: no-preference`; the user can also pause them. Lightning shares a 17-second timeline with a building’s window outage. Pack opening does not wait for animation under reduced motion. The shared GPU sprite has a `.gpu-led` status light with a 2.4-second stepped opacity blink (1 to 0.25); this shares the existing reduced-motion guard and `.motion-paused` override with the fans.
+These are functions and CSS patterns, not a separate component library.
+
+| Pattern / source | Variants and interaction |
+| --- | --- |
+| Shared shell — `src/main.ts` | Brand home link, `#/farm`, `#/packs`, `#/docs`, demo strip and footer. Active navigation has `aria-current`, cyan text and an underline. Page changes focus `main`; doc links focus their section. |
+| Action controls — `.button`, `.text-button`, `.text-link` | Standard raised button, yellow `.primary`, transparent `.quiet`, 44px `.compact`, and `.full` width. Main buttons are at least 48px high. Disabled controls expose native disabled state and reduced opacity. |
+| Page/section headers — `pageHeading()`, `.section-heading` | Short Pixel headings, supporting Mono copy and an optional adjacent action. They wrap and then stack on narrow screens. |
+| Room — `roomPanel()` | Six native slot buttons, sprites, rarity names and durability meters. Select a spare item and a slot, or use Install item. Installed hardware can be removed. Stable slot, repair and overclock IDs preserve keyboard focus across updates. |
+| Combos — `comboList()` | Active and missing variants show names, effects and text status. Missing item hints are inside native details. The room summary shows the hash bonus and cap. |
+| Inventory — `inventoryPanel()` | Native tag filter, selected `aria-pressed` item, textual equip lock and level, labeled room select, install/merge/scrap actions, capacity and expansion. Empty states explain the next action. |
+| Economy — `farm()` | Level progress, epoch timer, hash/balance/claim counters, electricity meter and a labeled withdrawal form. Withdrawal preview shows tax and net amount before confirmation. |
+| Pack lab — `packs()`, `packCards()`, `openPack()`, `reveal()` | Live simulated quote, native currency radio group, guarded opening button and three saved cards. Only the next unrevealed card is enabled; Reveal all is the alternative. Opening scrolls the cards into view and focuses the first reveal. Rarity and equip gates remain textual. |
+| District and dispatcher — `cityPanel()` | Eight labeled district tiles, current-farm and affected variants, lobbying, event protection text and current letter. A details control opens history. |
+| Season/community — `seasonPanel()`, `referralPanel()` | Countdown, district ranking, pending prize action, referral URL with clipboard fallback, simulated referral dashboard and once-only demo NFT credit. |
+| Guide — `docsSections`, `renderDocs()` in `src/docs.ts` | Nineteen sections, linked contents, beta callout, scoped table headings/captions and back-to-contents links. `#/docs/{id}` routes address `docs-{id}` targets. |
+| Confirmation — `confirm()`, native `dialog` | Withdraw, merge, scrap and reset explain consequences. Cancel receives initial focus; Escape cancels; closing returns focus to the triggering control where it still exists. |
+| Feedback — `notify()`, `#notice`, `#live-status` | Visual notice has dismissal and an error-border variant. A separate persistent, visually hidden polite/atomic status region receives feedback; it is not removed when the visual notice is hidden. Storage failures have a visible warning area. |
+
+Keyboard focus uses a three-pixel yellow outline with a four-pixel offset on interactive elements and scrollable tables. Pointer hover rules are inside `@media (hover:hover)`. Forced-colors rules use system focus/border colors for controls, selected items, meters and progress. Native details summaries have stable IDs so rendering can restore focus and expanded state.
+
+`src/sprites.ts` exports `sprite(name, className)` for scene art and `itemSprite(type, rarity, className)` for the collection. Twelve distinct item silhouettes across five rarities produce 60 local SVG variations. Higher ranks add hardware details, halos, corner marks and rank pips. Sprite SVGs are decorative; containing controls/text provide item names. Scene overrides and supported filenames are documented in [assets/README.md](assets/README.md). Item sprites are generated separately from those overrides.
+
+## Motion
+
+Animations are enabled only under `prefers-reduced-motion: no-preference`. The footer’s Animation button can pause them through `.motion-off`; when the operating system requests reduced motion the control is disabled in the off state. The override removes animations, transitions and smooth scrolling. No sound setting or sound playback is part of the current interface.
+
+Normal pack opening uses a 450ms shake, a 400ms seal break delayed 350ms, then a 450ms burst delayed 400ms. The interaction waits 850ms for the opening sequence when motion is enabled, then presents the cards. `.just-revealed` flips only the newly revealed card for 380ms; previously revealed cards do not replay their flip on the next reveal or epoch render. Reveal all spaces cards by 400ms when motion is enabled. Mythic adds a 450ms red screen flash, separate from its textual rarity label.
+
+Idle art uses a four-second pack float, four-second stepped fan turn, 2.5-second GPU LED blink and eight-second city-lightning cycle. Button transitions are 120ms and pressed buttons scale to `.96` when motion is allowed. Animations decorate state; they are not needed to complete an action.
+
+| Rarity | Sprite glow blur | Card glow mix | Card particles |
+| --- | --- | --- | --- |
+| Common | 7px | 8% | 2 |
+| Rare | 10px | 12% | 5 |
+| Epic | 14px | 18% | 8 |
+| Legendary | 20px | 26% | 11 |
+| Mythic | 26px | 33% | 14 |
+
+## Responsive behavior and evidence
+
+The implemented breakpoints are 1400px minimum, then 1080px, 820px and 580px maximum. Rules cascade in that order.
+
+| Width | Implemented adjustment |
+| --- | --- |
+| At least 1400px | Hero minimum height becomes 700px; artwork can fill the width; copy bottom padding becomes 300px. Default hero minimum is 670px. |
+| At most 1080px | Farm changes to `1.35fr / 1fr`; pack stage becomes 310px; counter sizes decrease; district map has two columns; withdrawal form wraps; docs uses a 210px contents column and 32px gap. |
+| At most 820px | Gutters become 20px. Farm, city and community stack. Inventory uses five columns; map uses four. Pack lab stacks but its stage internally places art beside price/controls. Docs contents becomes a static two-column list above the body. |
+| At most 580px | Gutters become 16px. Inner-page nav moves to its own row; landing nav is hidden. Hero actions use a full-width Play demo above two secondary actions. Room slots stay three across; inventory uses three columns; map uses two. Pack stage becomes vertical, with a 190px orbit. Docs contents becomes one column; table cells retain a 125px minimum and scroll locally. Notices inset 16px; dialog actions stack. |
+
+The production report [reports/interaction-results.json](reports/interaction-results.json) records no horizontal document overflow on all four routes at 320, 390, 768 and 1440 CSS pixels. It also records Docs at 200% text enlargement on a 390px viewport. This is text enlargement, not browser-native zoom.
+
+At 390×844, that report measured the landing title at y=154.375–202.375, product description at y=282.375–301.5625 and Play demo at y=321.5625–369.5625. The product and its primary action therefore fit within the first viewport in that tested state. These are automated rendered measurements from the report, not a new screenshot observation made while writing this document.
+
+The same report verifies local font loading, navigation, keyboard focus through timed updates, confirmation cancellation, cross-tab progress, reduced motion and the normal pack sequence. It does not establish physical-device, screen-reader or every-viewport behavior. Detailed review coverage, screenshots and remaining limitations belong in [reports/validation.md](reports/validation.md).
 
 ## Do’s and Don’ts
 
-- Reuse `.wrap`, `.section`, `.section-heading` and `.panel` for another section; use the six existing type roles and semantic colors.
-- Keep action language concrete and instructions next to their controls. Keep DEMO labels visible beside simulated balances and packs.
-- Add artwork through the single registry and preserve crisp scaling. Do not add runtime image/font requests or an unrelated icon style.
-- Keep all game mutations behind `GameAdapter`; do not read or write demo storage in a UI component.
-- Preserve tap and keyboard alternatives to drag/drop, reduced-motion behavior and labeled status text.
-- Do not add financial projections, prices, APY, wallet prompts or purported deployed contract addresses to this pre-launch demo.
+- Start another page with `.wrap.inner-page`, `pageHeading()` and existing `.panel`/heading/action patterns. Add its hash route and active navigation state in `src/main.ts`; keep the static export independent of server rewrites.
+- Reuse the six size roles, semantic colors and native control patterns. Use the yellow primary variant for the main action; use cyan for links, selection and powered states.
+- Keep instructions next to controls and demo/beta wording visible. Preserve meaningful item names, lock levels and event/combination text alongside color.
+- Send game mutations through `GameAdapter`. Read gameplay/economic values from `src/config.ts`; the UI should not become a second rules engine or write saved state directly.
+- Retain stable IDs, focus restoration, reduced-motion behavior and the persistent status region when extending interactive panels.
+- Add scene art through the existing registry and item art through the collection functions. Preserve crisp scaling and local runtime assets.
+- Do not restore the earlier single-page layout, GPU-only rooms, drag/drop instructions, Legendary modal, sound controls or token-burn copy: those are not the current implementation.
+- Do not present simulated balances, NFT checks, referrals or rankings as live chain behavior, or promise financial returns.
 
-Design review is documented in `artifacts/validation.md`. The pinned Better Interface guide informed the implementation; attribution and license texts are retained in `NOTICE.md` and `licenses/`.
+## Implementation references
+
+- [src/style.css](src/style.css): tokens, shared patterns, component states, motion, responsive and forced-colors rules.
+- [src/main.ts](src/main.ts): shell, routes, render patterns, interaction handlers and focus/status behavior.
+- [src/sprites.ts](src/sprites.ts): local city/scenes and all hardware rarity variations.
+- [src/docs.ts](src/docs.ts) and [docs.md](docs.md): player guide presentation and repository-readable guide.
+- [src/config.ts](src/config.ts), [src/game/adapter.ts](src/game/adapter.ts) and [src/game/types.ts](src/game/types.ts): beta parameters and adapter boundary.
+- [scripts/smoke.mjs](scripts/smoke.mjs): reproducible production interactions and responsive/accessibility evidence.
+- [NOTICE.md](NOTICE.md) and [licenses/](licenses/): retained font and design-guide attribution. Better Interface informed the implementation and review; the documentation method follows its pinned document-web-design section.

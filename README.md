@@ -1,112 +1,125 @@
 # BLACKOUT
 
-A fully playable, static pre-launch demo of a pixel-art idle mining farm. Open free three-card packs, install equipment, mine DEMO tokens, pay upkeep, merge hardware, unlock a second room and respond to the IMD swarm’s 45-second grid events. No wallet, backend, tracker or real-money transaction is present. Contracts are not deployed.
+A static pre-launch site and playable pixel-art mining demo. Open packs, build six-slot rooms, combine hardware and survive the IMD swarm’s city grid. **No wallet, real money or deployed game contracts.** All gameplay figures are **beta values, may change**.
 
-The finished export is in **`dist/`**. Source, lockfile, local fonts, generated art, preview image, tests and design/validation documentation accompany it. The intended site label is **`blackout`**.
+## Play and read
 
-## Install, run and rebuild
+The export uses hash routes so it works on ordinary static hosting and IPFS gateway subpaths without server rewrites:
 
-Use Node.js 22.12+ (this build was checked with Node 24.21.0) and npm.
+| Page | Route | Purpose |
+| --- | --- | --- |
+| Landing | `#/` (or the export root) | Discover BLACKOUT, play the demo, read the docs and follow X |
+| Farm | `#/farm` | Hardware, rooms, mining, maintenance, dispatches and progression |
+| Open Packs | `#/packs` | Dynamic demo prices, three-card reveals, odds and combos |
+| Docs | `#/docs` | Complete player guide with linkable sections |
+
+The same guide is in [docs.md](docs.md). Official X: [@IMDBlackout](https://x.com/IMDBlackout).
+
+## Install, preview and rebuild
+
+Use Node.js 22.12+ (this delivery used Node 24.21.0). The existing manifest and lockfile are retained unchanged.
 
 ```sh
 npm ci
 npm run dev
 ```
 
+Build and preview the production export:
+
 ```sh
 npm run typecheck
-npm test
 npm run build
 npm run preview
 ```
 
-`build` runs TypeScript and Vite and produces `dist/index.html` plus local assets. Vite’s base is `./`; navigation uses section hashes, so the export works at a gateway subpath without server rewrites. Serve the directory over HTTP; opening an ES-module page directly with `file://` is not a supported preview.
+`dist/index.html` and every runtime asset in `dist/` are part of the delivery. Vite uses `base: './'`. Fonts, favicon, sprites and the social image are local. The publisher serves these finished files; it does not need Node or a backend. Rebuild after any source or public-asset change.
 
-Dependencies are development-only. Do not submit `node_modules`, package-manager caches or browser downloads. This assignment prohibited writes to repository `node_modules/`, so the worker installed the lockfile’s dependencies in `/tmp/blackout-toolchain`, font downloads in `/tmp/blackout-fonts`, and browser binaries in `/tmp/blackout-playwright`. No dependency tree or vendored registry is in this submission. No ignore file was changed.
-
-## Browser checks and social image
+For this assignment, dependency installation stayed outside the repository to respect protected paths:
 
 ```sh
-npx playwright install chromium
-npm run test:smoke
-npm run test:revision
+mkdir -p /tmp/blackout-deps
+cp package.json package-lock.json /tmp/blackout-deps/
+npm ci --prefix /tmp/blackout-deps --cache /tmp/blackout-npm-cache
+/tmp/blackout-deps/node_modules/.bin/tsc --noEmit
+/tmp/blackout-deps/node_modules/.bin/vite build
 ```
 
-Both Playwright scripts start and close their own foreground HTTP preview under `/preview/`. The main smoke suite uses a browser clock to exercise the actual 45-second scheduler without a real-time wait. Screenshots and machine-readable results are written under `artifacts/`.
+No dependency directories, registries, caches or package archives belong in the submission. No ignore file was changed.
 
-After changing hero art or social copy:
+## Validate
 
 ```sh
-npm run build
+npm test
+npx playwright install chromium
+npm run test:smoke
+npm run check:delivery
+```
+
+`test:revision` is a compatibility alias for the current expanded smoke suite, not a second independent suite. The browser script owns a bounded foreground preview under `/preview/`, opens Chromium, validates the actual `dist/` export and closes both browser and server. It uses a controlled browser clock for epoch tests; it does not wait for days or weeks.
+
+External-toolchain commands used here:
+
+```sh
+BLACKOUT_TOOLCHAIN=/tmp/blackout-deps /tmp/blackout-deps/node_modules/.bin/vitest run
+PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browser /tmp/blackout-deps/node_modules/.bin/playwright install chromium
+BLACKOUT_TOOLCHAIN=/tmp/blackout-deps PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browser node scripts/smoke.mjs
+node scripts/check-delivery.mjs
+```
+
+Actual results: strict TypeScript and production build passed; **47 engine tests passed**; **14 production interaction checks passed** with zero failures, console errors or resource failures. Automated checks cover all four pages at 320, 390, 768 and 1440 CSS pixels, plus Docs at 200% text size. Play Demo is fully visible in the 390×844 first screen. Five axe page/dialog states have zero reported violations; incomplete checks remain identified in the JSON report.
+
+See [reports/validation.md](reports/validation.md) for the six-domain Better Interface review, fixes, measured checks and limitations; [reports/interaction-results.json](reports/interaction-results.json) for browser results; and [reports/bundle-budget.json](reports/bundle-budget.json) for byte accounting and export hashes. These are worker checks, not independent certification. Physical devices, actual screen readers and browser-native zoom were not tested. The unchanged development dependencies have audit findings recorded in validation.
+
+## Publish
+
+Publish the **contents of `dist/`** to the static host. Use the requested label **`blackout`** when available; an automatic label is acceptable when member names are closed.
+
+For this contributor job, the IdentityMD plane publishes the submitted export after completion and updates the project’s hosted site. The machine’s member-site command does not publish job deliverables. No hosting approval or naming change is needed to submit this export. See [reports/publication.md](reports/publication.md) for the actual command result and handoff status; do not mistake the existing hosted version for a verified update.
+
+On another static host, upload all files under `dist/` without rewriting hash routes or moving `assets/`. The existing `npm run publish` script belongs to the earlier member-site workflow and is deliberately unchanged with the protected manifest. It is not needed for this job’s platform publication.
+
+Regenerate the 1200×630 social preview, then rebuild:
+
+```sh
 npm run og
 npm run build
 ```
 
-`og` renders a real 1200×630 PNG to `artifacts/og.png` and copies it to `public/og.png`; the final build copies it to `dist/og.png`. Metadata includes title, favicon, description, `og:title`, relative `og:image`, dimensions and a large-image Twitter card. Relative metadata preserves gateway portability; crawler-specific unfurling was not independently certified.
+Open Graph image paths are relative for portable subpath hosting. Some social crawlers require a canonical absolute image URL; that host-specific unfurl behavior cannot be verified before the final publication URL is assigned.
 
-## Publish
+## Architecture
 
-On an authorized IdentityMD contributor machine:
+- `src/main.ts`: four-route application, accessible controls, dialogs, epoch displays and pack sequence. No framework migration or wallet SDK.
+- `src/config.ts`: the single game/economy parameter object. A future implementation can populate equivalent values from a Params contract.
+- `src/game/types.ts`: `GameAdapter`, state and item contracts. `src/game/adapter.ts` is the composition point for replacing `DemoAdapter` with a future `ChainAdapter`.
+- `src/game/DemoAdapter.ts`: clock-injectable, seeded local simulation; validated saves; asynchronous actions; bounded catch-up and simulated season/referral flows.
+- `src/game/rules.ts`: shared calculations for hash, combinations, slots, prices, taxes and progression.
+- `src/sprites.ts`: original procedural city/pack art plus 12 distinct item silhouettes × five rarity variants. `assets/README.md` describes overrides.
+- `src/docs.ts` and `docs.md`: the player-facing guide.
+- `src/style.css` and [DESIGN.md](DESIGN.md): implemented visual system.
 
-```sh
-imd site publish dist --name blackout
-# Equivalent project script:
-npm run publish
-```
+There are no deployed addresses to fill in, and no placeholder address is used. Contract settings remain empty until real deployment information exists. A production chain adapter, contract-bound parameters, wallet/claim verification, keeper/fallback execution, multiplayer referrals and live season ranking remain launch work.
 
-Publish the **contents of `dist/`**, not the source directory. The publisher serves this export and does not rebuild. `artifacts/publication.md` records the actual publishing outcome and URL. Rebuild before every new publication; check the complete submission size against 8,388,608 bytes. The export includes every runtime font and image.
+## Demo choices
 
-The revision’s publishing attempt bundled the current export into **278,820 bytes**, then was refused with **`503 member_sites_closed`** (“this plane names no member sites”). No live URL was returned. The export is ready to retry once that service permits member-site publishing.
+| Rule | Implementation |
+| --- | --- |
+| Epoch/calendar | 45 seconds represents 6 game hours; 4 epochs/day; 28 epochs/week |
+| Initial farm | Common GPU installed; Common Power Supply and Fan spare; 350 DEMO tokens and 0.1 simulated ETH |
+| Inventory | 15 spare slots; installed items use room slots; pending pack cards reserve capacity |
+| Rarity gate | Before level 10, Mythic rolls become Common: 70.3% Common and 0% Mythic |
+| Rarity sets | Strongest set only: +5/10/20/30/30% for Common through Mythic; combined room hash capped at +40% |
+| Token spending | Quoted nominal cost divided by 1.05 for the 5% purchasing bonus; no withdrawal tax |
+| Mining conversion | 0.1 DEMO tokens per effective hash per epoch, before tariff; a practice parameter, never a return forecast |
+| Time controls | Run an epoch or advance a game day locally; refill simulated funds without a purchase limit |
+| Quiet pack price | Decays during quiet local time and when demo controls advance quiet epochs; already elapsed time is not counted twice |
+| City/season | Seeded events; individual simulated rival farm scores contribute to district totals; three-farm lottery sampled without replacement |
+| Referral/NFT | Unique local referral links, manual invitee simulation and a once-per-farm demo holder credit; no cross-device tracking or ownership check |
+| Storage | `blackout.demo.v3`; shared across routes/tabs in the same origin; incompatible/corrupt saves recover with a notice |
+| Offline catch-up | At most 160 epochs per catch-up; no service worker, so offline interaction requires an already loaded page |
 
-For submission hygiene, `node scripts/check-delivery.mjs` checks required output files, relative entry-point assets, OG dimensions and byte accounting. Run it after removing local dependency/cache folders from the submission tree; it deliberately rejects those generated folders. Its final report is `artifacts/bundle-budget.json`.
+Earlier `blackout.demo.v1` saves are not deleted, but their incompatible four-type model is not imported into the new game. Earlier v3 season saves retain their progress when individual rival scores are added. Local saves are editable browser data, not a security boundary or entitlement to launch rewards.
 
-The assignment explicitly protects `.git/`; the worker does not stage, commit, change hooks or alter Git metadata. Source and export are supplied together for the network’s submission process. No Git submodule is used. Do not interpret this as a worker-created commit.
+## Changes and attribution
 
-## Adapter boundary
-
-`src/game/types.ts` defines the single asynchronous `GameAdapter` interface:
-
-`openPack`, `reveal`, `getFarm`, `place`, `unplace`, `claim`, `repair`, `overclock`, `merge`, `lobby`, `getGridEvents`, `getLetters`, plus `payElectricity` and `reset`.
-
-`src/game/adapter.ts` is the composition point. The UI imports that adapter, normalized types, shared display/math rules and `presentationFor(game.mode)`; it never imports `DemoAdapter` or accesses demo localStorage. A future Robinhood Chain adapter can implement the same operations and normalize contract state into the same farm/pack/event model, retaining the UI interactions and layout. Mode-specific status, local-storage/value disclosures, action labels, spending units and feedback now come from `src/presentation.ts`. Demo-only odds and reset controls are hidden for chain mode, and reset is also guarded in the handler. The regression suite switches only the public adapter mode in the served JavaScript to verify that the same components render chain copy, including after pack and farm actions. It is a presentation stub, not a ChainAdapter or a transaction test. Actual contract ABIs, wallet authorization, confirmations, reorg handling and production economic rules belong to that future implementation. They are not simulated as real chain functionality here.
-
-`src/config.ts` holds the launch date, X URL, site label, chain ID **4663**, and empty `token`, `packs`, `farm`, `grid` address fields. Keep those fields empty until the real contracts exist. Set `launchDate` to an ISO timestamp with a timezone to activate the countdown; the shipped empty value displays **Date TBA**. The site continues to describe itself honestly as a pre-launch demo.
-
-## Demo rules and intentional limits
-
-- Each pack has three independently rolled cards: rarity 70/22/7/1; GPU/Cooling/PSU/Room type weights 60/20/12/8. A separate Common starter GPU and 150 DEMO tokens make the first session playable. Packs are free and unlimited until the 240-item inventory limit; merge spare items to make room. Pack commitments and reveals are persisted and reveals are idempotent.
-- GPU base rates are 10/28/80/250 H/s. Cooling bonuses are 2/5/10/20%. Each room starts with two GPU slots, one cooling slot and one PSU slot. PSU adds 1/2/3/4 GPU slots. A consumed Room key unlocks room 02. Removing a PSU with occupied extra slots is blocked.
-- Durability scales GPU hashrate. Overclock levels 1–3 add 25% per level, consume more power and increase wear. Costs: room GPU repair 12 DEMO, electricity refill 15 DEMO, overclock 25/50/75 DEMO, merge 20 DEMO, lobby 10 DEMO. These are game mechanics, not prices or earnings projections.
-- The seeded xorshift generator and its state persist with the farm. Reset reproduces the initial seed; the demo is deliberately editable and is not a secure or authoritative ledger.
-- One of five grid events occurs every 45 seconds. Effects last 20 seconds: surge +50% hashrate; heat halves rooms without Rare+ cooling; blackout pauses mining, power use and wear; audit removes up to 10 DEMO tokens; calm changes nothing. Events only affect their selected district. The newest 30 events and letters are retained.
-- Lobbying consumes 10 DEMO and applies once to the next event. For harmful events, the farm’s district has weight 0.5 versus 1 for each other district (1/15 instead of 1/8). It can still be selected. Positive events keep equal district weights.
-- A resumed session simulates at most two hours of elapsed time, with event/expiry boundaries handled in order. Additional offline time grants no mining. There is no service worker; interactions work offline after the page is loaded, but an offline reload is not promised.
-- Progress is local to one browser origin. Use one tab; simultaneous-tab conflict resolution is not implemented. Invalid saves recover to a fresh demo with a visible notice; blocked/quota-limited storage remains playable with a warning. The local clock and storage are trusted because nothing has real value.
-- NFT starter packs, referrals and weekly inspection rewards are clearly marked launch teasers. They do not imply deployed contracts or active offers.
-
-## Verification actually performed
-
-- TypeScript strict typecheck and production Vite build: passed.
-- Vitest: **26 tests passed**, including 100,000 rolls, hashrate/cooling/slot math, spending, persistence, partial-pack recovery, event timing/effects, lobbying and offline limits.
-- 100,000-roll result: Common 69,950; Rare 21,998; Epic 7,042; Legendary 1,010. Types: GPU 60,135; Cooling 19,977; PSU 11,936; Room 7,952. All are within the specified test tolerance of 0.5 percentage points.
-- Playwright on the real `/preview/` production export: **19 grouped checks passed**. Pack/reveal, tap and drag placement, live mining, claim, upkeep, overclock, lobby/event letter, persistence, reset confirmation, keyboard focus, merge, cooling, slot expansion, room unlock, Legendary dialog, reduced motion, settings and loaded offline interaction were exercised.
-- Targeted revision Playwright suite: **5 grouped checks passed**, covering normal/reduced-motion phone arrival and reveal, keyboard focus, LED opacity/pause, four rarity glow levels, functional copy, and chain-mode presentation. All six reviewer findings reproduced on the original export and were fixed; `.imd-responses.json` contains each response.
-- Rendered widths 320, 390, 768, 1024 and 1440px: no horizontal document overflow. The playable pack sprite and opening button are visible at 390×844 with fresh storage and scrollY=0; the opening button is at y=779–827. The original smoke assertion was strengthened to check both playable controls rather than the hero anchor. Text enlargement to 200% at 390px also reflows without horizontal document overflow.
-- Axe-core: zero reported WCAG A/AA violations on the tested page and Legendary modal. The page had 26 passing rule checks; contrast on illustration/gradient/scanline backgrounds remains partially inconclusive. This is not a claim of full accessibility conformance.
-- No console errors, page errors, failed requests or HTTP error responses in the smoke run. The browser MCP was also used to inspect the actual export and exercise pack/lobby controls.
-
-Worker commands used the external dependency installation, for example:
-
-```sh
-/tmp/blackout-toolchain/node_modules/.bin/tsc --noEmit
-BLACKOUT_TOOLCHAIN=/tmp/blackout-toolchain /tmp/blackout-toolchain/node_modules/.bin/vitest run
-/tmp/blackout-toolchain/node_modules/.bin/vite build
-BLACKOUT_TOOLCHAIN=/tmp/blackout-toolchain PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-playwright node scripts/smoke.mjs
-BLACKOUT_TOOLCHAIN=/tmp/blackout-toolchain PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-playwright node scripts/revision-smoke.mjs
-```
-
-See `artifacts/validation.md`, `artifacts/revision-before.json`, `artifacts/revision-results.json`, `artifacts/smoke-results.json`, `artifacts/accessibility.json`, and the screenshots for exact coverage and limitations. These are worker observations, not independent certification. Native screen readers, physical devices, native browser 200% zoom, Safari/Firefox, localization and X crawler previews were not tested. WebKit was attempted in this revision but could not launch because system libraries (including GTK 4 and GStreamer) are unavailable. The prior accepted run recorded HTTP 403 when requesting the X reference profile; that external comparison was not repeated, so the code-drawn art follows the supplied detailed visual brief; an exact comparison to the profile art could not be made.
-
-## Design and attribution
-
-`DESIGN.md` records the implemented tokens, typography, components, responsive layouts and motion. `assets/README.md` explains replacing any generated sprite by filename. Font licenses and the pinned guide’s licenses are retained in `licenses/`; see `NOTICE.md` for source attribution.
+See [CHANGELOG.md](CHANGELOG.md) for the short change list. Original pixel style, palette, fonts and adapter boundary are retained. Font and Better Interface/Impeccable licenses are in `licenses/` with attribution in `NOTICE.md`.
