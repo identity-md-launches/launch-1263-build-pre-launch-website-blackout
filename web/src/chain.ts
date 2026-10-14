@@ -13,7 +13,9 @@ function waitForVisiblePage(){
 // Each attempt, including receipt monitoring and fallback retries, respects visibility.
 // viem doubles retryDelay on each retry of the ordered fallback cycle.
 export const rpcTransport = () => fallback(RPC_URLS.map((url):Transport => {
- const endpoint=http(url,{batch:{batchSize:40,wait:20},retryCount:0,timeout:6000});
+ // dRPC's free endpoint rejects JSON-RPC batches larger than three (code 31).
+ // Contract multicalls remain enabled; this cap also applies to log scans.
+ const endpoint=http(url,{batch:{batchSize:url===RPC_URLS[1]?3:40,wait:20},retryCount:0,timeout:6000});
  return options=>{
   const transport=endpoint(options);
   const request:typeof transport.request=async (args,requestOptions)=>{await waitForVisiblePage();return transport.request(args,requestOptions);};

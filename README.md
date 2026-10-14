@@ -68,7 +68,7 @@ To refresh the public evidence, run `node web/tools/run.mjs snapshot`, then rebu
 | Identity MD, token IDs 0–1999 | `0xb7d282d1c46f6062963bf2d134d058aa4de3af4cb7b092c5a0fd12ed74dc0f2c` | `public/starter-tree.json`, copied to `dist/` |
 | Exact ordered 11-wallet free list | `0xdc0842e9fd0017b08be09e787e877c53cfb446ca52aabdb9770e5c33b49d1325` | `public/free-tree.json`, copied to `dist/` |
 
-The browser lazily loads the proof files on Packs, verifies the selected wallet's proofs against pinned and live roots, shows eligible snapshot token IDs and hides the free-claim button from unlisted wallets. NFT claims run from launch +48 hours until launch +16 days. Free claims end at the live `freeClaimEnds()` value. Receipts are recovered from wallet-filtered chain logs, with an optional local scan cursor and manual receipt-ID lookup. Local storage is only a cache; ownership and claims remain on chain.
+The browser lazily loads the proof files on Packs, verifies the selected wallet's proofs against pinned and live roots, shows eligible snapshot token IDs and hides the free-claim button from unlisted wallets. NFT claims run from launch +48 hours until launch +16 days. Free claims end at the live `freeClaimEnds()` value. Receipts are recovered from wallet-filtered chain logs starting at the verified deployment block, with an optional local scan cursor and manual receipt-ID lookup. `web/data/deployment.json` records the factory deployment event, transaction and block hash that establish that boundary. Local storage is only a cache; ownership and claims remain on chain.
 
 ## ETH purchase and reveal behavior
 
@@ -88,9 +88,20 @@ All 41 ABI error names have plain-language mappings, including action-specific h
 
 Dollar estimates use the actual Coinbase ETH/USD spot price and the on-chain BLACKOUT/ETH market rate. They are indicative, exclude execution impact and gas, and are labeled unavailable when no price exists. A retained ETH/USD quote older than two minutes says “last price.” Pending-reward tax/net comes from a caller-aware claim simulation. The deployed contract stores individual credit ages privately, so the UI explains the 20% to 5% seven-day schedule and approximately seven-minute basis-point steps rather than inventing one exact tax-drop timestamp for mixed-age credits. Estimated epoch earnings use the wallet's last settled epoch's shares, reward-per-hash, electricity tariff (including the district discount) and audit. It excludes redistributed tax, referrals and auto-repair; future earnings can differ.
 
-The activity feed reads actual registrations, pack resolutions and settled mining payments. Initial history is bounded to 216,000 recent blocks, fetched in 20,000-block ranges; later reads scan the new tail with a 16-block reorg overlap. Pack labels use mint logs and immutable item kind/rarity; destroyed items omit erased detail. No synthetic event fills an empty feed. The leaderboard reads every registered farm in groups of 50 and ranks the current epoch's positive weights; it displays the top 20.
+The activity feed reads actual registrations, pack resolutions and settled mining payments. Initial history is bounded to 216,000 recent blocks and never starts before the verified L3 deployment at block 88,288,289. Both activity and pack discovery start with at most 10,000 blocks per request, halve provider-rejected ranges (including HTTP 400/403 responses), and keep the learned size. Up to four ranges share a batch after a successful probe; dRPC HTTP batches are capped at three requests to match its free endpoint. Each successfully decoded range advances its cursor immediately, so a later outage resumes from that checkpoint with a 16-block reorg overlap. Pack checkpoints also persist in optional local storage. No unreadable block is silently skipped. Pack labels use mint logs and immutable item kind/rarity; destroyed items omit erased detail. No synthetic event fills an empty feed. The leaderboard reads every registered farm in groups of 50 and ranks the current epoch's positive weights; it displays the top 20.
 
-## Validation
+## Revision validation
+
+The reopened v10 findings are answered in `.imd-responses.json`; see [reports/v10-revision/validation.md](reports/v10-revision/validation.md) for reproduction evidence, final checks and current limitations. This revision fixes provider-limited log discovery, preserves the Farm filter through refresh/polling, and moves the reported eligibility/feature implementation wording out of player screens. Addresses, proof files, roots, the ETH purchase flow and the pixel design remain unchanged.
+
+```sh
+node web/tools/v10-check.mjs logs
+REVISION_ONLY=1 FIXTURE_ONLY=1 node web/tools/v10-check.mjs
+```
+
+The log unit fixtures test adaptive ranges, cursor checkpoints, overlap/reorg handling and outage behavior. The browser regressions enforce fallback log limits of 10,000 and 100 blocks plus dRPC's three-request batch cap; they cover historical paid/starter pack recovery, an interrupted scan, total outage, filter persistence and player copy. Final Chromium and WebKit runs each passed 52 full-flow groups and seven revision groups. Live primary-down activity recovered, but a complete historical receipt scan hit dRPC timeouts and a PublicNode archive restriction even at one block. Fresh fallback scans can be slow or require retry; successful cursors are retained. The validation report records this limitation and the final design probe's 15/16 result with its one reviewed heuristic false positive.
+
+## Original v10 validation
 
 See [reports/v10/validation.md](reports/v10/validation.md) for actual commands, results, six-domain design review, fixes and limitations. [DESIGN.md](DESIGN.md) describes the final source. Earlier reports are historical, not v10 evidence. Recorded results: build/typecheck passed; 94 wallet/RPC flow checks, 8 reveal/recovery groups and 16 visual checks passed in Chromium and WebKit; zero axe violations across 14 tested states; the pinned probe passed 16/16. Browser-native request diagnostics and untested real-wallet actions are documented in the report.
 
@@ -116,6 +127,6 @@ No real wallet transaction was signed or broadcast. Native wallet signing, Coinb
 
 The plane publishes the supplied `dist/` under the existing label after submission. No publishing command, contract deployment, token mint or domain change was performed. Preserve the independently served `/freepack` path when attaching the export to playblackout.xyz. Social metadata retains the canonical `https://playblackout.xyz/og.png`, also included locally.
 
-The export and compact v10 review evidence fit within the **8 MiB** submission budget; a temporary standalone Git bundle checks the complete current-file snapshot. The byte report separately records the supplied checkout’s incomplete historical objects. All runtime city art, sprites, fonts, social images, source, lockfile and required proof assets remain. No ignore file was added or modified, and no submodule or dependency/cache directory is included. See the final byte audit in `reports/v10/delivery.json`.
+The export and compact v10 review evidence fit within the **8 MiB** submission budget; a temporary standalone Git bundle checks the complete current-file snapshot. The byte report separately records the supplied checkout’s incomplete historical objects. All runtime city art, sprites, fonts, social images, source, lockfile and required proof assets remain. No ignore file was added or modified, and no submodule or dependency/cache directory is included. See the revision byte audit in `reports/v10-revision/delivery.json`.
 
 Artwork/font notices remain in [NOTICE.md](NOTICE.md) and `licenses/`; this includes Better Interface guidance and official wallet marks.

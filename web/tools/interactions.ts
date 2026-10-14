@@ -4,7 +4,7 @@ import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
 import { decodeAbiParameters, multicall3Abi, deploylessCallViaBytecodeBytecode, decodeFunctionData, encodeFunctionResult, encodeErrorResult, encodeEventTopics, encodeAbiParameters, keccak256, stringToHex, type Address, type Hex } from 'viem';
-import { contracts, roles, ROOTS } from '../src/config';
+import { contracts, roles, ROOTS, GAME_DEPLOYMENT_BLOCK } from '../src/config';
 import abiData from '../src/abi.json';
 import { serve } from './serve.mjs';
 import { requireTool, repo } from './deps.mjs';
@@ -19,7 +19,7 @@ mkdirSync(join(repo,'test/scratch/interaction-shots'),{recursive:true});
 mkdirSync(join(repo,'artifacts/v10'),{recursive:true});
 function fixture() {
  const now=BigInt(Math.floor(Date.now()/1000));
- const state={wallet,authorized:false,chain:'0x1',added:false,hold:false,signatureHold:false,resolveRace:0n,reject:false,revertNext:false,revertRead:'',revertData:null as Hex|null,mismatch:false,failClaimRead:false,rpcOffline:false,primaryDown:false,secondaryDown:false,rpcUrls:[] as string[],revealRarities:[1,1,1],level:7n,launch:now-3n*86400n,enabled:false,epoch:4n,nonce:0,block:2000n,native:1100n,freeClaimed:false,nftClaimed:false,allowance:0n,pending:100n*E,items:[{id:1n,holder:wallet,durability:5000,kind:0,rarity:1,overclock:0,starter:false,equipped:false},{id:2n,holder:wallet,durability:10000,kind:3,rarity:1,overclock:0,starter:false,equipped:true}],slots:[2n,...Array(23).fill(0n)],rooms:new Set([0]),receipts:new Map<string,{target:bigint;count:bigint;opened:bigint;captured:boolean;player:string;block:bigint}>(),txs:new Map<string,any>(),sent:[] as any[],rpc:[] as string[],readFns:[] as string[],walletCalls:[] as any[]};
+ const state={wallet,authorized:false,chain:'0x1',added:false,hold:false,signatureHold:false,resolveRace:0n,reject:false,revertNext:false,revertRead:'',revertData:null as Hex|null,mismatch:false,failClaimRead:false,rpcOffline:false,primaryDown:false,secondaryDown:false,rpcUrls:[] as string[],revealRarities:[1,1,1],level:7n,launch:now-3n*86400n,enabled:false,epoch:4n,nonce:0,block:GAME_DEPLOYMENT_BLOCK+2000n,activityBlock:GAME_DEPLOYMENT_BLOCK+1990n,logLimit:10000n,logFailAt:null as bigint|null,logRequests:[] as {url:string;from:bigint;to:bigint;activity:boolean;rejected:boolean}[],native:1100n,freeClaimed:false,nftClaimed:false,allowance:0n,pending:100n*E,items:[{id:1n,holder:wallet,durability:5000,kind:0,rarity:1,overclock:0,starter:false,equipped:false},{id:2n,holder:wallet,durability:10000,kind:3,rarity:1,overclock:0,starter:false,equipped:true}],slots:[2n,...Array(23).fill(0n)],rooms:new Set([0]),receipts:new Map<string,{target:bigint;count:bigint;opened:bigint;captured:boolean;player:string;block:bigint}>(),txs:new Map<string,any>(),sent:[] as any[],rpc:[] as string[],readFns:[] as string[],walletCalls:[] as any[]};
  const encode=(name:string,fn:string,result:unknown)=>encodeFunctionResult({abi:abiData[name as keyof typeof abiData] as any,functionName:fn,result} as any);
  function value(name:string,fn:string,a:any[]):any {
   const k=`${name}.${fn}`;state.readFns.push(k);if(state.failClaimRead&&k==='FarmRewards.claim')throw {code:-32005,message:'Rate limit exceeded'};
@@ -105,7 +105,7 @@ function fixture() {
     else if(t.to.toLowerCase()==='0x0000000000000000000000000000000000000064'){state.native++;result=`0x${state.native.toString(16).padStart(64,'0')}`;}
     else {const {name,fn,args}=identify(t.to,t.data);result=encode(name,fn,value(name,fn,args));}
    } else if(req.method==='eth_getLogs') {
-    const q=req.params[0];if(Array.isArray(q.address)){const mk=(name:string,eventName:string,args:any,data:any,types:any,idx:number)=>({address:contracts[name as keyof typeof contracts],topics:encodeEventTopics({abi:abiData[name as keyof typeof abiData] as any,eventName,args} as any),data:encodeAbiParameters(types,data),blockNumber:'0x7c6',transactionIndex:'0x0',logIndex:'0x'+idx.toString(16),transactionHash:keccak256(stringToHex(eventName)),blockHash:keccak256(stringToHex('fixture block')),removed:false});return {jsonrpc:'2.0',id:req.id,result:BigInt(q.fromBlock)<=1990n&&BigInt(q.toBlock)>=1990n?[mk('FarmCore','Registered',{player:wallet},[3n],[{type:'uint256'}],0),mk('FarmRewards','EpochSettled',{epoch:3n},[100n*E,5n*E],[{type:'uint256'},{type:'uint256'}],1)]:[]};}const name=q.address.toLowerCase()===contracts.PackSale?'PackSale':'StarterClaim';
+    const q=req.params[0];if(Array.isArray(q.address)){const mk=(name:string,eventName:string,args:any,data:any,types:any,idx:number)=>({address:contracts[name as keyof typeof contracts],topics:encodeEventTopics({abi:abiData[name as keyof typeof abiData] as any,eventName,args} as any),data:encodeAbiParameters(types,data),blockNumber:'0x'+state.activityBlock.toString(16),transactionIndex:'0x0',logIndex:'0x'+idx.toString(16),transactionHash:keccak256(stringToHex(eventName)),blockHash:keccak256(stringToHex('fixture block')),removed:false});return {jsonrpc:'2.0',id:req.id,result:BigInt(q.fromBlock)<=state.activityBlock&&BigInt(q.toBlock)>=state.activityBlock?[mk('FarmCore','Registered',{player:wallet},[3n],[{type:'uint256'}],0),mk('FarmRewards','EpochSettled',{epoch:3n},[100n*E,5n*E],[{type:'uint256'},{type:'uint256'}],1)]:[]};}const name=q.address.toLowerCase()===contracts.PackSale?'PackSale':'StarterClaim';
     result=[];
     for(const [key,r]of state.receipts){const [kind,id]=key.split(':');if((kind==='paid')!==(name==='PackSale')||r.player!==wallet)continue;if(BigInt(q.fromBlock)>r.block||BigInt(q.toBlock)<r.block)continue;
      const eventName=name==='PackSale'?'PackCommitted':'StarterCommitted';
@@ -156,8 +156,25 @@ async function injected(context:any,f:ReturnType<typeof fixture>) {
  await context.route(/^https:\/\/(rpc\.mainnet\.chain\.robinhood\.com|robinhood\.drpc\.org|robinhood-rpc\.publicnode\.com)\//,async(route:any)=>{
   const url=route.request().url();f.state.rpcUrls.push(url);if(route.request().method()==='OPTIONS'){await route.fulfill({status:204,headers:{'access-control-allow-origin':'*','access-control-allow-methods':'POST, OPTIONS','access-control-allow-headers':'content-type'}});return;}
   if(f.state.rpcOffline||f.state.primaryDown&&url.includes('rpc.mainnet.chain')||f.state.secondaryDown&&url.includes('drpc.org')){await route.fulfill({status:503,contentType:'text/plain',body:'RPC temporarily unavailable',headers:{'access-control-allow-origin':'*','access-control-allow-methods':'POST, OPTIONS','access-control-allow-headers':'content-type'}});return;}
-  const body=route.request().postDataJSON();const result=Array.isArray(body)?await Promise.all(body.map(f.rpc)):await f.rpc(body);
-  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(result),headers:{'access-control-allow-origin':'*'}});
+  const body=route.request().postDataJSON();
+  if(url.includes('drpc.org')&&Array.isArray(body)&&body.length>3){
+   await route.fulfill({status:500,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify(body.map((req:any)=>({jsonrpc:'2.0',id:req.id,error:{code:31,message:'Batch of more than 3 requests are not allowed on free plan'}})))});return;
+  }
+  const respond=async(req:any)=>{
+   if(req.method==='eth_getLogs'){
+    const q=req.params[0],from=BigInt(q.fromBlock),to=BigInt(q.toBlock),activity=Array.isArray(q.address);
+    const rangeRejected=!url.includes('rpc.mainnet.chain')&&to-from+1n>f.state.logLimit;
+    const interrupted=f.state.logFailAt!==null&&from>=f.state.logFailAt;
+    f.state.logRequests.push({url,from,to,activity,rejected:rangeRejected||interrupted});
+    if(interrupted)return {jsonrpc:'2.0',id:req.id,error:{code:-32005,message:'Temporarily unavailable'}};
+    if(rangeRejected)return {jsonrpc:'2.0',id:req.id,error:url.includes('drpc.org')?{code:35,message:'ranges over 10000 blocks are not supported on free plan'}:{code:-32602,message:'Archive requests require a personal token. Get one at: https://www.allnodes.com/publicnode'}};
+   }
+   return f.rpc(req);
+  };
+  const result=Array.isArray(body)?await Promise.all(body.map(respond)):await respond(body);
+  const responses=Array.isArray(result)?result:[result];
+  const status=responses.every((r:any)=>r.error?.code===35)?400:responses.every((r:any)=>r.error?.code===-32602)?403:200;
+  await route.fulfill({status,contentType:'application/json',body:JSON.stringify(result),headers:{'access-control-allow-origin':'*'}});
  });
 }
 const waitTx=async(page:any,label?:string)=>{await page.locator('#tx-status').filter({hasText:label||'Confirmed'}).waitFor();await page.waitForFunction(()=>document.querySelector('#tx-status')?.getAttribute('data-state')==='confirmed');await page.waitForTimeout(350);};
@@ -178,6 +195,14 @@ async function fixtureSuite(browser:any,engine:string) {
  await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:join(repo,`test/scratch/interaction-shots/${engine}-farm-390.png`)});
  const farmAxe=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();report.accessibility.push({engine,route:'farm fixture',violations:farmAxe.violations});if(farmAxe.violations.length)console.log('Farm axe',JSON.stringify(farmAxe.violations));assert.equal(farmAxe.violations.length,0,`${engine}: populated Farm accessibility`);pass(`${engine}: populated Farm axe WCAG checks`);
  assert((await page.locator('#onboarding').innerText()).includes('Your farm is mining'));
+ for(const [value,expected] of [['spare',['item-1']],['installed',['item-2']]] as const){
+  await page.locator('#inventory-filter').selectOption(value);
+  await page.locator('[data-refresh]').first().click();await page.waitForTimeout(1000);
+  assert.equal(await page.locator('#inventory-filter').inputValue(),value);
+  assert.deepEqual(await page.locator('[data-item-equipped]:visible').evaluateAll((es:HTMLElement[])=>es.map(e=>e.id)),expected);
+ }
+ await page.locator('#inventory-filter').selectOption('all');
+ pass(`${engine}: inventory and installed filters survive a completed refresh`);
  f.state.items[0].rarity=4;await page.locator('[data-refresh]').first().click();await page.locator('#item-1 .item-gate').filter({hasText:'Requires level 10'}).waitFor();assert(await page.locator('[data-select-item="1"]').isDisabled());
  f.state.items[0].rarity=2;f.state.level=1n;await page.locator('[data-refresh]').first().click();await page.locator('#item-1 .item-gate').filter({hasText:'Requires level 3'}).waitFor();
  f.state.items[0].rarity=1;f.state.items[0].kind=3;await page.locator('[data-refresh]').first().click();await page.locator('#item-1 .item-gate').filter({hasText:'One of each type per room'}).waitFor();assert(await page.locator('[data-select-item="1"]').isDisabled());
@@ -278,7 +303,7 @@ async function fixtureSuite(browser:any,engine:string) {
  f.state.revertRead='FarmCore.sync';f.state.revertData=encodeErrorResult({abi:abiData.Token as any,errorName:'ERC20InsufficientBalance',args:[wallet,0n,E]});await page.locator('[data-sync]').click();await page.locator('#tx-status').filter({hasText:'BLACKOUT balance is too low'}).waitFor();f.state.revertRead='';f.state.revertData=null;pass(`${engine}: bubbled ERC-6093 token error decoded`);
  f.state.revertNext=true;await page.locator('[data-sync]').click();await page.locator('#tx-status[data-state="reverted"]').filter({hasText:'cannot be updated'}).waitFor();f.state.revertRead='';pass(`${engine}: mined revert retains hash and decodes InvalidValue`);
  f.state.hold=true;await page.locator('[data-sync]').click();await page.locator('#tx-status[data-state="pending"]').waitFor();assert(await page.locator('#tx-status a').getAttribute('href').then((h:string)=>h.startsWith('https://robinhoodchain.blockscout.com/tx/')));f.state.hold=false;await waitTx(page);pass(`${engine}: pending transaction and explorer link become confirmed`);
- await page.goto(url+'#/city');await page.waitForTimeout(700);await page.getByText('Coming soon. Civic has not enabled district stakes, locks and lobbying.').waitFor({timeout:5000});await page.goto(url+'#/season');await page.getByText('Season token pot: Coming soon. Civic has not enabled this phase.').waitFor();await page.goto(url+'#/billboards');await page.getByText('Week 0 · Coming soon. Civic has not enabled billboards.').waitFor();pass(`${engine}: disabled Civic phases stay Coming soon`);
+ await page.goto(url+'#/city');await page.waitForTimeout(700);await page.getByText('District stakes are coming soon.').waitFor({timeout:5000});await page.goto(url+'#/season');await page.getByText('Season rewards are coming soon.').waitFor();await page.goto(url+'#/billboards');await page.getByText('Week 0 · Billboards are coming soon.').waitFor();pass(`${engine}: disabled Civic phases stay Coming soon`);
  await page.goto(url+'#/contracts');await page.getByText('Registry wiring and claim roots verified.').waitFor();assert.equal(await page.locator('.contract-address').count(),18);pass(`${engine}: all 18 contract links and launch numbers`);
  f.state.launch=BigInt(Math.floor(Date.now()/1000));await page.goto(url+'#/packs');await page.reload();await page.locator('[data-claim-nft="1927"]').waitFor();await page.getByText('Opens in',{exact:false}).first().waitFor();assert(await page.locator('[data-claim-nft="1927"]').isDisabled());
  f.state.launch=BigInt(Math.floor(Date.now()/1000))-17n*86400n;await page.reload();await page.locator('.pack-claims').filter({hasText:'Closed'}).waitFor();assert(await page.locator('[data-claim-nft="1927"]').isDisabled());
@@ -297,9 +322,76 @@ async function fixtureSuite(browser:any,engine:string) {
  const nativeErrors=errors.filter(message=>/^\/(rpc\.mainnet\.chain\.robinhood\.com|robinhood\.drpc\.org|robinhood-rpc\.publicnode\.com|127\.0\.0\.1:\d+\/preview)\/ due to access control checks\.$/.test(message));if(nativeErrors.length)report.limitations.push(`${engine}: ${nativeErrors.length} browser-native request cancellation/access-control diagnostics during fixture reload/outage tests. RPCs are intercepted; all recovery assertions above must still pass. ${[...new Set(nativeErrors)].join(' ')}`);assert.deepEqual(errors.filter(e=>!nativeErrors.includes(e)),[]);pass(`${engine}: no application script errors; native request diagnostics are recorded`);
  await context.close();
 }
+async function revisionSuite(browser:any,engine:string){
+ for(const limit of [10000n,100n]){
+  const f=fixture();f.state.primaryDown=true;f.state.chain='0x1237';f.state.added=true;f.state.logLimit=limit;
+  f.state.block=GAME_DEPLOYMENT_BLOCK+(limit===10000n?32000n:2000n);
+  if(limit===10000n)f.state.logFailAt=GAME_DEPLOYMENT_BLOCK+20000n;
+  f.state.receipts.set('paid:7',{target:1000n,count:1n,opened:0n,captured:true,player:wallet,block:GAME_DEPLOYMENT_BLOCK+10n});
+  f.state.receipts.set('starter:1927',{target:1000n,count:1n,opened:0n,captured:true,player:wallet,block:GAME_DEPLOYMENT_BLOCK+1800n});
+  const context=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'});await injected(context,f);const page=await context.newPage();
+  const errors:string[]=[];page.on('pageerror',(e:any)=>errors.push(e.message));
+  await page.goto(url+'#/packs');await page.locator('#connect').click();await page.getByRole('button',{name:'Fixture Wallet',exact:true}).click();
+  if(limit===10000n){
+   await page.locator('#receipt-list .reconnect-note').waitFor({timeout:45000});
+   const saved=await page.evaluate(key=>JSON.parse(localStorage.getItem(key)||'null'),`blackout.receipts.4663.${wallet}`);
+   assert.equal(saved.cursor,String(GAME_DEPLOYMENT_BLOCK+19999n));
+   assert.equal(saved.ids.length,2);
+   const before=f.state.logRequests.length;f.state.logFailAt=null;
+   await page.locator('[data-refresh]').first().click();
+   await page.locator('[data-receipt="paid:7"]').waitFor({timeout:45000});
+   const resumed=f.state.logRequests.slice(before);assert(resumed.length>0);
+   assert(resumed.every(r=>r.from>=GAME_DEPLOYMENT_BLOCK+19999n-16n));
+   assert(resumed.some(r=>r.activity)&&resumed.some(r=>!r.activity));
+   pass(`${engine}: primary-down receipt and activity scans checkpoint successful ranges and resume after a mid-scan outage`);
+  }
+  await page.locator('[data-receipt="paid:7"]').waitFor({timeout:60000});await page.locator('[data-receipt="starter:1927"]').waitFor();
+  await page.locator('#connection-status').filter({hasText:'City connected'}).waitFor({timeout:60000});
+  assert((await page.locator('#city-activity').innerText()).includes('100 BLACKOUT paid'));
+  assert(f.state.logRequests.every(r=>r.from>=GAME_DEPLOYMENT_BLOCK));
+  assert(f.state.logRequests.filter(r=>!r.rejected).every(r=>r.to-r.from+1n<=limit));
+  if(limit===100n){assert(f.state.logRequests.some(r=>r.rejected&&r.activity));assert(f.state.logRequests.some(r=>r.rejected&&!r.activity));}
+  pass(`${engine}: primary down, ${limit}-block fallback limit: historical paid/starter packs, ETH quote and activity recover`);
+  const beforeOutage=f.state.logRequests.length;f.state.rpcOffline=true;
+  await page.locator('[data-refresh]').first().click();await page.locator('#connection-status').filter({hasText:'Reconnecting'}).waitFor({timeout:45000});
+  assert.equal(await page.locator('[data-receipt]').count(),2);assert((await page.locator('#city-activity').innerText()).includes('100 BLACKOUT paid'));
+  assert(!(await page.locator('body').innerText()).includes('HTTP request failed'));
+  assert.equal(f.state.logRequests.length,beforeOutage,'All-down failure must not recursively split ranges');
+  f.state.rpcOffline=false;await page.locator('[data-refresh]').first().click();await page.locator('#connection-status').filter({hasText:'City connected'}).waitFor({timeout:45000});
+  pass(`${engine}: all-down keeps packs and activity; retry restores connection without a range-splitting storm`);
+  if(limit===10000n){
+   await page.goto(url+'#/farm');await page.locator('#item-2').waitFor();
+   for(const [value,expected]of [['spare',['item-1']],['installed',['item-2']]] as const){
+    await page.locator('#inventory-filter').selectOption(value);await page.locator('#inventory-filter').focus();
+    await page.locator('[data-refresh]').first().click();await page.waitForTimeout(1000);
+    assert.equal(await page.locator('#inventory-filter').inputValue(),value);
+    assert.deepEqual(await page.locator('[data-item-equipped]:visible').evaluateAll((es:HTMLElement[])=>es.map(e=>e.id)),expected);
+   }
+   await page.locator('#inventory-filter').selectOption('spare');await page.locator('#inventory-filter').focus();
+   await page.waitForTimeout(16500);
+   assert.equal(await page.locator('#inventory-filter').inputValue(),'spare');assert.equal(await page.evaluate(()=>document.activeElement?.id),'inventory-filter');
+   assert.deepEqual(await page.locator('[data-item-equipped]:visible').evaluateAll((es:HTMLElement[])=>es.map(e=>e.id)),['item-1']);
+   pass(`${engine}: both hardware filters survive Refresh; In inventory and keyboard focus survive a 15-second poll`);
+   await page.locator('#connect').click();await page.locator('[data-disconnect]').click();
+   for(const [route,text]of [['packs','Connect to check your eligible Identity MD NFTs.'],['city','The city will choose the next event automatically.'],['season','Season rewards are coming soon.'],['billboards','Billboards are coming soon.']]){
+    await page.goto(url+'#/'+route);await page.getByText(text,{exact:false}).waitFor();
+    const copy=await page.locator('#main').innerText();assert(!/Civic|free allowlist|26182375|token IDs|autonomous fallback/.test(copy));
+    if(route==='packs'){
+     const box=await page.locator('.pack-claims').boundingBox();assert(box);console.log('Starter claims panel height',box.height);
+     await page.screenshot({path:join(repo,`test/scratch/interaction-shots/${engine}-revision-packs-390.png`),fullPage:true});
+    }
+    for(const width of [320,390,1440]){await page.setViewportSize({width,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`${route} overflow ${width}`);}
+    await page.setViewportSize({width:390,height:844});
+   }
+   await page.goto(url+'#/docs/starter');assert((await page.locator('#doc-starter').innerText()).includes('26182375'));assert((await page.locator('#doc-starter').innerText()).includes('proof'));
+   pass(`${engine}: plain starter/City/Season/Billboards guidance, technical eligibility retained in Docs, no overflow at 320/390/1440`);
+  }
+  assert.equal(f.state.sent.length,0);assert.deepEqual(errors,[]);await context.close();
+ }
+}
 async function juicySuite(browser:any,engine:string){
  const f=fixture();f.state.chain='0x1237';f.state.added=true;f.state.revealRarities=[0,2,4];
- f.state.receipts.set('paid:1',{target:1000n,count:1n,opened:0n,captured:true,player:wallet,block:1990n});
+ f.state.receipts.set('paid:1',{target:1000n,count:1n,opened:0n,captured:true,player:wallet,block:GAME_DEPLOYMENT_BLOCK+1990n});
  const context=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'no-preference'});await injected(context,f);const page=await context.newPage();
  await page.goto(url+'#/packs');await page.locator('#connect').click();await page.getByRole('button',{name:'Fixture Wallet',exact:true}).click();await page.locator('[data-reveal="paid:1"]:enabled').waitFor();
  assert((await page.locator('.pack-sound').innerText()).includes('off'));await page.locator('[data-reveal="paid:1"]').click();await page.getByRole('heading',{name:'Hardware revealed.'}).waitFor({timeout:45000});
@@ -357,9 +449,10 @@ try {
   try{browser=await driver.launch({headless:true,...(engine==='chromium'&&process.env.BLACKOUT_BROWSER_CONSTRAINED?{args:['--renderer-process-limit=2','--no-zygote','--disable-gpu']}:{}),...(executable?{executablePath:executable}:{})});}
   catch(e:any){if(engine==='chromium')throw e;report.limitations.push(`WebKit launch unavailable: ${e.message}`);continue;}
   browsers.push(browser);
-  if(!process.env.FIXTURE_ONLY)await liveVisualSuite(browser,engine);
-  if(!process.env.VISUAL_ONLY){if(!process.env.JUICY_ONLY)await fixtureSuite(browser,engine);if(!process.env.FLOW_ONLY)await juicySuite(browser,engine);}
+  if(process.env.REVISION_ONLY)await revisionSuite(browser,engine);
+  else if(!process.env.FIXTURE_ONLY)await liveVisualSuite(browser,engine);
+  if(!process.env.VISUAL_ONLY&&!process.env.REVISION_ONLY){if(!process.env.JUICY_ONLY)await fixtureSuite(browser,engine);if(!process.env.FLOW_ONLY)await juicySuite(browser,engine);}
   await browser.close();
  }
 } catch(e:any){report.errors.push(e.stack||e.message);console.error(e);process.exitCode=1;}
-finally {for(const browser of browsers)await browser.close();server.close();writeFileSync(join(repo,'artifacts/v10',process.env.JUICY_ONLY?'juicy-validation.json':process.env.FLOW_ONLY?'flow-validation.json':process.env.FIXTURE_ONLY?'fixture-validation.json':process.env.VISUAL_ONLY?'visual-validation.json':'interaction-validation.json'),JSON.stringify({checkedAt:new Date().toISOString(),fixtureWritesOnly:true,browserVersions:browsers.map(b=>b.version()),...report},null,2)+'\n');}
+finally {for(const browser of browsers)await browser.close();server.close();writeFileSync(join(repo,'artifacts/v10',process.env.REVISION_ONLY?'revision-validation.json':process.env.JUICY_ONLY?'juicy-validation.json':process.env.FLOW_ONLY?'flow-validation.json':process.env.FIXTURE_ONLY?'fixture-validation.json':process.env.VISUAL_ONLY?'visual-validation.json':'interaction-validation.json'),JSON.stringify({checkedAt:new Date().toISOString(),fixtureWritesOnly:true,browserVersions:browsers.map(b=>b.version()),...report},null,2)+'\n');}

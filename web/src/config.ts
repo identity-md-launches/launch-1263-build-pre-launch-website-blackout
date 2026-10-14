@@ -3,6 +3,8 @@ export const SITE_LABEL = 'blackout-mine-the-city-pray-the';
 export const RPC = 'https://rpc.mainnet.chain.robinhood.com';
 export const RPC_URLS = [RPC, 'https://robinhood.drpc.org', 'https://robinhood-rpc.publicnode.com'] as const;
 export const POLL_MS = 15000;
+// L3 factory deployment receipt, verified on chain; evidence in web/data/deployment.json.
+export const GAME_DEPLOYMENT_BLOCK = 88_288_289n;
 export const EXPLORER = 'https://robinhoodchain.blockscout.com';
 export const chain = defineChain({ id: 4663, name: 'Robinhood Chain', nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: { default: { http: [...RPC_URLS] } }, blockExplorers: { default: { name: 'Blockscout', url: EXPLORER } } });
 export const contracts = {

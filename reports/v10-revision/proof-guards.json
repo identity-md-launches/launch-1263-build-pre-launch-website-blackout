@@ -1,0 +1,7 @@
+{
+  "checkedAt": "2026-10-14T17:48:04.533Z",
+  "baseline": true,
+  "changedSnapshotOwnerRejected": true,
+  "reorderedFreeWalletsRejected": true,
+  "method": "Run the real production tree builder on temporary copies; exact STARTER ROOT MISMATCH and FREE ROOT MISMATCH assertions required. All shipped proof files remain untouched."
+}

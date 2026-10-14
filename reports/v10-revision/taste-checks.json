@@ -1,0 +1,116 @@
+{
+  "checks": [
+    {
+      "name": "render",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 26020,
+      "output": "renders, no script errors or missing local files\nexternal hosts: api.coinbase.com, rpc.mainnet.chain.robinhood.com, cca-lite.coinbase.com"
+    },
+    {
+      "name": "layout",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 0,
+      "output": "no horizontal scroll at 320, 390 or 1440\nno text box overlaps another\nno floating control covers text\nno text cut off by overflow: hidden"
+    },
+    {
+      "name": "targets",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 0,
+      "output": "all 37 controls at least 24px or spaced at 390\n12 under the 44px comfortable size"
+    },
+    {
+      "name": "contrast",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 0,
+      "output": "all measured text meets 4.5:1 (3:1 large)\n20 text boxes over images, video, canvas or gradients not measured"
+    },
+    {
+      "name": "casing",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 0,
+      "output": "no all-caps text in content"
+    },
+    {
+      "name": "tracking",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 0,
+      "output": "letter-spacing natural in content (display type may run tight)"
+    },
+    {
+      "name": "eyebrows",
+      "passed": false,
+      "exitCode": 1,
+      "durationMs": 1,
+      "output": "1 kicker labels above headings:\n390px: \"Buy tax after token launch\" above \"90%\" (#main > section.landing-section.launch-section:nth-of-type(7) > div.launch-rules:nth-of-type(2) > h3)"
+    },
+    {
+      "name": "type-sizes",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 1,
+      "output": "390: 5 sizes in use, 5 with one-offs (12px\u00d79, 14px\u00d7100, 16px\u00d730, 20px\u00d714, 32px\u00d72)\n1440: 4 sizes in use, 5 with one-offs (14px\u00d7113, 16px\u00d741, 20px\u00d718, 32px\u00d71, 64px\u00d72)\nbar: 6 sizes used more than once, 8 counting one-offs, per width"
+    },
+    {
+      "name": "type-faces",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 0,
+      "output": "families (3): pixel, mono, system-ui\nweights (2): 400, 600"
+    },
+    {
+      "name": "glyphs",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 0,
+      "output": "no em dashes or emoji in text"
+    },
+    {
+      "name": "slogans",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 0,
+      "output": "2 two-beat lines; a stack is four or more, so keep the best and cut the rest:\n\"The city, live. See city leaders \u2192\" (#home-live > div.section-heading:nth-of-type(1))\n\"The city is alive. Its operators aren\u2019t human.\" (#main > section.swarm-section.wrap:nth-of-type(6) > div.swarm-copy:nth-of-type(2) > p.swarm-lead:nth-of-type(1))"
+    },
+    {
+      "name": "repetition",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 1,
+      "output": "no repeated lines"
+    },
+    {
+      "name": "copy-budget",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 0,
+      "output": "prose on the first screen: 15 words at 390 (bar 60), 21 at 1440 (bar 90)\nall words on the first screen: 62 at 390, 67 at 1440\nwhole page: 619 words, 182 of them prose"
+    },
+    {
+      "name": "chrome",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 0,
+      "output": "border and shadow together: 0\ncards inside cards: 0\ngradient text: 0"
+    },
+    {
+      "name": "motion",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 0,
+      "output": "transition: all on 0 elements\nendless animations: 173; still running with reduced motion: 0"
+    },
+    {
+      "name": "share",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 0,
+      "output": "title \"BLACKOUT \u2014 Open packs. Mine the city.\", favicon, og:title, og:image, description"
+    }
+  ]
+}

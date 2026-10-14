@@ -1,0 +1,21 @@
+{
+  "checkedAt": "2026-10-14T17:39:58.122Z",
+  "chainId": 4663,
+  "registry": "All module addresses and both roots match",
+  "status": "passed",
+  "providerChainIds": {
+    "https://rpc.mainnet.chain.robinhood.com": {
+      "chain": 4663
+    },
+    "https://robinhood.drpc.org": {
+      "chain": 4663
+    },
+    "https://robinhood-rpc.publicnode.com": {
+      "chain": 4663
+    }
+  },
+  "homeEpoch": "1",
+  "farmRead": true,
+  "leaderboardFarms": 6,
+  "activityEntries": 20
+}

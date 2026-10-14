@@ -1,6 +1,8 @@
 import { formatUnits, decodeEventLog, type Address, type Hex } from 'viem';
 import { ABI, addresses, client, read, contractErrorName } from './chain';
 import { KINDS, RARITIES, type Item } from './data';
+import { GAME_DEPLOYMENT_BLOCK } from './config';
+import { newLogScan, scanLogRanges } from './logs';
 export type Activity={key:string;block:bigint;index:number;hash:Hex;text:string};
 export type Leaderboard={epoch:bigint;farms:{wallet:Address;hash:bigint;district:number}[];districts:bigint[];total:number};
 const short=(s:string)=>`${s.slice(0,6)}…${s.slice(-4)}`;
@@ -8,19 +10,22 @@ const decoded=new Map<string,Activity>();
 // Kind and rarity are immutable; durability/overclock are not cached here. Burned items omit their detail.
 const metadata=new Map<string,Promise<Pick<Item,'kind'|'rarity'>|null>>();
 let cursor:bigint|null=null;
-export async function loadActivity():Promise<Activity[]>{
+const scan=newLogScan();
+let pending:Promise<Activity[]>|null=null;
+export function loadActivity():Promise<Activity[]>{
+ if(!pending)pending=scanActivity().finally(()=>{pending=null;});
+ return pending;
+}
+async function scanActivity():Promise<Activity[]>{
  const head=await client.getBlockNumber();
- const from=cursor===null?(head>216000n?head-216000n:0n):(cursor>16n?cursor-16n:0n);
- const collected:Awaited<ReturnType<typeof client.getLogs>>=[];
+ const tail=cursor===null?head-216000n:(cursor>head?head:cursor)-16n;
+ const from=tail>GAME_DEPLOYMENT_BLOCK?tail:GAME_DEPLOYMENT_BLOCK;
  const events=Object.values(ABI).flat().filter(e=>e.type==='event'&&['PackOpened','StarterResolved','Registered','EpochSettled'].includes(e.name));
- // Bounded ranges and three concurrent reads keep initial history responsive without a full archive scan.
- for(let start=from;start<=head;start+=60000n){
-  const ranges=Array.from({length:3},(_,i)=>start+BigInt(i)*20000n).filter(n=>n<=head);
-  const chunks=await Promise.all(ranges.map(n=>client.getLogs({address:[addresses.PackSale,addresses.StarterClaim,addresses.FarmCore,addresses.FarmRewards],events,fromBlock:n,toBlock:n+19999n<head?n+19999n:head})));
-  collected.push(...chunks.flat());
- }
- const oldTail=[...decoded.entries()].filter(([,v])=>v.block>=from);
- const recent=[...collected].reverse().filter(log=>log.transactionHash&&log.blockNumber!==null).slice(0,12);
+ await scanLogRanges(from,head,scan,
+  range=>client.getLogs({address:[addresses.PackSale,addresses.StarterClaim,addresses.FarmCore,addresses.FarmRewards],events,...range}),
+  async(collected,{fromBlock,toBlock})=>{
+ const oldTail=[...decoded.entries()].filter(([,v])=>v.block>=fromBlock&&v.block<=toBlock);
+ const recent=[...collected].sort((a,b)=>a.blockNumber===b.blockNumber?(b.logIndex??0)-(a.logIndex??0):(a.blockNumber??0n)>(b.blockNumber??0n)?-1:1).filter(log=>log.transactionHash&&log.blockNumber!==null).slice(0,12);
  // Receipt and item calls for independent events share viem's multicall/JSON-RPC batches.
  const parsed=await Promise.all(recent.map(async(log):Promise<Activity|null>=>{
   const hash=log.transactionHash!,block=log.blockNumber!,index=log.logIndex??0,key=`${hash}:${index}`;
@@ -53,13 +58,16 @@ export async function loadActivity():Promise<Activity[]>{
   }
   return text?{key,block,index,hash,text}:null;
  }));
- // Commit atomically only after successful reads; failures leave the previous feed and cursor intact.
+ // Commit each decoded range atomically. A later failure retains this progress;
+ // retries rescan the overlap, replacing any events removed by a shallow reorg.
  for(const [key]of oldTail)decoded.delete(key);
  for(const entry of parsed)if(entry)decoded.set(entry.key,entry);
- cursor=head;
- const result=[...decoded.values()].sort((a,b)=>a.block===b.block?b.index-a.index:a.block>b.block?-1:1).slice(0,20);
- decoded.clear();result.forEach(e=>decoded.set(e.key,e));return result;
+ cursor=toBlock;
+ const retained=activityList();decoded.clear();retained.forEach(e=>decoded.set(e.key,e));
+ });
+ return activityList();
 }
+function activityList(){return [...decoded.values()].sort((a,b)=>a.block===b.block?b.index-a.index:a.block>b.block?-1:1).slice(0,20);}
 export async function loadLeaderboard(epoch:bigint):Promise<Leaderboard>{
  const count=await read<bigint>('FarmCore','count'),farms:Leaderboard['farms']=[];
  for(let offset=0n;offset<count;offset+=50n){

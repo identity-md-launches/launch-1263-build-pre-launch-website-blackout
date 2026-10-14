@@ -1,0 +1,66 @@
+{
+  "chromium": {
+    "filters": [
+      {
+        "option": "spare",
+        "label": "spare",
+        "before": [
+          "item-1"
+        ],
+        "after": [
+          "item-1",
+          "item-2"
+        ]
+      },
+      {
+        "option": "installed",
+        "label": "installed",
+        "before": [
+          "item-2"
+        ],
+        "after": [
+          "item-1",
+          "item-2"
+        ]
+      }
+    ],
+    "reportedCopyPresent": {
+      "packs": true,
+      "city": true,
+      "season": true,
+      "billboards": true
+    }
+  },
+  "webkit": {
+    "filters": [
+      {
+        "option": "spare",
+        "label": "spare",
+        "before": [
+          "item-1"
+        ],
+        "after": [
+          "item-1",
+          "item-2"
+        ]
+      },
+      {
+        "option": "installed",
+        "label": "installed",
+        "before": [
+          "item-2"
+        ],
+        "after": [
+          "item-1",
+          "item-2"
+        ]
+      }
+    ],
+    "reportedCopyPresent": {
+      "packs": true,
+      "city": true,
+      "season": true,
+      "billboards": true
+    }
+  }
+}

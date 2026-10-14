@@ -50,6 +50,10 @@ function reflectMotion() {
 function preserveForms() {
  return Array.from(document.querySelectorAll<HTMLInputElement|HTMLSelectElement>('#main input,#main select')).filter(el=>el.id).map(el=>({id:el.id,value:el.value,focused:document.activeElement===el}));
 }
+function applyInventoryFilter() {
+ const value=document.querySelector<HTMLSelectElement>('#inventory-filter')?.value;
+ document.querySelectorAll<HTMLElement>('[data-item-equipped]').forEach(row=>row.hidden=value==='installed'?row.dataset.itemEquipped!=='true':value==='spare'?row.dataset.itemEquipped==='true':false);
+}
 function render(keepForms=false) {
  if(keepForms&&draggingHardware){deferredRender=true;return;}
  const focusId=keepForms?(document.activeElement as HTMLElement|null)?.id:undefined;
@@ -74,6 +78,7 @@ function render(keepForms=false) {
  if(pack.result&&Date.now()>revealAnimationUntil)document.querySelector('.reveal-result')?.classList.add('reveal-seen');
  if(current==='home'){ $('#home-live').innerHTML=homeStats(home,globalError);$('#feature-cards').innerHTML=featureCards(home); }
  formValues.forEach(({id,value,focused})=>{const el=document.getElementById(id) as HTMLInputElement|HTMLSelectElement|null;if(el){el.value=value;if(focused)el.focus({preventScroll:true});}});
+ applyInventoryFilter();
  const slippageField=document.querySelector<HTMLInputElement>('#pack-slippage');if(slippageField){try{slippageBps(slippageField.value);}catch(error){slippageField.setAttribute('aria-invalid','true');$('#slippage-error').hidden=false;$('#slippage-error').textContent=errorMessage(error);}}
  openDetails.forEach(id=>{const d=document.getElementById(id) as HTMLDetailsElement|null;if(d)d.open=true;});
  if(focusId)document.getElementById(focusId)?.focus({preventScroll:true});
@@ -319,7 +324,7 @@ document.addEventListener('change',async e=>{
    catch(error){el.setAttribute('aria-invalid','true');$('#slippage-error').hidden=false;$('#slippage-error').textContent=errorMessage(error);}
   }
   else if(el.id==='install-item'&&farm){const item=currentItem(BigInt(el.value));const slots=farm.rooms.flatMap(r=>r.slots.flatMap((_,i)=>placementReason(item,farm!,r,i)?[]:[`<option value="${r.index},${i}">Room ${r.index+1}, slot ${i+1}</option>`]));$('#install-slot').innerHTML=slots.join('');}
-  else if(el.id==='inventory-filter')document.querySelectorAll<HTMLElement>('[data-item-equipped]').forEach(row=>row.hidden=el.value==='installed'?row.dataset.itemEquipped!=='true':el.value==='spare'?row.dataset.itemEquipped==='true':false);
+  else if(el.id==='inventory-filter')applyInventoryFilter();
   else if(el.id==='lock-days'&&walletAddress()){const [min,boost]=await read<[bigint,bigint]>('Economy','lockQuote',[walletAddress()!,BigInt(el.value)]);$<HTMLInputElement>('#lock-amount').value=units(min);$('#lock-quote-note').textContent=`Minimum: ${tokens(min)} BLACKOUT · +${Number(boost)/100}% hash.`;}
  }catch(error){actionError(error);}
 });

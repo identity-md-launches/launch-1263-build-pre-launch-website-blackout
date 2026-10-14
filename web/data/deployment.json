@@ -1,0 +1,37 @@
+{
+  "chainId": 4663,
+  "blockNumber": 88288289,
+  "blockHash": "0xd6556819f0ffe7f9393f1e5bc181acdbb704ad8b1325052049d01250ee439168",
+  "transactionHash": "0x1cface4af63416b81af7e069c215b3aa44aafd7e841167ef9e887f7949ffbc1f",
+  "factory": "0x9c9d2fcb75c2c132c0ac0c42df3819a42347265e",
+  "launchNumber": 1722,
+  "receiptStatus": 1,
+  "addresses": [
+    "0xA0d1FbA2D5b8950b87Cb8Fc5303678862af1A316",
+    "0x1b41fC9723DF25EeC7e91D947072dCcc2483285F",
+    "0x90e138670b28a1f7c2D4ff6f6C25423E1B6F9b9d",
+    "0x83C9aFDF145Ea32f1B6cDa1C88150b6AF9553237",
+    "0x40499CcA542B3cD2dB0287Fa0B6Da87002F042e8",
+    "0xDDa6387BF0244FC82EB3Dbda168AcC4D9eED56A3",
+    "0xF28D8d409e471F7cEFf7a029DCc56328e167C3D5",
+    "0xcda5653467843137aadb2729151e5e8042A49B13"
+  ],
+  "log": {
+    "address": "0x9c9d2fcb75c2c132c0ac0c42df3819a42347265e",
+    "topics": [
+      "0xc5072623c00f524bc781b8c6d63c823f97681871148f832424827833fea92668",
+      "0x00000000000000000000000000000000000000000000000000000000000006ba"
+    ],
+    "data": "0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000008000000000000000000000000a0d1fba2d5b8950b87cb8fc5303678862af1a3160000000000000000000000001b41fc9723df25eec7e91d947072dccc2483285f00000000000000000000000090e138670b28a1f7c2d4ff6f6c25423e1b6f9b9d00000000000000000000000083c9afdf145ea32f1b6cda1c88150b6af955323700000000000000000000000040499cca542b3cd2db0287fa0b6da87002f042e8000000000000000000000000dda6387bf0244fc82eb3dbda168acc4d9eed56a3000000000000000000000000f28d8d409e471f7ceff7a029dcc56328e167c3d5000000000000000000000000cda5653467843137aadb2729151e5e8042a49b13",
+    "blockNumber": "0x5432c21",
+    "transactionHash": "0x1cface4af63416b81af7e069c215b3aa44aafd7e841167ef9e887f7949ffbc1f",
+    "transactionIndex": "0x5",
+    "blockHash": "0xd6556819f0ffe7f9393f1e5bc181acdbb704ad8b1325052049d01250ee439168",
+    "blockTimestamp": "0x0",
+    "logIndex": "0x3",
+    "removed": false
+  },
+  "verifiedAt": "2026-10-14T17:29:01.232Z",
+  "rpc": "https://rpc.mainnet.chain.robinhood.com",
+  "method": "Factory deployment log contains all eight L3 addresses, including PackSale at index 6 and StarterClaim at index 7. Transaction receipt status is 1. eth_getBlockByNumber returned the same block number (decoded to 88288289) and block hash. Historical eth_getCode is unavailable on these public providers; this check uses the deployment receipt."
+}

@@ -1,0 +1,16 @@
+{
+  "checkedAt": "2026-10-14T18:06:53.178Z",
+  "limitBytes": 8388608,
+  "currentFileBytes": 8365227,
+  "fileCount": 193,
+  "productionBytes": 3526996,
+  "relativeLocalReferencesChecked": 11,
+  "protectedPathsUnchanged": true,
+  "submodules": 0,
+  "dependencyAndCacheDirectoriesIncluded": 0,
+  "bundleBytes": 2481743,
+  "conservativeAvailableBasePlusCandidateBytes": 5625423,
+  "missingHistoricalObjects": 249,
+  "bundleMethod": "Create a temporary bare Git repository, stage every current deliverable file, commit there, then create and verify a complete standalone Git bundle. The source .git is never modified.",
+  "bundleLimitation": "The supplied checkout lacks 249 historical objects. This verifies the complete current-file snapshot and the conservative available-base-plus-candidate size, not unavailable history or the publisher’s final metadata."
+}
