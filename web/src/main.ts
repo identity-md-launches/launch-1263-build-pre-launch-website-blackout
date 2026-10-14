@@ -1,22 +1,23 @@
 import './live.css';
-import { isAddress, parseUnits, type Address } from 'viem';
+import { parseUnits, type Address } from 'viem';
 import { landing } from '../../src/landing';
-import { sprite, spriteSheet, itemSprite } from '../../src/sprites';
+import { sprite, spriteSheet } from '../../src/sprites';
 import { initAtmosphere, toggleSound, soundEnabled, playSound } from '../../src/effects';
 import { config as legacyConfig } from '../../src/config';
 import { verifyRegistry, wiringVerified, mismatches, read, errorMessage, nativeBlock } from './chain';
-import { loadHome, loadFarm, loadReceipt, type Farm, type Home, type Receipt, KINDS, RARITIES, scrapQuote, chainTime, entropyState } from './data';
+import { loadHome, loadFarm, loadReceipt, type Farm, type Home, type Receipt, KINDS, RARITIES, scrapQuote, chainTime } from './data';
 import { account, walletAddress, setupWallet, openWallet, switchNetwork, canWrite, tx, txLink, setTx, send, approve, transact, assertWallet, transactionBusy, refreshTransaction } from './wallet';
 import { eligibility } from './proofs';
 import { findReceipts } from './receipts';
 import { reveal } from './reveal';
+import { quoteEthPack, slippageBps } from './packs';
 import { docsPage } from './docs';
 import { esc, tokens, units, duration, homeStats, featureCards, farmPage, packsPage, cityPage, seasonPage, boardsPage, contractsPage, type PackState, type CityState, type SeasonState, type Board, receiptRow } from './views';
 const $=<T extends HTMLElement=HTMLElement>(selector:string)=>document.querySelector<T>(selector)!;
 const route=()=>location.hash.replace(/^#\/?/,'').split('/')[0]||'home';
 let home:Home|null=null,farm:Farm|null=null,city:CityState|null=null,season:SeasonState|null=null,boards:Board[]|null=null,boardWeek=0n;
 let globalError='',pageError='',generation=0,lastWallet='',refreshing=false,selectedWeek:bigint|null=null;
-let pack:PackState={quote:null,count:1,receipts:null,receiptError:'',eligible:null,eligibilityError:'',priceError:'',ethQuote:null,ethQuoteError:''};
+let pack:PackState={quote:null,count:1,receipts:null,receiptError:'',eligible:null,eligibilityError:'',priceError:'',ethQuote:null,ethQuoteError:'',slippage:300,result:null,activeReceipt:null};
 let motion=!matchMedia('(prefers-reduced-motion: reduce)').matches;
 let revealController:AbortController|null=null;
 let chosenAction:(()=>Promise<void>)|null=null;
@@ -30,7 +31,7 @@ $('#app').innerHTML=`${spriteSheet()}<a class="skip-link" href="#main">Skip to c
 <main id="main" tabindex="-1"></main>
 <footer class="site-footer wrap"><a class="footer-brand" href="#/">BLACKOUT</a><p>A city worth keeping alive.<br><span class="muted">Live on Robinhood Chain.</span></p><div><a href="#/docs">Field guide</a><a href="#/docs/risks">Risks</a><a href="#/contracts">Contracts</a><a href="${legacyConfig.xUrl}" target="_blank" rel="noopener noreferrer">Follow on X ↗</a><button class="text-button" data-motion-toggle>Pause animation</button><button class="text-button" data-sound>Sound ${soundEnabled()?'on':'off'}</button></div><p class="footer-fine">Real assets. Wallet signatures required. No guaranteed rewards.</p></footer>
 <dialog id="wallet-dialog" class="wallet-sheet" aria-labelledby="wallet-title"><div class="sheet-head"><h2 id="wallet-title">Connect a wallet</h2><button data-close-wallet class="close-button" aria-label="Close wallet picker">×</button></div><div id="wallet-rows"></div><p id="wallet-note" class="small" role="status"></p></dialog>
-<dialog id="action-dialog" aria-labelledby="action-title"><div class="dialog-inner"><h2 id="action-title"></h2><div id="action-body"></div><p id="action-error" class="field-error" role="alert"></p><div class="actions"><button class="button" id="cancel-action">Cancel</button><button class="button primary" id="confirm-action">Confirm</button></div></div></dialog>
+<dialog id="action-dialog" aria-labelledby="action-title"><div class="dialog-inner"><h2 id="action-title"></h2><div id="action-body"></div><section id="action-tx-status" class="dialog-tx-status" aria-label="Transaction progress" aria-live="polite" hidden></section><p id="action-error" class="field-error" role="alert"></p><div class="actions"><button class="button" id="cancel-action">Cancel</button><button class="button primary" id="confirm-action">Confirm</button></div></div></dialog>
 <div id="copy-message" class="sr-only" role="status"></div>`;
 function reflectMotion() {
  document.body.classList.toggle('motion-off',!motion);
@@ -40,6 +41,7 @@ function preserveForms() {
  return Array.from(document.querySelectorAll<HTMLInputElement|HTMLSelectElement>('#main input,#main select')).filter(el=>el.id).map(el=>({id:el.id,value:el.value,focused:document.activeElement===el}));
 }
 function render(keepForms=false) {
+ const focusId=keepForms?(document.activeElement as HTMLElement|null)?.id:undefined;
  const formValues=keepForms?preserveForms():[];
  const openDetails=keepForms?Array.from(document.querySelectorAll<HTMLDetailsElement>('#main details[open]')).map(d=>d.id).filter(Boolean):[];
  const current=route();document.body.dataset.page=current;
@@ -58,6 +60,7 @@ function render(keepForms=false) {
  if(current==='home'){ $('#home-live').innerHTML=homeStats(home,globalError);$('#feature-cards').innerHTML=featureCards(home); }
  formValues.forEach(({id,value,focused})=>{const el=document.getElementById(id) as HTMLInputElement|HTMLSelectElement|null;if(el){el.value=value;if(focused)el.focus({preventScroll:true});}});
  openDetails.forEach(id=>{const d=document.getElementById(id) as HTMLDetailsElement|null;if(d)d.open=true;});
+ if(focusId)document.getElementById(focusId)?.focus({preventScroll:true});
  reflectMotion();renderedRoute=current;updateControls();
 }
 function renderStatus() {
@@ -68,14 +71,19 @@ function renderStatus() {
 }
 function updateControls() {
  const allowed=canWrite();
- const selectors='[data-unplace],[data-install],[data-repair],[data-scrap],[data-buy-room],[data-sync],[data-claim],[data-claim-nft],[data-claim-free],[data-capture],[data-reveal],[data-buy-eth],[data-unlock],[data-lobby],[data-season-claim],[data-board-refund]';
- if(!allowed)document.querySelectorAll<HTMLButtonElement>(selectors).forEach(b=>b.disabled=true);
- if(!allowed)document.querySelectorAll<HTMLButtonElement>('#main button[type="submit"]').forEach(b=>b.disabled=true);
+ document.querySelectorAll<HTMLButtonElement>('#main [data-write]').forEach(b=>b.disabled=!allowed||b.dataset.unavailable==='true');
+}
+function txContent() {
+ if(!tx)return '';
+ return `<strong>${esc(tx.label)} · ${tx.state==='signature'?'Awaiting wallet':tx.state.charAt(0).toUpperCase()+tx.state.slice(1)}</strong><p>${esc(tx.detail)}</p>${tx.hash?`<a href="${txLink(tx.hash)}" target="_blank" rel="noopener noreferrer">View transaction ↗</a><code>${tx.hash}</code>`:''}`;
 }
 function updateTx() {
  const el=$('#tx-status');el.hidden=!tx;if(!tx)return;
  el.dataset.state=tx.state;
- el.innerHTML=`<div><strong>${esc(tx.label)} · ${tx.state==='signature'?'Awaiting wallet':tx.state.charAt(0).toUpperCase()+tx.state.slice(1)}</strong><p>${esc(tx.detail)}</p>${tx.hash?`<a href="${txLink(tx.hash)}" target="_blank" rel="noopener noreferrer">View transaction ↗</a><code>${tx.hash}</code>`:''}${revealController?'<p id="reveal-progress" role="status">Preparing reveal…</p>':''}</div><div>${revealController?'<button class="button" data-stop-reveal>Stop waiting</button>':tx.state==='pending'?'<button class="button" data-check-tx>Check confirmation</button>':'<button class="text-button" data-dismiss-tx>Dismiss</button>'}</div>`;
+ el.innerHTML=`<div>${txContent()}${revealController?'<p id="reveal-progress" role="status">Revealing...</p>':''}</div><div>${revealController?'<button class="button" data-stop-reveal>Stop waiting</button>':tx.state==='pending'?'<button class="button" data-check-tx>Check confirmation</button>':'<button class="text-button" data-dismiss-tx>Dismiss</button>'}</div>`;
+ if($<HTMLDialogElement>('#action-dialog').open) {
+  const status=$('#action-tx-status');status.hidden=false;status.dataset.state=tx.state;status.innerHTML=txContent();
+ }
 }
 async function refreshHome() {
  if(refreshing)return;refreshing=true;
@@ -119,11 +127,18 @@ async function loadPage(current=route()) {
  }catch(e){if(valid())pageError=errorMessage(e);}
  if(valid())render(true);
 }
+let quoteRequest=0;
 async function refreshQuote(show=true) {
- const count=pack.count;
- try {const quote=await read<bigint>('PackSale','quote',[BigInt(count)]);if(count!==pack.count)return;pack.quote=quote;pack.priceError='';}
- catch(e){pack.priceError=errorMessage(e);pack.quote=null;}
- if(show&&route()==='packs')render(true);
+ const request=++quoteRequest,count=pack.count,slippage=pack.slippage;
+ pack.ethQuote=null;pack.ethQuoteError='';
+ try {
+  const quote=await read<bigint>('PackSale','quote',[BigInt(count)]);
+  if(request!==quoteRequest)return;
+  pack.quote=quote;pack.priceError='';
+  try {const estimate=await quoteEthPack(quote,slippage);if(request===quoteRequest)pack.ethQuote=estimate;}
+  catch(e){if(request===quoteRequest)pack.ethQuoteError=errorMessage(e);}
+ } catch(e){if(request===quoteRequest){pack.priceError=errorMessage(e);pack.quote=null;}}
+ if(request===quoteRequest&&show&&route()==='packs')render(true);
 }
 async function refreshEligibility(wallet:Address) {
  try{const result=await eligibility(wallet);if(wallet===walletAddress()){pack.eligible=result;pack.eligibilityError='';}}
@@ -137,13 +152,12 @@ async function refreshReceipts(wallet:Address) {
 }
 function confirmAction(title:string,body:string,label:string,action:()=>Promise<void>) {
  returnFocus=document.activeElement as HTMLElement;
- $('#action-title').textContent=title;$('#action-body').innerHTML=body;$('#confirm-action').textContent=label;$('#action-error').textContent='';chosenAction=action;
+ $('#action-tx-status').hidden=true;$('#action-tx-status').innerHTML='';$('#action-title').textContent=title;$('#action-body').innerHTML=body;$('#confirm-action').textContent=label;$('#action-error').textContent='';chosenAction=action;
  $<HTMLDialogElement>('#action-dialog').showModal();$('#cancel-action').focus();
 }
 function input(id:string) {return $<HTMLInputElement|HTMLSelectElement>(`#${id}`).value.trim();}
 function amount(value:string,label:string) {if(!/^\d+(\.\d{1,18})?$/.test(value))throw Error(`Enter ${label} as a positive decimal with at most 18 places.`);const v=parseUnits(value,18);if(v<=0n)throw Error(`${label} must be greater than zero.`);return v;}
 function integer(value:string,label:string,min=0,max=Number.MAX_SAFE_INTEGER) {if(!/^\d+$/.test(value)||!Number.isSafeInteger(Number(value))||Number(value)<min||Number(value)>max)throw Error(`Enter ${label} between ${min} and ${max}.`);return BigInt(value);}
-function getRecipient() {const value=input('pack-recipient');if(!value)return assertWallet();if(!isAddress(value)||BigInt(value)===0n)throw Error('Enter a valid, nonzero gift recipient address.');return value as Address;}
 function actionError(e:unknown,label='Action unavailable') {setTx({label,state:'error',detail:errorMessage(e)});}
 function currentItem(id:bigint) {const item=farm?.items.find(i=>i.id===id);if(!item||!farm)throw Error('Item no longer in this wallet. Refresh your farm.');return item;}
 function installDialog(id?:bigint,slot?:[number,number]) {
@@ -155,52 +169,55 @@ function installDialog(id?:bigint,slot?:[number,number]) {
   const chosen=integer(input('install-item'),'item ID',1),[r,s]=input('install-slot').split(',').map(BigInt);await send('FarmCore','place',[chosen,r,s],'Place hardware');
  });
 }
+let preparingPack=false;
 async function beginPack(kind:'tokens'|'eth') {
- const from=assertWallet(),count=integer(input('pack-count'),'pack count',1,8),recipient=getRecipient();
- const quote=await read<bigint>('PackSale','quote',[count]);
- const gift=recipient.toLowerCase()!==from.toLowerCase();
- if(kind==='tokens') {
-  confirmAction(gift?'Gift hardware packs':'Open hardware packs',`<p>${count} pack(s) for <strong>${units(quote)} BLACKOUT</strong>, plus gas.</p><p>Recipient: <span class="full-address">${recipient}</span></p><p class="small">First approve this amount, then confirm the purchase. A price increase beyond the allowance reverts. Reveal the receipt after the future target block.</p>`,gift?'Approve & gift packs':'Approve & open packs',async()=>{
-   assertWallet(from);await approve('PackSale',quote);assertWallet(from);
-   await send('PackSale',gift?'buyPacksFor':'openPack',gift?[recipient,count,quote]:[count],gift?'Gift packs':'Open packs');
-  });
- } else {
-  const value=amount(input('pack-eth'),'ETH input'),minTokens=amount(input('min-tokens'),'minimum output'),maxCost=amount(input('max-cost'),'maximum pack cost');
-  if(maxCost<quote)throw Error('Maximum pack cost is below the current quote. Refresh and review the limit.');
-  confirmAction('Buy packs with ETH',`<p>Spend <strong>${units(value)} ETH</strong> plus gas for ${count} pack(s).</p><p>Minimum output: ${units(minTokens)} BLACKOUT.<br>Maximum pack cost: ${units(maxCost)} BLACKOUT.</p><p>Recipient: <span class="full-address">${recipient}</span></p><p class="small">The swap and purchase are atomic. Excess BLACKOUT returns to your wallet. Check the recipient and all amounts.</p>`,'Buy with ETH',async()=>{assertWallet(from);await send('PackSale','buyWithETH',[recipient,count,minTokens,maxCost],'Buy packs with ETH',value);});
- }
-}
-async function ethEstimate() {
- const p=pack.quote;if(p===null)throw Error('Wait for the pack quote, then retry.');
- const estimate=await read<bigint>('V4Market','quote',[10n**18n]);if(estimate===0n)throw Error('The market returned no quote.');
- let value:bigint;
- if(input('pack-eth'))value=amount(input('pack-eth'),'ETH input');
- else {value=(p*10n**18n*103n+estimate*100n-1n)/(estimate*100n);$<HTMLInputElement>('#pack-eth').value=units(value);}
- const output=await read<bigint>('V4Market','quote',[value]);pack.ethQuote=output;
- $<HTMLInputElement>('#min-tokens').value=units(output*99n/100n>p?output*99n/100n:p);
- $<HTMLInputElement>('#max-cost').value=units(p);
- $('#eth-quote-note').textContent=`TWAP estimate: ${tokens(output)} BLACKOUT. Minimum uses 1% tolerance, at least the current pack cost. This is not a guarantee.`;
+ if(preparingPack||transactionBusy)return;
+ const from=assertWallet(),count=BigInt(pack.count),slippage=kind==='eth'?slippageBps(input('pack-slippage')):pack.slippage;
+ preparingPack=true;
+ try {
+  const quote=await read<bigint>('PackSale','quote',[count]);
+  assertWallet(from);
+  if(kind==='tokens') {
+   confirmAction('Pay with BLACKOUT',`<p>${count} pack${count===1n?'':'s'} for <strong>${units(quote)} BLACKOUT</strong>, plus gas.</p><p class="small">Approve if needed, then open your packs. The final price is set when the purchase confirms.</p>`,'Pay with BLACKOUT',async()=>{
+    assertWallet(from);await approve('PackSale',quote);assertWallet(from);
+    await send('PackSale','openPack',[count],'Open packs with BLACKOUT');
+   });
+  } else {
+   const estimate=await quoteEthPack(quote,slippage);assertWallet(from);
+   confirmAction('Buy pack with ETH',`<p>Spend <strong>${units(estimate.value)} ETH</strong> plus gas for ${count} pack${count===1n?'':'s'}.</p><p class="small">One transaction buys BLACKOUT and opens your pack${count===1n?'':'s'}. Extra BLACKOUT stays in your wallet.</p><p class="small">Slippage: ${slippage/100}%.<br>Minimum swap output: ${units(estimate.minTokens)} BLACKOUT.<br>Maximum pack cost: ${units(estimate.maxCost)} BLACKOUT.</p>`,'Buy pack with ETH',async()=>{
+    assertWallet(from);await send('PackSale','buyWithETH',[from,count,estimate.minTokens,estimate.maxCost],'Buy pack with ETH',estimate.value);
+   });
+  }
+ } finally {preparingPack=false;}
 }
 async function revealPack(kind:Receipt['kind'],id:bigint) {
- const from=assertWallet();const receipt=await loadReceipt(kind,id);
+ const from=assertWallet(),receipt=await loadReceipt(kind,id);
  if(receipt.player.toLowerCase()!==from.toLowerCase())throw Error('This receipt belongs to another wallet.');
- if(receipt.resolved)throw Error('This receipt is already resolved. Refresh your inventory.');
- const before=await read<bigint>('FarmItems','ownedCount',[from]);
- revealController=new AbortController();updateTx();
+ pack.result=null;
+ const before=await loadFarm(from);assertWallet(from);
+ revealController=new AbortController();
+ pack.activeReceipt={key:`${kind}:${id}`,message:home&&home.native>receipt.target+256n&&!receipt.captured?'Re-arming, wait a moment':'Revealing...'};
+ if(route()==='packs')render(true);
  try {
-  playSound('pack');await reveal(receipt,revealController.signal);playSound('reveal');
-  const after=await loadFarm(from);farm=after;
-  if(route()==='packs') {
-   const added=after.items.slice(Number(before));
-   const area=$('#reveal-result');area.innerHTML=`<section class="reveal-result"><h2>Hardware revealed.</h2><p>Your on-chain inventory has been updated.</p><div class="reveal-cards">${added.map(i=>`<article class="reveal-card ${RARITIES[i.rarity].toLowerCase()}">${itemSprite(KINDS[i.kind],RARITIES[i.rarity])}<h3>${KINDS[i.kind]}</h3><p>${RARITIES[i.rarity]} · #${i.id}</p></article>`).join('')}</div><a class="button primary" href="#/farm">Place your hardware →</a></section>`;area.scrollIntoView({behavior:motion?'smooth':'instant',block:'center'});
-  }
- }finally{revealController=null;updateTx();}
+  let alreadyOpened=receipt.resolved;
+  if(!alreadyOpened){playSound('pack');alreadyOpened=await reveal(receipt,revealController.signal)==='already-opened';}
+  const after=await loadFarm(from);assertWallet(from);farm=after;
+  const existing=new Set(before.items.map(i=>i.id));
+  pack.result={items:alreadyOpened?[]:after.items.filter(i=>!existing.has(i.id)),alreadyOpened};
+  if(alreadyOpened)setTx({label:'Pack receipt',state:'complete',detail:'Already opened, see your Farm'});
+  else playSound('reveal');
+  await refreshReceipts(from);
+  if(route()==='packs'){render(true);$('#reveal-result').scrollIntoView({behavior:motion?'smooth':'instant',block:'center'});}
+ }finally{revealController=null;pack.activeReceipt=null;if(route()==='packs')render(true);updateTx();}
 }
 $('#cancel-action').addEventListener('click',()=>$<HTMLDialogElement>('#action-dialog').close());
 $<HTMLDialogElement>('#action-dialog').addEventListener('cancel',e=>{if(transactionBusy)e.preventDefault();});
-$<HTMLDialogElement>('#action-dialog').addEventListener('close',()=>{chosenAction=null;returnFocus?.focus();});
+$<HTMLDialogElement>('#action-dialog').addEventListener('close',()=>{
+ chosenAction=null;
+ requestAnimationFrame(()=>{const target=returnFocus?.isConnected?returnFocus:returnFocus?.id?document.getElementById(returnFocus.id):$('#main');target?.focus({preventScroll:true});});
+});
 $('#confirm-action').addEventListener('click',()=>{
- const action=chosenAction;if(!action)return;
+ const action=chosenAction;if(!action)return;$('#action-error').textContent='';
  // Read form selections before closing, because the dialog is also the review form.
  void transact(async()=>{try{await action();$<HTMLDialogElement>('#action-dialog').close();}catch(e){$('#action-error').textContent=errorMessage(e);throw e;}});
 });
@@ -229,8 +246,12 @@ document.addEventListener('click',async e=>{
   else if(el.hasAttribute('data-sync'))await transact(async()=>{await send('FarmCore','sync',[],'Sync farm');});
   else if(el.hasAttribute('data-claim')&&farm){const f=farm,from=assertWallet();if(f.claimNet===null)throw Error('Refresh the claim-tax preview first.');confirmAction('Claim mining rewards',`<p>Gross: ${units(f.pending)} BLACKOUT.<br>Estimated tax: ${units(f.pending-f.claimNet)}.<br>You receive approximately <strong>${units(f.claimNet)} BLACKOUT</strong>, before gas.</p><p class="small">The final tax is calculated on chain when your transaction is included.</p>`,'Claim rewards',async()=>{assertWallet(from);await send('FarmRewards','claim',[f.pending],'Claim rewards');});}
   else if(el.hasAttribute('data-auto-off'))await transact(async()=>{await send('FarmCore','setAutoRepair',[false,8000],'Disable auto-repair');});
-  else if(el.hasAttribute('data-eth-quote'))await ethEstimate();
-  else if(el.hasAttribute('data-buy-eth'))await beginPack('eth');
+  else if(el.hasAttribute('data-refresh-quote'))await refreshQuote();
+  else if(el.hasAttribute('data-pack-step')) {
+   const next=Math.max(1,Math.min(10,pack.count+Number(el.dataset.packStep)));
+   if(next!==pack.count){pack.count=next;pack.quote=null;pack.ethQuote=null;render(true);document.querySelector<HTMLElement>(`[data-pack-step="${el.dataset.packStep}"]`)?.focus({preventScroll:true});await refreshQuote();}
+  }
+  else if(el.hasAttribute('data-buy-tokens'))await beginPack('tokens');
   else if(el.dataset.claimNft){const id=Number(el.dataset.claimNft),claim=pack.eligible?.owned.find(c=>c.tokenId===id),from=assertWallet();if(!claim||claim.holder.toLowerCase()!==from.toLowerCase())throw Error('No verified NFT proof for this wallet.');await transact(async()=>{await send('StarterClaim','claim',[BigInt(id),claim.proof],`Claim Identity MD #${id}`);});}
   else if(el.hasAttribute('data-claim-free')){const claim=pack.eligible?.free;if(!claim)throw Error('This wallet has no free-claim proof.');await transact(async()=>{await send('StarterClaim','claimFree',[BigInt(claim.index),claim.proof],'Claim free starter');});}
   else if(el.dataset.capture){const [kind,id]=el.dataset.capture.split(':');await transact(async()=>{await send(kind==='paid'?'PackSale':'StarterClaim','captureEntropy',[BigInt(id)],'Capture pack entropy');});}
@@ -244,9 +265,9 @@ document.addEventListener('click',async e=>{
 document.addEventListener('submit',async e=>{
  const form=e.target as HTMLFormElement;if(!form.id)return;e.preventDefault();
  try {
-  if(form.id==='pack-form')await beginPack('tokens');
+  if(form.id==='pack-form')await beginPack('eth');
   else if(form.id==='auto-repair-form'){const threshold=Number(integer(input('repair-threshold'),'threshold',20,100))*100;confirmAction('Enable auto-repair',`<p>Spend pending mining credits automatically when health falls below ${threshold/100}%. Wallet tokens are not used.</p>`,'Enable auto-repair',async()=>{await send('FarmCore','setAutoRepair',[true,threshold],'Enable auto-repair');});}
-  else if(form.id==='receipt-form'){const kind=input('receipt-kind') as Receipt['kind'],id=BigInt(input('receipt-id'));if(id<0n)throw Error('Enter a nonnegative receipt ID.');const r=await loadReceipt(kind,id);if(BigInt(r.player)===0n)throw Error('No receipt exists with this type and ID.');if(!walletAddress()||r.player.toLowerCase()!==walletAddress()!.toLowerCase())throw Error('This receipt belongs to a different wallet.');if(r.resolved)throw Error('This receipt is already resolved.');pack.receipts=[...(pack.receipts??[]).filter(x=>!(x.kind===kind&&x.id===id)),r];pack.receiptError='';render(true);}
+  else if(form.id==='receipt-form'){const kind=input('receipt-kind') as Receipt['kind'],id=BigInt(input('receipt-id'));if(id<0n)throw Error('Enter a nonnegative receipt ID.');const r=await loadReceipt(kind,id);if(BigInt(r.player)===0n)throw Error('No receipt exists with this type and ID.');if(!walletAddress()||r.player.toLowerCase()!==walletAddress()!.toLowerCase())throw Error('This receipt belongs to a different wallet.');if(r.resolved)pack.result={items:[],alreadyOpened:true};pack.receipts=[...(pack.receipts??[]).filter(x=>!(x.kind===kind&&x.id===id)),r];pack.receiptError='';render(true);}
   else if(form.id==='season-form'){selectedWeek=integer(input('season-week'),'season week');await loadPage('season');}
   else if(form.id==='lock-form'){const from=assertWallet(),days=integer(input('lock-days'),'lock term',7,30),value=amount(input('lock-amount'),'BLACKOUT amount');if(![7n,14n,30n].includes(days))throw Error('Choose 7, 14 or 30 days.');const [min]=await read<[bigint,bigint]>('Economy','lockQuote',[from,days]);if(value<min)throw Error(`The minimum lock is ${units(min)} BLACKOUT.`);confirmAction('Lock BLACKOUT',`<p>Lock <strong>${units(value)} BLACKOUT</strong> for ${days} days. You cannot withdraw early.</p>`,'Approve & lock',async()=>{assertWallet(from);await approve('Economy',value);assertWallet(from);await send('Economy','lock',[value,days],'Lock BLACKOUT');});}
   else if(form.id==='billboard-form'){const from=assertWallet(),district=integer(input('board-district'),'district',0,7),bid=amount(input('board-bid'),'bid'),text=input('board-text'),handle=input('board-handle');if(!/^[A-Za-z0-9 !_\-]{1,32}$/.test(text)||!/^[A-Za-z0-9_]{1,15}$/.test(handle))throw Error('Use 1–32 permitted message characters and a 1–15 character X handle.');confirmAction('Bid for a billboard',`<p>Bid ${units(bid)} BLACKOUT. Message: ${esc(text)}.</p><p class="small">Winning bids fund the game. An outbid refund is withdrawn separately.</p>`,'Approve & bid',async()=>{assertWallet(from);await approve('Billboards',bid);assertWallet(from);await send('Billboards','bidBillboard',[district,bid,text,handle],'Bid billboard');});}
@@ -255,7 +276,10 @@ document.addEventListener('submit',async e=>{
 document.addEventListener('change',async e=>{
  const el=e.target as HTMLInputElement|HTMLSelectElement;
  try {
-  if(el.id==='pack-count'){pack.count=Number(integer(el.value,'pack count',1,8));pack.quote=null;await refreshQuote();if(pack.quote!==null){$<HTMLInputElement>('#min-tokens').value=units(pack.quote);$<HTMLInputElement>('#max-cost').value=units(pack.quote);}}
+  if(el.id==='pack-slippage'){
+   try{pack.slippage=slippageBps(el.value);el.removeAttribute('aria-invalid');$('#slippage-error').hidden=true;await refreshQuote();}
+   catch(error){el.setAttribute('aria-invalid','true');$('#slippage-error').hidden=false;$('#slippage-error').textContent=errorMessage(error);}
+  }
   else if(el.id==='inventory-filter')document.querySelectorAll<HTMLElement>('[data-item-equipped]').forEach(row=>row.hidden=el.value==='installed'?row.dataset.itemEquipped!=='true':el.value==='spare'?row.dataset.itemEquipped==='true':false);
   else if(el.id==='lock-days'&&walletAddress()){const [min,boost]=await read<[bigint,bigint]>('Economy','lockQuote',[walletAddress()!,BigInt(el.value)]);$<HTMLInputElement>('#lock-amount').value=units(min);$('#lock-quote-note').textContent=`Minimum: ${tokens(min)} BLACKOUT · +${Number(boost)/100}% hash.`;}
  }catch(error){actionError(error);}
@@ -270,17 +294,16 @@ window.addEventListener('hashchange',()=>{
 document.addEventListener('walletchange',()=>{
  const key=`${walletAddress()||''}:${account().chainId||''}`;if(key===lastWallet)return;lastWallet=key;generation++;
  if(!transactionBusy)$<HTMLDialogElement>('#action-dialog').close();
- farm=null;city=null;pack.eligible=null;pack.receipts=null;pack.eligibilityError='';pack.receiptError='';revealController?.abort();
+ farm=null;city=null;pack.eligible=null;pack.receipts=null;pack.eligibilityError='';pack.receiptError='';pack.result=null;pack.activeReceipt=null;revealController?.abort();
  if(renderedRoute){render(true);void loadPage();}
 });
 document.addEventListener('walletbusy',()=>{updateControls();$<HTMLButtonElement>('#confirm-action').disabled=transactionBusy;$<HTMLButtonElement>('#cancel-action').disabled=transactionBusy;});
 document.addEventListener('txchange',updateTx);
-document.addEventListener('revealprogress',((e:CustomEvent<string>)=>{const status=document.getElementById('reveal-progress');if(status)status.textContent=e.detail;}) as EventListener);
-document.addEventListener('transactionend',()=>{
- // Preserve a completed reveal's artwork while receipts refresh in the background.
- if(route()==='packs'&&$('#reveal-result')?.textContent){void refreshHome();if(walletAddress()){const owner=walletAddress()!;void findReceipts(owner).then(r=>{if(walletAddress()!==owner)return;pack.receipts=r;if(route()==='packs')$('#receipt-list').innerHTML=r.length?r.map(item=>receiptRow(item,home)).join(''):'<p>No pending receipts. Your hardware is ready on Farm.</p>';}).catch(e=>{pack.receiptError=errorMessage(e);});}return;}
- void refreshHome().then(()=>loadPage());
-});
+document.addEventListener('revealprogress',((e:CustomEvent<string>)=>{
+ const status=document.getElementById('reveal-progress');if(status)status.textContent=e.detail;
+ if(pack.activeReceipt){pack.activeReceipt.message=e.detail;const row=document.querySelector(`[data-receipt="${pack.activeReceipt.key}"] .receipt-state`);if(row)row.textContent=e.detail;}
+}) as EventListener);
+document.addEventListener('transactionend',()=>{updateControls();void refreshHome().then(()=>loadPage());});
 matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change',e=>{if(e.matches){motion=false;reflectMotion();}});
 render();setupWallet();initAtmosphere(()=>motion);
 // Enlarged text must be able to grow the header without covering the game.
@@ -295,22 +318,21 @@ setInterval(()=>{
 setInterval(()=>{if(!document.hidden&&!transactionBusy)void refreshHome();},30000);
 
 
-// A native block is much shorter than an epoch. Refresh an active capture window
-// without re-rendering forms or moving focus; the reveal helper owns its own clock.
+// Update receipt states without replacing purchase inputs or moving their focus.
 let readingReceiptClock=false;
 setInterval(async()=>{
  if(readingReceiptClock||document.hidden||transactionBusy||route()!=='packs'||!home||!pack.receipts?.length)return;
  readingReceiptClock=true;
  try {
-  const current=await nativeBlock();if(route()!=='packs'||!home)return;home.native=current;
+  const owner=walletAddress(),current=await nativeBlock();if(route()!=='packs'||!home||owner!==walletAddress())return;home.native=current;
   for(const row of document.querySelectorAll<HTMLElement>('[data-receipt]')) {
    const receipt=pack.receipts?.find(r=>`${r.kind}:${r.id}`===row.dataset.receipt);if(!receipt)continue;
-   row.querySelector<HTMLElement>('.receipt-state')!.textContent=entropyState(receipt,current);
-   row.querySelector<HTMLElement>('[data-native-block]')!.textContent=String(current);
-   row.querySelector<HTMLButtonElement>('[data-capture]')!.disabled=!canWrite()||receipt.captured||receipt.resolved||current<=receipt.target;
+   const next=receiptRow(receipt,home,pack.activeReceipt);
+   const template=document.createElement('template');template.innerHTML=next;
+   if(row.outerHTML!==template.innerHTML&& !row.contains(document.activeElement))row.replaceWith(template.content);
   }
   const status=document.getElementById('receipt-clock-status');if(status)status.textContent='';
  } catch {
-  const status=document.getElementById('receipt-clock-status');if(status)status.textContent='Native block refresh failed. Refresh data before capturing; your receipt remains on chain.';
+  const status=document.getElementById('receipt-clock-status');if(status)status.textContent='Could not check reveal readiness. Refresh receipts to try again.';
  } finally {readingReceiptClock=false;}
 },3000);

@@ -39,5 +39,5 @@ if(!home.phases[4]) {
  catch(e){const message=errorMessage(e);if(!message.startsWith('FeatureDisabled:'))throw e;conditionalReads['Economy.lobbyQuote']='Expected FeatureDisabled while Civic flag 4 is false.';}
 }
 const report={totalFarms,nextItemId,conditionalReads,checkedAt:new Date().toISOString(),block:home.block.toString(),chainId:await client.getChainId(),registryMismatches:issues,liveHome:home,readMethods:[...readLog].sort(),farmWallet:wallet,hasFarm:farm.hasFarm,itemCount:farm.items.length,limitations:['No wallet keys used. No signed transaction broadcast.','Live inventory is empty; item mutation paths need deterministic interaction fixtures.']};
-mkdirSync('reports/live',{recursive:true});writeFileSync('reports/live/live-reads.json',JSON.stringify(report,(_,v)=>typeof v==='bigint'?v.toString():v,2)+'\n');
+mkdirSync('reports/v9',{recursive:true});writeFileSync('reports/v9/live-reads.json',JSON.stringify(report,(_,v)=>typeof v==='bigint'?v.toString():v,2)+'\n');
 console.log('PASS',readLog.size,'distinct live methods; all 14 module addresses and both roots matched.');

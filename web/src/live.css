@@ -154,3 +154,20 @@ body[data-page="home"] .chain-strip{display:none}
 .reflow-mode .live-page .page-heading h1{overflow-wrap:anywhere}
 .live-docs>*{min-width:0}.reflow-mode .live-docs nav{grid-template-columns:minmax(0,1fr)}
 .live-stat small{font-weight:400}
+
+/* Packs: one primary purchase, secondary token payment and progressive disclosure. */
+.pack-quantity{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-block:0 20px}
+.pack-stepper{display:flex;align-items:center;gap:12px}
+.pack-stepper .button{min-width:44px;padding:8px;font-size:var(--font-title)}
+.pack-stepper output{min-width:2ch;text-align:center;font-variant-numeric:tabular-nums}
+.pack-buy{min-height:56px!important;font-size:var(--font-body)}
+.pack-token-buy{margin-block:8px 0;font-size:var(--font-small)}
+.pack-fee-note{margin-block:8px 0}
+.pack-price-note,.pack-fee-note,.packs-page .page-heading p,.pack-purchase details p,.receipt-section p,#action-dialog p{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+.pack-limits{font-size:var(--font-small);font-variant-numeric:tabular-nums}.pack-limits dt{color:var(--muted);margin-top:12px}.pack-limits dd{margin:4px 0;overflow-wrap:anywhere}
+.pack-quote{overflow-wrap:anywhere}.pack-quote:empty,.receipt-state:empty{display:none}
+.packs-page .pack-heading{margin-bottom:20px}.packs-page .pack-purchase details{margin-block:16px;padding-block:0}
+.dialog-tx-status{margin-block:20px;padding:16px;background:var(--bg);border-inline-start:3px solid var(--accent);overflow-wrap:anywhere}
+.dialog-tx-status code{display:block;margin-top:8px}.dialog-tx-status p{margin-block:8px}
+#action-dialog{overscroll-behavior:contain}#action-body{overflow-wrap:anywhere}
+@media(max-width:600px){.packs-page .live-pack-art{height:92px}.packs-page .live-pack-art>.sprite{height:92px}.packs-page .pack-quote{font-size:var(--font-body)}.packs-page .pack-heading{margin-bottom:16px}.pack-quantity{margin-bottom:16px}}

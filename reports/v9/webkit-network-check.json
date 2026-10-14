@@ -1,0 +1,22 @@
+{
+  "pageErrors": [],
+  "failedRequests": [],
+  "responses": [
+    {
+      "url": "https://rpc.mainnet.chain.robinhood.com/",
+      "status": 200
+    },
+    {
+      "url": "https://rpc.mainnet.chain.robinhood.com/",
+      "status": 200
+    },
+    {
+      "url": "https://rpc.mainnet.chain.robinhood.com/",
+      "status": 200
+    }
+  ],
+  "state": "Registry verified",
+  "detail": "",
+  "method": "Live production export loaded in WebKit 26.0 with GnuTLS GIO module installed outside repository; no RPC interception.",
+  "runtimeWrapper": "/tmp/blackout-webkit-networking/webkit.sh"
+}

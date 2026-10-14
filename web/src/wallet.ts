@@ -4,7 +4,7 @@ import { http, getAddress, type Address, type Hex } from 'viem';
 import { chain, EXPLORER, type ContractName } from './config';
 import { ABI, addresses, client, errorMessage, wiringVerified, calldata } from './chain';
 export const walletConfig = createConfig({ chains: [chain], multiInjectedProviderDiscovery: true, connectors: [injected(), coinbaseWallet({preference:'smartWalletOnly',appName:'BLACKOUT',appLogoUrl:'https://playblackout.xyz/app-icon.png'})], transports: {[chain.id]:http(chain.rpcUrls.default.http[0])} });
-export type TxState = { label: string; state: 'signature'|'pending'|'confirmed'|'reverted'|'error'; detail: string; hash?: Hex; account?: Address };
+export type TxState = { label: string; state: 'signature'|'pending'|'confirmed'|'reverted'|'error'|'complete'; detail: string; hash?: Hex; account?: Address };
 export let tx:TxState|null = null;
 export let transactionBusy=false;
 const txKey='blackout.live.transactions.4663';
@@ -140,7 +140,7 @@ export async function confirmHash(hash:Hex,label:string,from:Address) {
 export async function approve(name:ContractName,amount:bigint) {
  const from=assertWallet();
  const allowance=await client.readContract({address:addresses.Token,abi:ABI.Token,functionName:'allowance',args:[from,addresses[name]]}) as bigint;
- if(allowance!==amount){await send('Token','approve',[addresses[name],amount],`Approve ${name}`);assertWallet(from);}
+ if(allowance<amount){await send('Token','approve',[addresses[name],amount],`Approve ${name}`);assertWallet(from);}
 }
 export async function transact(action:()=>Promise<void>) {
  if(transactionBusy)return;

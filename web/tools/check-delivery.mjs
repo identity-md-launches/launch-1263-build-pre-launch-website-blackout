@@ -38,5 +38,5 @@ const groups={};for(const [p,n]of Object.entries(byPath))groups[p.split('/')[0]]
 const distFiles=files.filter(p=>p.startsWith('dist/'));
 const hashes=Object.fromEntries(distFiles.map(p=>[p,createHash('sha256').update(readFileSync(join(repo,p))).digest('hex')]));
 const report={checkedAt:new Date().toISOString(),limitBytes:8388608,currentFileBytes:total,fileCount:files.length,groups,productionBytes:groups.dist,relativeLocalReferencesChecked:localReferences,protectedPathsUnchanged:true,submodules:0,dependencyAndCacheDirectoriesIncluded:0,distSha256:hashes,note:'Current tracked and nonignored candidate files; deleted historical images excluded. Complete current-file temporary Git bundle is measured separately in bundle-trial.json. Final publisher metadata is outside this worker.'};
-mkdirSync(join(repo,'reports/live'),{recursive:true});writeFileSync(join(repo,'reports/live/delivery.json'),JSON.stringify(report,null,2)+'\n');
+mkdirSync(join(repo,'reports/v9'),{recursive:true});writeFileSync(join(repo,'reports/v9/delivery.json'),JSON.stringify(report,null,2)+'\n');
 console.log(`PASS ${files.length} current files, ${total} raw bytes; dist ${groups.dist} bytes; local assets and protected paths verified.`);

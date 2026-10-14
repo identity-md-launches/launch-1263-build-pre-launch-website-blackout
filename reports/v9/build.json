@@ -1,0 +1,21 @@
+{
+  "checkedAt": "2026-10-14T14:23:50.281794+00:00",
+  "commands": [
+    "node web/tools/run.mjs typecheck",
+    "node web/tools/run.mjs build"
+  ],
+  "exitCodes": [
+    0,
+    0
+  ],
+  "strictTypecheck": true,
+  "liveRootChecks": true,
+  "proofsVerified": 2011,
+  "vite": "7.1.7",
+  "output": "dist/",
+  "base": "./",
+  "warnings": [
+    "Rollup discarded unsupported PURE annotations in installed dependency code."
+  ],
+  "lastBuildSummary": "\u2713 2867 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                         2.63 kB \u2502 gzip:   0.86 kB\ndist/assets/index-Xsx2LmgT.css        114.04 kB \u2502 gzip:  22.43 kB\ndist/assets/ccip-jsiu9AeO.js            2.62 kB \u2502 gzip:   1.24 kB\ndist/assets/hooks.module-DE9oX6xH.js   15.84 kB \u2502 gzip:   6.29 kB\ndist/assets/index-BGXyWoZ0.js         335.20 kB \u2502 gzip: 103.29 kB\ndist/assets/index-DGxMZtJC.js         427.27 kB \u2502 gzip: 127.73 kB\ndist/assets/index-CscIPXqj.js         546.32 kB \u2502 gzip: 140.39 kB\n\u2713 built in 11.54s"
+}

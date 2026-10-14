@@ -1,6 +1,6 @@
 import { type Hex, type Address } from 'viem';
 import { revealReceipt } from './upstream-reveal.js';
-import { client, addresses, nativeBlock } from './chain';
+import { client, addresses, nativeBlock, errorMessage } from './chain';
 import { account, assertWallet, confirmHash, provider, setTx } from './wallet';
 import { loadReceipt, type Receipt } from './data';
 // Upstream reveal.js owns the wait/re-arm/resolve loop. This bridge adds transaction
@@ -29,12 +29,25 @@ export async function reveal(receipt:Receipt,signal:AbortSignal) {
   throw Error(`Unexpected reveal RPC method: ${method}`);
  }};
  const before=await nativeBlock();
- if(before<=receipt.target)setTx({label:'Reveal pack',state:'signature',detail:`Waiting for native block ${receipt.target+1n}. You can stop waiting and return later.`});
- await revealReceipt({provider:bridge,contract,receipt:receipt.id.toString(),starter:receipt.kind==='starter',count:1,pollMs:2000,onStatus:(detail:string)=>{
-  document.dispatchEvent(new CustomEvent('revealprogress',{detail}));
- }});
+ const progress=before>receipt.target+256n&&!receipt.captured?'Re-arming, wait a moment':'Revealing...';
+ setTx({label:'Reveal pack',state:'signature',detail:progress,account:from});
+ try {
+  const outcome=await revealReceipt({provider:bridge,contract,receipt:receipt.id.toString(),starter:receipt.kind==='starter',captured:receipt.captured,count:1,pollMs:2000,onStatus:(detail:string)=>{
+   document.dispatchEvent(new CustomEvent('revealprogress',{detail}));
+  }});
+  if(outcome==='already-opened'){check();return 'already-opened' as const;}
+ } catch(error) {
+  // Another tab or keeper may have resolved the receipt since our initial read.
+  // Only suppress InvalidValue when the chain confirms every pack was opened.
+  if(/InvalidValue/.test(errorMessage(error))) {
+   const current=await loadReceipt(receipt.kind,receipt.id);
+   if(current.resolved){check();return 'already-opened' as const;}
+  }
+  throw error;
+ }
  check();
  const refreshed=await loadReceipt(receipt.kind,receipt.id);
  if(refreshed.remaining>=receipt.remaining)throw Error('Receipt is still pending. Refresh and reveal after the next target block.');
  if(account().address?.toLowerCase()!==from.toLowerCase())throw Error('Wallet changed. Refresh the inventory for the current account.');
+ return 'opened' as const;
 }

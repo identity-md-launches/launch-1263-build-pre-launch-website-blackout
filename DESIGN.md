@@ -1,4 +1,4 @@
-# BLACKOUT — implemented live-app design
+# BLACKOUT — implemented v9 design
 
 This records the final implementation in `src/style.css`, `src/landing.ts`, `src/sprites.ts`, and `web/src/`. It describes the shipped export, not a proposed redesign. The original 16-bit city, three skyline layers, grid tower, dispatcher, hardware sprites, district landmarks, navy/purple sky and CRT scanlines remain. The landing now leads into a live wallet app.
 
@@ -6,7 +6,7 @@ This records the final implementation in `src/style.css`, `src/landing.ts`, `src
 
 At 390 CSS pixels, the first screen shows BLACKOUT, a plain description of the mining game, the yellow **Enter your farm** action, the external **Free starter pack** link, Connect and the city art. The primary button is above the fold. The header's Free pack link and the hero's starter link both go to the independently hosted `https://playblackout.xyz/freepack`.
 
-The landing continues with live chain statistics, How to play in 60 seconds, hardware, the dispatcher, Launch, Civic feature phases, FAQ and a final action. Farm, Packs, City, Season, Billboards, Contracts and Field guide are separate hash views. Farm groups rewards, rooms and inventory; item actions live in details disclosures. Packs separates purchase limits, eligibility and pending receipts. Each form places units and relevant instructions next to its controls.
+The landing continues with live chain statistics, How to play in 60 seconds, hardware, the dispatcher, Launch, Civic feature phases, FAQ and a final action. Farm, Packs, City, Season, Billboards, Contracts and Field guide are separate hash views. Farm groups rewards, rooms and inventory; item actions live in details disclosures. Packs leads with its ETH price, quantity stepper and one yellow Buy pack with ETH button. BLACKOUT payment is smaller and secondary; slippage settings sit under Advanced. Starter eligibility and receipts follow the purchase. Each form places units and relevant instructions next to its controls.
 
 ## Color tokens
 
@@ -14,7 +14,7 @@ The landing continues with live chain statistics, How to play in 60 seconds, har
 | --- | --- | --- |
 | `--bg` / `--navy-950` | `#05060F` | Main background and dark text on the yellow action |
 | `--surface` / `--navy-900` | `#090E1D` | Panels, wallet sheet and transaction feedback |
-| `--surface-raised` / `--navy-850` | `#0E1428` | Inputs and elevated controls |
+| `--surface-raised` / `--navy-850` | `#0E1428` | Chain-strip tone and elevated controls; live text inputs use `--bg` |
 | `--hover` / `--navy-800` | `#141D33` | Hovered secondary controls |
 | `--border` / `--navy-600` | `#354664` | Structural separators |
 | `--border-control` | `#65748F` | Visible input/button boundaries |
@@ -51,7 +51,11 @@ The inherited spacing scale is **4, 8, 12, 16, 24, 32, 48 and 80px**. The outer 
 
 When root text exceeds 20px, `reflow-mode` lets the header wrap, makes it non-sticky, places game navigation in document flow, stacks statistics and guide links, and permits grid children to shrink. The 200% text-size check uses this layout.
 
-Controls normally have a minimum 44px height; main actions use 48px and wallet rows 56px. Native select/input controls have visible labels, 16px input text, appropriate numeric input modes and explicit units. Links within prose retain normal inline treatment and adequate spacing. The probe's 24px-or-spacing target rule passed; ten inline targets were below its preferred 44px size.
+Controls normally have a minimum 44px height; the Packs primary action has a 56px minimum and wallet rows are 56px. The stepper has 44px minimum buttons, 12px gaps and a stable two-character numeric output. Native select/input controls have visible labels, 16px input text, appropriate numeric input modes and explicit units. Links within prose retain normal inline treatment and adequate spacing. The probe's 24px-or-spacing target rule passed; ten inline targets were below its preferred 44px size.
+
+## Elevation, depth and shapes
+
+Panels use the existing flat navy surfaces with one-pixel structural borders, square corners and no extra shadows. The native confirmation dialog supplies the overlay; its inset progress region uses the page background and a 3px cyan leading border. City and pack-art glows remain decorative. Fields and buttons retain the pixel system’s square corners. Long amounts, hashes and IDs wrap instead of clipping.
 
 ## Components and states
 
@@ -61,9 +65,9 @@ Controls normally have a minimum 44px height; main actions use 48px and wallet r
 
 **Farm.** Six slot buttons per room contain sprite, item name and durability. Empty slots offer placement. Item details contain place/unplace, repair and scrap actions; repair and room dialogs show fresh quotes. Scrap uses an irreversible-action confirmation and minimum payout. Reward claims show gross credits, estimated tax and net output from simulation. Insufficient eligibility disables the relevant action with adjacent explanation.
 
-**Packs and reveal.** Token purchases show the quoted cost and exact approval. The ETH disclosure labels ETH input, minimum BLACKOUT output and maximum pack cost separately. Snapshot token IDs and free eligibility appear only after proof verification. Receipt rows show type, decimal ID, target/native blocks, remaining packs, capture state and the 256-block window. Active receipt clocks refresh every three seconds without replacing forms or moving focus. Reveal follows the upstream loop and presents the original hardware artwork as three cards; users can stop waiting between wallet requests.
+**Packs and reveal.** `packsPage` in `web/src/views.ts` renders the ETH amount first, with the BLACKOUT quote beneath at the small muted size. `.pack-quantity` aligns the label and native button/output stepper; quantity is bounded to 1–10. `.pack-buy` is the only filled purchase action. `.pack-token-buy` is a smaller outlined alternative. `#pack-advanced` uses native details disclosure for a labeled 16px slippage input (3% default, 0.1–10% allowed), field-specific errors and exact swap/cost limits. No recipient input remains. Snapshot token IDs and free eligibility still depend on verified proofs. Receipt rows expose one action and state: Revealing... while waiting, Reveal when ready, Re-arming, wait a moment during expired-window recovery, then the three hardware cards and Go to Farm. Fully opened receipts offer only the Farm link. Clock updates do not replace purchase inputs; result state survives receipt, inventory and eligibility refreshes. Stepper focus survives quote updates.
 
-**Transaction feedback.** A polite live region distinguishes awaiting wallet, pending, confirmed, reverted and error. Pending/finished states include an explorer link and hash. Known contract errors use their decoded names with recovery guidance. Busy state prevents duplicate actions. Failed reads offer Retry; a registry mismatch warns and disables writes. Optional local storage retains transaction hashes and receipt scan cursors, never keys.
+**Transaction feedback.** A polite live region distinguishes awaiting wallet, pending, confirmed, reverted and error. Pending/finished states include an explorer link and hash. The same label, signature/pending status and explorer link are rendered inside the active native confirmation dialog, so its backdrop does not hide progress. Failure remains visible there for review; success closes it. `data-write` marks only transaction controls, with `data-unavailable` preserving eligibility when busy state clears. Read-only Season week selection remains available without a wallet. Known contract errors use their decoded names with recovery guidance. Busy state prevents duplicate actions. Failed reads offer Retry; a registry mismatch warns and disables writes. Optional local storage retains transaction hashes and receipt scan cursors, never keys.
 
 **City, Season and Billboards.** The dispatcher and district art accompany chain values. Disabled modules remain Coming soon. Season scores are correctly labeled as token spend per active farm and counted BLACKOUT spend. Chain-supplied text is HTML-escaped. Billboard input mirrors the deployed character and length restrictions before requesting approval.
 
@@ -77,6 +81,12 @@ CRT scanlines and pixel art preserve the requested visual identity. A Pause city
 
 ## Review evidence and boundaries
 
-The pinned Better Interface guide was applied across accessibility, layout, writing, typography, colors and UI during implementation. The final pinned design probe passed **16/16** checks at 320, 390 and 1440px. The 390px first-screen screenshot was inspected manually; product and primary action are visible. Functional browser checks cover 320, 390, 768 and 1440px. See `reports/live/validation.md` for exact commands, findings, fixes, browser/axe coverage and remaining limits.
+The pinned Better Interface guide was applied across accessibility, layout, writing, typography, colors and UI during implementation. The final pinned design probe passed **16/16** checks at 320, 390 and 1440px. The 390px first-screen screenshot was inspected manually; product and primary action are visible. Functional browser checks cover 320, 390, 768 and 1440px. See `reports/v9/validation.md` for exact commands, findings, fixes, browser/axe coverage and remaining limits.
 
-This is not a claim of complete WCAG conformance. Native screen readers, physical phones, external wallet onboarding and text-over-art contrast were not fully evaluated. The supplied on-chain phase/funding state limits real successful transaction testing; the populated game checks use controlled browser fixtures, with that boundary recorded explicitly.
+This is not a claim of complete WCAG conformance. Native screen readers, physical phones, external wallet onboarding and text-over-art contrast were not fully evaluated. No real wallet transaction is signed by the review. Purchase, reveal and populated-game checks use controlled browser fixtures, with that boundary recorded explicitly. Earlier browser-runtime failures and their resolution are recorded separately from the final successful live and fixture checks.
+
+## Reuse guidance
+
+Start a new game view with `.wrap.live-page`, `heading()` and the existing semantic tokens. Use `.button.primary` for its main task, ordinary `.button` for alternatives, and native details for optional settings. Keep controls at least 44px and reuse the six-size type scale. Add `disabled(condition)` to transaction controls so the write gate and feature eligibility remain separate; leave read-only forms ungated. Preserve full amounts and addresses. Reuse the SVG city/hardware system, local fonts and reduced-motion controls; do not introduce a second visual system.
+
+The 1200×630 social card is rendered from the current city by `web/tools/render-og.mjs`. Its cyan badge reads **BLACKOUT on Robinhood Chain**. `--check` compares a fresh deterministic render with both `public/og.png` and `dist/og.png`.

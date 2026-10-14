@@ -1,0 +1,13 @@
+{
+  "checkedAt": "2026-10-14T14:37:08.771Z",
+  "mode": "regression-check",
+  "badge": "BLACKOUT on Robinhood Chain",
+  "dimensions": [
+    1200,
+    630
+  ],
+  "sha256": "5dd2576ae7e825661768343a1f898dfd8e1b9851c9901eed382d6f95e7664ef7",
+  "bytes": 156003,
+  "artSource": "src/sprites.ts via the current landing SVG city",
+  "result": "passed"
+}

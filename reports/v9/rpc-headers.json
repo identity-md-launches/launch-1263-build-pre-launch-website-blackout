@@ -1,0 +1,10 @@
+[
+  {
+    "origin": "http://127.0.0.1:4173",
+    "error": "HTTP Error 403: Forbidden"
+  },
+  {
+    "origin": "https://playblackout.xyz",
+    "error": "HTTP Error 403: Forbidden"
+  }
+]

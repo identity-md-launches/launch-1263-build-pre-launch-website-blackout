@@ -1,0 +1,52 @@
+{
+  "method": "WCAG relative luminance of declared opaque token pairs; excludes artwork and translucent backgrounds",
+  "colors": {
+    "text": "#EDF2FF",
+    "muted": "#B3BFD3",
+    "accent": "#39E6FF",
+    "bg": "#05060F",
+    "surface": "#090E1D",
+    "highlight": "#FFE600",
+    "danger": "#FF869C",
+    "border-control": "#65748F",
+    "raised": "#0E1428"
+  },
+  "pairs": [
+    {
+      "foreground": "text",
+      "background": "bg",
+      "ratio": 18.04,
+      "threshold": 4.5
+    },
+    {
+      "foreground": "muted",
+      "background": "raised",
+      "ratio": 9.84,
+      "threshold": 4.5
+    },
+    {
+      "foreground": "accent",
+      "background": "surface",
+      "ratio": 12.76,
+      "threshold": 4.5
+    },
+    {
+      "foreground": "bg",
+      "background": "highlight",
+      "ratio": 15.94,
+      "threshold": 4.5
+    },
+    {
+      "foreground": "danger",
+      "background": "surface",
+      "ratio": 8.37,
+      "threshold": 4.5
+    },
+    {
+      "foreground": "border-control",
+      "background": "raised",
+      "ratio": 3.87,
+      "threshold": 3
+    }
+  ]
+}

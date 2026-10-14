@@ -11,16 +11,15 @@ import { requireTool, repo } from './deps.mjs';
 const {chromium,webkit}=requireTool('playwright');
 const AxeBuilder=requireTool('@axe-core/playwright').default;
 const wallet='0x83027ad9d0d5374335086c539dadd1db983441b0';
-const gift='0xc951677461a1971afc117b533428d7c1119f8d7e';
 const E=10n**18n;
 const report:{passed:string[];limitations:string[];errors:string[];screenshots:string[];accessibility:unknown[]}= {passed:[],limitations:[],errors:[],screenshots:[],accessibility:[]};
 const pass=(label:string)=>{report.passed.push(label);console.log('PASS',label);};
 const {server,url}=await serve();
 mkdirSync(join(repo,'test/scratch/interaction-shots'),{recursive:true});
-mkdirSync(join(repo,'reports/live'),{recursive:true});
+mkdirSync(join(repo,'reports/v9'),{recursive:true});
 function fixture() {
  const now=BigInt(Math.floor(Date.now()/1000));
- const state={wallet,authorized:false,chain:'0x1',added:false,hold:false,reject:false,revertNext:false,revertRead:'',revertData:null as Hex|null,mismatch:false,rpcOffline:false,enabled:false,epoch:4n,nonce:0,native:1100n,freeClaimed:false,nftClaimed:false,allowance:0n,pending:100n*E,items:[{id:1n,holder:wallet,durability:5000,kind:0,rarity:1,overclock:0,starter:false,equipped:false},{id:2n,holder:wallet,durability:10000,kind:3,rarity:1,overclock:0,starter:false,equipped:true}],slots:[2n,...Array(23).fill(0n)],rooms:new Set([0]),receipts:new Map<string,{target:bigint;count:bigint;opened:bigint;captured:boolean;player:string}>(),txs:new Map<string,any>(),sent:[] as any[],rpc:[] as string[],walletCalls:[] as any[]};
+ const state={wallet,authorized:false,chain:'0x1',added:false,hold:false,signatureHold:false,resolveRace:0n,reject:false,revertNext:false,revertRead:'',revertData:null as Hex|null,mismatch:false,rpcOffline:false,enabled:false,epoch:4n,nonce:0,block:2000n,native:1100n,freeClaimed:false,nftClaimed:false,allowance:0n,pending:100n*E,items:[{id:1n,holder:wallet,durability:5000,kind:0,rarity:1,overclock:0,starter:false,equipped:false},{id:2n,holder:wallet,durability:10000,kind:3,rarity:1,overclock:0,starter:false,equipped:true}],slots:[2n,...Array(23).fill(0n)],rooms:new Set([0]),receipts:new Map<string,{target:bigint;count:bigint;opened:bigint;captured:boolean;player:string;block:bigint}>(),txs:new Map<string,any>(),sent:[] as any[],rpc:[] as string[],walletCalls:[] as any[]};
  const encode=(name:string,fn:string,result:unknown)=>encodeFunctionResult({abi:abiData[name as keyof typeof abiData] as any,functionName:fn,result} as any);
  function value(name:string,fn:string,a:any[]):any {
   const k=`${name}.${fn}`;
@@ -55,7 +54,13 @@ function fixture() {
    case 'StarterClaim.claims':{const r=state.receipts.get(`starter:${a[0]}`);return r?[r.player,r.target,r.opened===r.count]:['0x0000000000000000000000000000000000000000',0n,false];}
    case 'StarterClaim.entropyCaptured':return state.receipts.get(`starter:${a[0]}`)?.captured??false;
    case 'PackSale.commits':{const r=state.receipts.get(`paid:${a[0]}`);return r?[r.player,r.target,r.count,r.opened,false,false,'0x'+'00'.repeat(32),r.captured,false]:['0x0000000000000000000000000000000000000000',0n,0n,0n,false,false,'0x'+'00'.repeat(32),false,false];}
-   case 'PackSale.openPack':case 'PackSale.buyPacksFor':case 'PackSale.buyWithETH':return 1n;
+   case 'PackSale.resolve':{
+    const r=state.receipts.get(`paid:${a[0]}`)!;
+    if(state.resolveRace===a[0]){r.opened=r.count;state.resolveRace=0n;}
+    if(a[1]>r.count-r.opened)throw {code:3,message:'execution reverted',data:encodeErrorResult({abi:abiData.PackSale as any,errorName:'InvalidValue'})};
+    return;
+   }
+   case 'PackSale.openPack':case 'PackSale.buyWithETH':return 1n;
    case 'StarterClaim.claimFree':return (1n<<255n)|a[0];
    case 'Economy.districtStake':case 'Economy.districtTotal':return 0n;
    case 'GridOperator.eventAt':return [0,10000,0,'0x'+'00'.repeat(32),true];
@@ -78,9 +83,9 @@ function fixture() {
   else if(fn==='scrap')state.items=state.items.filter(i=>i.id!==a[0]);
   else if(fn==='buyRoom')state.rooms.add(Number(a[0]));
   else if(name==='FarmRewards'&&fn==='claim')state.pending-=a[0];
-  else if(name==='PackSale'&&['openPack','buyPacksFor','buyWithETH'].includes(fn)){const player=fn==='openPack'?wallet:a[0];state.receipts.set('paid:1',{target:1000n,count:fn==='openPack'?a[0]:a[1],opened:0n,captured:false,player});}
-  else if(name==='StarterClaim'&&fn==='claim'){state.nftClaimed=true;state.receipts.set(`starter:${a[0]}`,{target:1000n,count:1n,opened:0n,captured:false,player:wallet});}
-  else if(fn==='claimFree'){state.freeClaimed=true;state.receipts.set(`starter:${(1n<<255n)|a[0]}`,{target:1000n,count:1n,opened:0n,captured:false,player:wallet});}
+  else if(name==='PackSale'&&['openPack','buyWithETH'].includes(fn)){const player=fn==='openPack'?wallet:a[0];state.receipts.set('paid:1',{target:1000n,count:fn==='openPack'?a[0]:a[1],opened:0n,captured:false,player,block:state.block});}
+  else if(name==='StarterClaim'&&fn==='claim'){state.nftClaimed=true;state.receipts.set(`starter:${a[0]}`,{target:1000n,count:1n,opened:0n,captured:false,player:wallet,block:state.block});}
+  else if(fn==='claimFree'){state.freeClaimed=true;state.receipts.set(`starter:${(1n<<255n)|a[0]}`,{target:1000n,count:1n,opened:0n,captured:false,player:wallet,block:state.block});}
   else if(fn==='captureEntropy'){const r=state.receipts.get(`${name==='PackSale'?'paid':'starter'}:${a[0]}`)!;if(state.native>r.target+256n)r.target=state.native+2n;else r.captured=true;}
   else if(fn==='resolve'){const r=state.receipts.get(`${name==='PackSale'?'paid':'starter'}:${a[0]}`)!;if(!r.captured&&state.native>r.target+256n){r.target=state.native+2n;return;}r.captured=true;r.opened++;for(let i=0;i<3;i++){const id=state.items.reduce((m,x)=>x.id>m?x.id:m,0n)+1n;state.items.push({id,holder:wallet,durability:10000,kind:i,rarity:1,overclock:0,starter:name==='StarterClaim',equipped:false});}}
  }
@@ -89,8 +94,9 @@ function fixture() {
   try {
    let result:any;
    if(req.method==='eth_chainId')result='0x1237';
-   else if(req.method==='eth_blockNumber')result='0x7d0';
-   else if(req.method==='eth_getBlockByNumber')result={number:'0x7d0',timestamp:`0x${now.toString(16)}`,hash:keccak256(stringToHex('fixture block')),parentHash:keccak256(stringToHex('parent')),transactions:[],gasLimit:'0x1c9c380',gasUsed:'0x0',baseFeePerGas:'0x1'};
+   // Receipt polling watches new block numbers, just as it does on chain.
+   else if(req.method==='eth_blockNumber')result=`0x${(++state.block).toString(16)}`;
+   else if(req.method==='eth_getBlockByNumber')result={number:`0x${state.block.toString(16)}`,timestamp:`0x${now.toString(16)}`,hash:keccak256(stringToHex('fixture block')),parentHash:keccak256(stringToHex('parent')),transactions:[],gasLimit:'0x1c9c380',gasUsed:'0x0',baseFeePerGas:'0x1'};
    else if(req.method==='eth_getBalance')result=`0x${E.toString(16)}`;
    else if(req.method==='eth_call'){
     const t=req.params[0];
@@ -99,14 +105,14 @@ function fixture() {
    } else if(req.method==='eth_getLogs') {
     const q=req.params[0],name=q.address.toLowerCase()===contracts.PackSale?'PackSale':'StarterClaim';
     result=[];
-    for(const [key,r]of state.receipts){const [kind,id]=key.split(':');if((kind==='paid')!==(name==='PackSale')||r.player!==wallet)continue;if(BigInt(q.fromBlock)>1999n||BigInt(q.toBlock)<1999n)continue;
+    for(const [key,r]of state.receipts){const [kind,id]=key.split(':');if((kind==='paid')!==(name==='PackSale')||r.player!==wallet)continue;if(BigInt(q.fromBlock)>r.block||BigInt(q.toBlock)<r.block)continue;
      const eventName=name==='PackSale'?'PackCommitted':'StarterCommitted';
      const topics=encodeEventTopics({abi:abiData[name] as any,eventName,args:name==='PackSale'?{id:BigInt(id),player:wallet}:{tokenId:BigInt(id),holder:wallet}} as any);
-     result.push({address:contracts[name],topics,data:encodeAbiParameters(name==='PackSale'?[{type:'uint256'},{type:'uint256'},{type:'bool'}]:[{type:'uint256'}],name==='PackSale'?[r.count,r.target,false]:[r.target] as any),blockNumber:'0x7cf',transactionIndex:'0x0',logIndex:'0x0',transactionHash:keccak256(stringToHex(key)),blockHash:keccak256(stringToHex('fixture block')),removed:false});
+     result.push({address:contracts[name],topics,data:encodeAbiParameters(name==='PackSale'?[{type:'uint256'},{type:'uint256'},{type:'bool'}]:[{type:'uint256'}],name==='PackSale'?[r.count,r.target,false]:[r.target] as any),blockNumber:`0x${r.block.toString(16)}`,transactionIndex:'0x0',logIndex:'0x0',transactionHash:keccak256(stringToHex(key)),blockHash:keccak256(stringToHex('fixture block')),removed:false});
     }
    } else if(req.method==='eth_getTransactionReceipt') {
-    const t=state.txs.get(req.params[0]);result=!t||state.hold?null:{transactionHash:req.params[0],transactionIndex:'0x0',blockHash:keccak256(stringToHex('fixture block')),blockNumber:'0x7d0',from:wallet,to:t.to,gasUsed:'0x5208',cumulativeGasUsed:'0x5208',effectiveGasPrice:'0x1',contractAddress:null,logs:[],logsBloom:'0x'+'00'.repeat(256),status:t.revert?'0x0':'0x1',type:'0x2'};
-   } else if(req.method==='eth_getTransactionByHash') {const t=state.txs.get(req.params[0]);result={...t,hash:req.params[0],from:wallet,input:t.data,value:t.value||'0x0',blockNumber:'0x7d0',type:'0x2',nonce:'0x1',gas:'0x5208',maxFeePerGas:'0x1',maxPriorityFeePerGas:'0x1',chainId:'0x1237'};}
+    const t=state.txs.get(req.params[0]);result=!t||state.hold?null:{transactionHash:req.params[0],transactionIndex:'0x0',blockHash:keccak256(stringToHex('fixture block')),blockNumber:`0x${t.block.toString(16)}`,from:wallet,to:t.to,gasUsed:'0x5208',cumulativeGasUsed:'0x5208',effectiveGasPrice:'0x1',contractAddress:null,logs:[],logsBloom:'0x'+'00'.repeat(256),status:t.revert?'0x0':'0x1',type:'0x2'};
+   } else if(req.method==='eth_getTransactionByHash') {const t=state.txs.get(req.params[0]);result={...t,block:undefined,hash:req.params[0],from:wallet,input:t.data,value:t.value||'0x0',blockNumber:`0x${t.block.toString(16)}`,type:'0x2',nonce:'0x1',gas:'0x5208',maxFeePerGas:'0x1',maxPriorityFeePerGas:'0x1',chainId:'0x1237'};}
    else throw Error(`Unexpected fixture RPC ${req.method}`);
    return {jsonrpc:'2.0',id:req.id,result};
   }catch(e:any){return {jsonrpc:'2.0',id:req.id,error:{code:e.code||-32000,message:e.message||'fixture error',...(e.data?{data:e.data}:{})}};}
@@ -124,9 +130,10 @@ async function injected(context:any,f:ReturnType<typeof fixture>) {
   if(method==='wallet_addEthereumChain'){assert.equal(params[0].chainId,'0x1237');assert.deepEqual(params[0].rpcUrls,['https://rpc.mainnet.chain.robinhood.com']);f.state.added=true;return null;}
   if(method==='wallet_getCapabilities')return {};
   if(method==='eth_sendTransaction'){
+   while(f.state.signatureHold)await new Promise(resolve=>setTimeout(resolve,50));
    if(f.state.reject){f.state.reject=false;throw Object.assign(new Error('User rejected request'),{code:4001});}
    const t=params[0],decoded=f.identify(t.to,t.data),hash=keccak256(stringToHex(`fixture-tx-${++f.state.nonce}`));
-   f.state.sent.push({...t,...decoded,hash});f.state.txs.set(hash,{...t,revert:f.state.revertNext});
+   f.state.sent.push({...t,...decoded,hash});f.state.txs.set(hash,{...t,block:f.state.block,revert:f.state.revertNext});
    if(!f.state.revertNext)f.apply(t);else f.state.revertRead=`${decoded.name}.${decoded.fn}`;f.state.revertNext=false;return hash;
   }
   throw Error(`Unexpected wallet method ${method}`);
@@ -143,7 +150,7 @@ async function injected(context:any,f:ReturnType<typeof fixture>) {
  };
  await context.addInitScript({content:'globalThis.__name = (fn) => fn; ('+init.toString()+')();'});
  await context.route('https://rpc.mainnet.chain.robinhood.com/**',async(route:any)=>{
-  if(f.state.rpcOffline){await route.fulfill({status:503,body:'RPC temporarily unavailable'});return;}
+  if(f.state.rpcOffline){await route.fulfill({status:503,contentType:'text/plain',body:'RPC temporarily unavailable',headers:{'access-control-allow-origin':'*','access-control-allow-methods':'POST, OPTIONS','access-control-allow-headers':'content-type'}});return;}
   const body=route.request().postDataJSON();const result=Array.isArray(body)?await Promise.all(body.map(f.rpc)):await f.rpc(body);
   await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(result),headers:{'access-control-allow-origin':'*'}});
  });
@@ -152,8 +159,12 @@ const waitTx=async(page:any,label?:string)=>{await page.locator('#tx-status').fi
 const clickConfirm=async(page:any)=>{await page.locator('#confirm-action').click();await waitTx(page);await page.locator('#action-dialog').waitFor({state:'hidden'});};
 async function fixtureSuite(browser:any,engine:string) {
  const f=fixture();const context=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'});await injected(context,f);
- const page=await context.newPage();const errors:string[]=[];page.on('pageerror',(e:any)=>errors.push(e.message));
+ const page=await context.newPage();const errors:string[]=[];page.on('pageerror',(e:any)=>{errors.push(e.message);console.error('FIXTURE PAGE ERROR',engine,page.url(),e.message);});
+ page.on('requestfailed',(request:any)=>console.warn('FIXTURE REQUEST FAILED',engine,request.method(),request.url(),request.failure()?.errorText));
  await page.goto(url);await page.waitForFunction(()=>document.querySelector('#connection-status')?.textContent==='Registry verified');
+ await page.goto(url+'#/season');await page.locator('#season-week').waitFor();
+ assert(await page.getByRole('button',{name:'View week',exact:true}).isEnabled());await page.locator('#season-week').fill('2');await page.getByRole('button',{name:'View week',exact:true}).click();await page.waitForFunction(()=>document.querySelector('#season-week')?.getAttribute('value')==='2');
+ assert.equal(f.state.walletCalls.filter(x=>x.method==='eth_requestAccounts').length,0);assert(await page.locator('[data-season-claim]').first().isDisabled());pass(`${engine}: v8 regression — View week reads week 2 without a wallet; claims remain gated`);
  await page.locator('#connect').click();await page.getByRole('button',{name:'Fixture Wallet',exact:true}).waitFor({timeout:5000});assert.equal(await page.getByRole('button',{name:'Browser wallet',exact:true}).count(),0);assert.equal(await page.getByRole('button',{name:'Second Fixture',exact:true}).count(),1);pass(`${engine}: EIP-6963 wallets are named; generic duplicate hidden`);
  await page.getByRole('button',{name:'Fixture Wallet',exact:true}).click();await page.locator('#connect').filter({hasText:'Switch network'}).waitFor();
  await page.locator('#connect').click();await page.waitForTimeout(700);await page.locator('#connect').filter({hasText:'0x8302'}).waitFor({timeout:5000});assert(f.state.walletCalls.some(x=>x.method==='wallet_addEthereumChain'));pass(`${engine}: switch/add chain 4663 with correct RPC`);
@@ -168,16 +179,87 @@ async function fixtureSuite(browser:any,engine:string) {
  await page.locator('#item-1 summary').click();await page.locator('[data-scrap="1"]').click();await page.locator('#cancel-action').click();assert.equal(f.state.items.length,2);await page.locator('[data-scrap="1"]').click();await clickConfirm(page);assert.equal(f.state.items.length,1);pass(`${engine}: destructive scrap confirmation, cancellation and minimum payout`);
  await page.screenshot({path:join(repo,`test/scratch/interaction-shots/${engine}-farm-populated.png`),fullPage:true});
  await page.goto(url+'#/packs');await page.locator('[data-claim-nft="1927"]').waitFor();assert.equal(await page.locator('[data-claim-free]').count(),1);pass(`${engine}: verified NFT #1927 and free allowlist visibility`);
- await page.locator('[data-claim-nft="1927"]').click();await waitTx(page);assert(f.state.nftClaimed);const nft=f.state.sent.find(t=>t.fn==='claim'&&t.name==='StarterClaim');assert.equal(nft.args[0],1927n);assert(nft.args[1].length>0);
- await page.locator('[data-claim-free]').click();await waitTx(page);assert(f.state.freeClaimed);pass(`${engine}: NFT and free proofs submitted to StarterClaim`);
- await page.locator('#pack-count').fill('2');await page.locator('#pack-count').blur();await page.waitForFunction(()=>document.querySelector('.pack-quote')?.textContent?.includes('200'));
- await page.locator('#pack-form button[type="submit"]').click();await clickConfirm(page);assert(f.state.sent.some(t=>t.fn==='openPack'&&t.args[0]===2n));pass(`${engine}: approve then openPack with requested count`);
- await page.locator('#pack-recipient').fill(gift);await page.locator('#pack-form button[type="submit"]').click();await clickConfirm(page);assert(f.state.sent.some(t=>t.fn==='buyPacksFor'&&t.args[0].toLowerCase()===gift&&t.args[2]===200n*E));pass(`${engine}: gifted packs retain recipient and maximum cost`);
- await page.locator('#pack-recipient').fill('');await page.locator('#eth-details summary').click();await page.locator('#pack-eth').fill('0.003');await page.locator('[data-eth-quote]').click();await page.locator('#eth-quote-note').filter({hasText:'TWAP estimate'}).waitFor();await page.locator('#min-tokens').fill('250');await page.locator('#max-cost').fill('200');await page.locator('[data-buy-eth]').click();await clickConfirm(page);const eth=f.state.sent.find(t=>t.fn==='buyWithETH');assert.equal(eth.args[2],250n*E);assert.equal(eth.args[3],200n*E);assert.equal(BigInt(eth.value),3n*10n**15n);pass(`${engine}: Buy with ETH encodes input, minTokens and maxCost`);
- const previousNative=await page.locator('[data-native-block]').first().innerText();await page.locator('#pack-recipient').focus();f.state.native=1200n;await page.waitForFunction(previous=>document.querySelector('[data-native-block]')?.textContent!==previous,previousNative,{timeout:6000});assert.equal(await page.evaluate(()=>document.activeElement?.id),'pack-recipient');pass(`${engine}: capture clock updates without moving form focus`);
- // Resolve the receipt created by the atomic purchase. Expiry re-arms, then the upstream helper completes it.
- const receipt=f.state.receipts.get('paid:1')!;receipt.target=800n;f.state.native=1100n;
- await page.locator('[data-refresh-receipts]').click();await page.locator('[data-reveal="paid:1"]').waitFor();await page.locator('[data-reveal="paid:1"]').click();await page.getByRole('heading',{name:'Hardware revealed.'}).waitFor({timeout:30000});assert(f.state.sent.filter(t=>t.name==='PackSale'&&t.fn==='resolve').length>=2);pass(`${engine}: expired 256-block window re-arms and reveals using upstream helper`);
+ if(await page.locator('[data-dismiss-tx]').isVisible())await page.locator('[data-dismiss-tx]').click();
+ // Quantity and primary hierarchy, including the mobile first screen.
+ assert.equal(await page.locator('#pack-recipient').count(),0);assert.equal(await page.locator('#pack-count input').count(),0);
+ assert(await page.getByRole('button',{name:'Fewer packs'}).isDisabled());
+ for(let n=1;n<10;n++){await page.getByRole('button',{name:'More packs'}).click();await page.waitForFunction((count:number)=>document.querySelector('#pack-count')?.textContent===String(count),n+1);await page.locator('[data-buy-eth]:enabled').waitFor();}
+ assert.equal(await page.locator('#pack-count').innerText(),'10');assert(await page.getByRole('button',{name:'More packs'}).isDisabled());
+ for(let n=10;n>2;n--){await page.getByRole('button',{name:'Fewer packs'}).click();await page.waitForFunction((count:number)=>document.querySelector('#pack-count')?.textContent===String(count),n-1);await page.locator('[data-buy-eth]:enabled').waitFor();}
+ await page.locator('[data-buy-eth]:enabled').waitFor();assert((await page.locator('.pack-token-price').innerText()).includes('200'));
+ await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:join(repo,`test/scratch/interaction-shots/${engine}-packs-390.png`)});const buyBox=await page.locator('[data-buy-eth]').boundingBox();assert(buyBox&&buyBox.y+buyBox.height<770);
+ await page.screenshot({path:join(repo,`test/scratch/interaction-shots/${engine}-packs-390.png`)});
+ assert(!(await page.locator('.pack-purchase').innerText()).includes('Opens at'));assert(!(await page.locator('.pack-purchase').innerText()).includes('Purchases open'));
+ pass(`${engine}: stepper 1–10, ETH primary visible at 390, no gift or duplicate sale copy`);
+ for(const width of [320,390,768,1440]) {
+  await page.setViewportSize({width,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`Packs fixture overflow ${width}`);
+  if(width===1440)await page.screenshot({path:join(repo,`test/scratch/interaction-shots/${engine}-packs-1440.png`)});
+ }
+ await page.setViewportSize({width:390,height:844});
+ const packsAxe=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();report.accessibility.push({engine,route:'packs fixture',violations:packsAxe.violations});assert.equal(packsAxe.violations.length,0);
+ await page.locator('#pack-increase').focus();await page.keyboard.press('Enter');await page.waitForFunction(()=>document.querySelector('.pack-token-price')?.textContent?.includes('300'));assert.equal(await page.evaluate(()=>document.activeElement?.id),'pack-increase');await page.locator('#pack-decrease').click();await page.waitForFunction(()=>document.querySelector('.pack-token-price')?.textContent?.includes('200'));
+ pass(`${engine}: populated Packs reflows at four widths, passes axe and preserves keyboard stepper focus`);
+ // Default slippage: both maximum pack cost and minimum swap output are protected.
+ let start=f.state.sent.length;
+ await page.locator('[data-buy-eth]').click();await page.locator('#action-dialog').waitFor();
+ f.state.signatureHold=true;f.state.hold=true;await page.locator('#confirm-action').click();
+ await page.locator('#action-tx-status[data-state="signature"]').filter({hasText:'Confirm in your wallet'}).waitFor();
+ assert((await page.locator('#action-tx-status').innerText()).includes('Buy pack with ETH'));assert(await page.locator('#confirm-action').isDisabled());
+ await page.keyboard.press('Escape');assert(await page.locator('#action-dialog').isVisible());
+ const dialogAxe=await new AxeBuilder({page}).include('#action-dialog').withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();report.accessibility.push({engine,route:'ETH signature dialog',violations:dialogAxe.violations});assert.equal(dialogAxe.violations.length,0);
+ f.state.signatureHold=false;await page.locator('#action-tx-status[data-state="pending"]').waitFor();
+ assert((await page.locator('#action-tx-status a').getAttribute('href')).startsWith('https://robinhoodchain.blockscout.com/tx/'));
+ await page.screenshot({path:join(repo,`test/scratch/interaction-shots/${engine}-pending-dialog-390.png`)});
+ f.state.hold=false;await waitTx(page);await page.locator('#action-dialog').waitFor({state:'hidden'});
+ let writes=f.state.sent.slice(start);assert.equal(writes.length,1);const eth=writes[0];assert.equal(eth.fn,'buyWithETH');assert.equal(eth.to.toLowerCase(),contracts.PackSale);assert.equal(eth.args[0].toLowerCase(),wallet);assert.equal(eth.args[1],2n);assert.equal(eth.args[3],206n*E);
+ assert.equal(eth.args[2],BigInt(eth.value)*100000n*9700n/10000n);assert(eth.args[2]>=eth.args[3]);assert.equal(BigInt(eth.value),(206n*E*10000n+100000n*9700n-1n)/(100000n*9700n));
+ pass(`${engine}: ETH purchase is one buyWithETH transaction, connected recipient, 3% bounds and ETH value`);
+ pass(`${engine}: v8 regression — signature, transaction label and pending explorer link stay inside active dialog`);
+ await page.locator('#pack-advanced summary').click();await page.locator('#pack-slippage').fill('5');await page.locator('#pack-slippage').blur();await page.locator('[data-buy-eth]:enabled').waitFor();
+ start=f.state.sent.length;await page.locator('[data-buy-eth]').click();await clickConfirm(page);writes=f.state.sent.slice(start);assert.equal(writes.length,1);assert.equal(writes[0].args[3],210n*E);assert.equal(writes[0].args[2],BigInt(writes[0].value)*100000n*9500n/10000n);
+ pass(`${engine}: Advanced slippage changes minTokens and maxCost together`);
+ await page.locator('#pack-slippage').fill('0');await page.locator('#pack-slippage').blur();await page.locator('#slippage-error').filter({hasText:'0.1% to 10%'}).waitFor();assert.equal(await page.locator('#pack-slippage').getAttribute('aria-invalid'),'true');const invalidStart=f.state.sent.length;await page.locator('[data-buy-eth]').click();assert.equal(await page.locator('#action-dialog').isVisible(),false);assert.equal(f.state.sent.length,invalidStart);
+ pass(`${engine}: invalid slippage shows a field error and never reaches a wallet prompt`);
+ await page.locator('#pack-slippage').fill('3');await page.locator('#pack-slippage').blur();await page.locator('[data-buy-eth]:enabled').waitFor();
+ // Token path: never request an approval when equal OR greater allowance exists.
+ for(const allowance of [0n,200n*E,900n*E]) {
+  f.state.allowance=allowance;start=f.state.sent.length;await page.locator('[data-buy-tokens]').click();await clickConfirm(page);writes=f.state.sent.slice(start);
+  assert.deepEqual(writes.map(t=>t.fn),allowance===0n?['approve','openPack']:['openPack']);assert.equal(writes.at(-1).args[0],2n);
+  if(allowance===0n){assert.equal(writes[0].args[0].toLowerCase(),contracts.PackSale);assert.equal(writes[0].args[1],200n*E);}
+ }
+ pass(`${engine}: BLACKOUT approval only for insufficient allowance, skipped for equal and greater allowance`);
+ // An error belongs in the dialog too, and can be retried without a reload.
+ f.state.reject=true;await page.locator('[data-buy-eth]').click();await page.locator('#confirm-action').click();await page.locator('#action-tx-status[data-state="error"]').filter({hasText:'rejected'}).waitFor();assert(await page.locator('#action-dialog').isVisible());await page.locator('#cancel-action:enabled').click();
+ pass(`${engine}: failed signature is visible inside the dialog and cancel restores controls`);
+ const receipt=f.state.receipts.get('paid:1')!;receipt.target=f.state.native+100n;
+ await page.locator('[data-refresh-receipts]').click();await page.locator('[data-receipt="paid:1"] .receipt-state').filter({hasText:'Revealing...'}).waitFor();assert.equal(await page.locator('[data-reveal="paid:1"]').count(),0);
+ f.state.native=receipt.target+1n;await page.locator('[data-reveal="paid:1"]').waitFor({timeout:7000});
+ await page.locator('#pack-slippage').focus();f.state.native++;await page.waitForTimeout(3300);assert.equal(await page.evaluate(()=>document.activeElement?.id),'pack-slippage');
+ pass(`${engine}: waiting receipt shows Revealing..., becomes Reveal, clock preserves input focus`);
+ receipt.target=f.state.native-300n;f.state.hold=true;
+ await page.locator('[data-reveal="paid:1"]').click();await page.locator('[data-receipt="paid:1"] .receipt-state').filter({hasText:'Re-arming, wait a moment'}).waitFor();f.state.hold=false;
+ await page.getByRole('heading',{name:'Hardware revealed.'}).waitFor({timeout:30000});assert(f.state.sent.filter(t=>t.name==='PackSale'&&t.fn==='resolve').length>=2);
+ await page.locator('[data-buy-eth]:enabled').waitFor();await page.locator('[data-buy-tokens]:enabled').waitFor();await page.locator('[data-claim-free]:enabled').waitFor();await page.locator('[data-claim-nft="1927"]:enabled').waitFor();
+ assert.equal((await page.locator('#reveal-result .reveal-card').count()),3);assert((await page.locator('#reveal-result').innerText()).includes('Place your hardware in a room to start mining'));
+ assert.equal(await page.locator('[data-receipt="paid:1"] .receipt-state').innerText(),'');assert((await page.locator('[data-receipt="paid:1"]').innerText()).includes('1 pack left'));
+ pass(`${engine}: expired window re-arms, reveals hardware and reloads remaining receipts and inventory`);
+ pass(`${engine}: v8 regression — buy and eligible claim buttons re-enable immediately after reveal without refresh`);
+ await page.locator('[data-reveal="paid:1"]').click();await page.locator('[data-receipt="paid:1"]').waitFor({state:'hidden',timeout:15000});
+ assert.equal(receipt.opened,receipt.count);assert.equal(await page.locator('[data-reveal="paid:1"]').count(),0);
+ await page.locator('#receipt-lookup summary').click();await page.locator('#receipt-id').fill('1');await page.locator('#receipt-form button[type="submit"]').click();await page.getByRole('heading',{name:'Already opened, see your Farm'}).waitFor();assert.equal(await page.locator('[data-reveal="paid:1"]').count(),0);
+ pass(`${engine}: fully opened receipts hide Reveal, including manual receipt lookup`);
+ // Stale tab / concurrent keeper: InvalidValue is suppressed only with on-chain completion.
+ receipt.opened=0n;await page.locator('[data-refresh-receipts]').click();await page.locator('[data-reveal="paid:1"]').waitFor();f.state.resolveRace=1n;start=f.state.sent.length;
+ await page.locator('[data-reveal="paid:1"]').click();await page.locator('#tx-status[data-state="complete"]').filter({hasText:'Already opened, see your Farm'}).waitFor();assert.equal(f.state.sent.length,start);await page.locator('[data-reveal="paid:1"]').waitFor({state:'hidden'});
+ pass(`${engine}: concurrent fully opened receipt InvalidValue becomes Already opened, see your Farm`);
+ receipt.opened=0n;await page.locator('[data-refresh-receipts]').click();await page.locator('[data-reveal="paid:1"]').waitFor();f.state.revertRead='PackSale.resolve';
+ await page.locator('[data-reveal="paid:1"]').click();await page.locator('#tx-status[data-state="error"]').filter({hasText:'InvalidValue'}).waitFor();f.state.revertRead='';
+ pass(`${engine}: unrelated InvalidValue remains actionable when packs are still unopened`);
+ // The newly restored claims actually work, including proof submission.
+ await page.locator('[data-claim-nft="1927"]:enabled').click();await waitTx(page);assert(f.state.nftClaimed);const nft=f.state.sent.find(t=>t.fn==='claim'&&t.name==='StarterClaim');assert.equal(nft.args[0],1927n);assert(nft.args[1].length>0);
+ await page.locator('[data-claim-free]:enabled').click();await waitTx(page);assert(f.state.freeClaimed);pass(`${engine}: NFT and free proofs submitted to StarterClaim after reveals`);
+ const starter=f.state.receipts.get('starter:1927')!;starter.captured=true;starter.target=f.state.native-300n;await page.locator('[data-refresh-receipts]').click();f.state.hold=true;await page.locator('[data-reveal="starter:1927"]').click();await page.locator('#tx-status[data-state="pending"]').waitFor();assert(!(await page.locator('[data-receipt="starter:1927"] .receipt-state').innerText()).includes('Re-arming'));f.state.hold=false;await page.locator('[data-receipt="starter:1927"]').waitFor({state:'hidden',timeout:15000});
+ pass(`${engine}: captured starter entropy remains revealable after 256 blocks without re-arming`);
  await page.goto(url+'#/farm');await page.locator('[data-sync]').waitFor();f.state.reject=true;await page.locator('[data-sync]').click();await page.locator('#tx-status').filter({hasText:'rejected'}).waitFor();pass(`${engine}: rejected wallet request remains recoverable`);
  f.state.revertRead='FarmCore.sync';await page.locator('[data-sync]').click();await page.locator('#tx-status').filter({hasText:'InvalidValue'}).waitFor();f.state.revertRead='';pass(`${engine}: custom contract error names decoded before signing`);
  f.state.revertRead='FarmCore.sync';f.state.revertData=encodeErrorResult({abi:abiData.Token as any,errorName:'ERC20InsufficientBalance',args:[wallet,0n,E]});await page.locator('[data-sync]').click();await page.locator('#tx-status').filter({hasText:'ERC20InsufficientBalance'}).waitFor();f.state.revertRead='';f.state.revertData=null;pass(`${engine}: bubbled ERC-6093 token error decoded`);
@@ -195,9 +277,11 @@ async function fixtureSuite(browser:any,engine:string) {
 async function liveVisualSuite(browser:any,engine:string) {
  const context=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'});const page=await context.newPage();const errors:string[]=[];page.on('pageerror',(e:any)=>errors.push(e.message));
  for(const width of [320,390,768,1440]) {
-  await page.setViewportSize({width,height:width>1000?1000:844});await page.goto(url);await page.waitForFunction(()=>['Registry verified','Read unavailable'].includes(document.querySelector('#connection-status')?.textContent||''),undefined,{timeout:30000});if(await page.locator('#connection-status').innerText()==='Read unavailable'){const rpcFailure=await page.locator('#registry-warning').innerText();console.warn('LIVE RPC RETRY',engine,rpcFailure);await page.locator('#registry-warning [data-refresh]').click();await page.waitForFunction(()=>document.querySelector('#connection-status')?.textContent==='Registry verified',undefined,{timeout:30000});report.limitations.push(`${engine}: one transient live RPC failure; Retry recovered: ${rpcFailure}`);}
+  await page.setViewportSize({width,height:width>1000?1000:844});await page.goto(url);await page.waitForFunction(()=>['Registry verified','Read unavailable'].includes(document.querySelector('#connection-status')?.textContent||''),undefined,{timeout:30000});if(await page.locator('#connection-status').innerText()==='Read unavailable'){const rpcFailure=await page.locator('#registry-warning').innerText();console.warn('LIVE RPC RETRY',engine,rpcFailure);await page.locator('#registry-warning [data-refresh]').click();try {
+    await page.waitForFunction(()=>document.querySelector('#connection-status')?.textContent==='Registry verified',undefined,{timeout:30000});report.limitations.push(`${engine}: transient live RPC failure; Retry recovered: ${rpcFailure}`);
+   }catch{report.limitations.push(`${engine}: live RPC did not recover on Retry at ${width}px. Visual checks cover the rendered unavailable state; contract behavior is validated separately with RPC reads and browser fixtures.`);}}
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
-  if(width===390){const b=await page.locator('.hero-actions .primary').boundingBox();assert(b&&b.y+b.height<844);pass(`${engine}: product and main action visible at 390`);}
+  if(width===390&&await page.locator('#connection-status').innerText()==='Registry verified'){const b=await page.locator('.hero-actions .primary').boundingBox();assert(b&&b.y+b.height<844);pass(`${engine}: product and main action visible at 390`);}
   for(const path of ['farm','packs','city','season','billboards','contracts','docs/risks']) {
    await page.goto(url+'#/'+path);await page.waitForTimeout(500);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`${path} overflows ${width}`);
   }
@@ -211,16 +295,18 @@ async function liveVisualSuite(browser:any,engine:string) {
  const axe=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();report.accessibility.push({engine,route:'packs',violations:axe.violations.map((v:any)=>({id:v.id,impact:v.impact,nodes:v.nodes.map((n:any)=>n.target)}))});
  assert.equal(axe.violations.length,0,`${engine}: accessibility violations on Packs`);pass(`${engine}: axe WCAG A/AA checks on Packs`);
  await page.goto(url);const before=await page.locator('#hardware-track').evaluate((e:HTMLElement)=>e.scrollLeft);await page.locator('[data-hardware-scroll="1"]').click();await page.waitForTimeout(300);assert(await page.locator('#hardware-track').evaluate((e:HTMLElement)=>e.scrollLeft)>before);pass(`${engine}: preserved hardware carousel advances`);
- assert.deepEqual(errors,[]);pass(`${engine}: live export loads with no script errors`);
+ const rpcErrors=errors.filter(message=>/^\/rpc\.mainnet\.chain\.robinhood\.com\/ due to access control checks\.$/.test(message));
+ if(rpcErrors.length)report.limitations.push(`${engine}: ${rpcErrors.length} public-RPC access-control errors reported by the browser: ${rpcErrors[0]} These are external network failures; successful live chain reads are not claimed for this engine.`);
+ assert.deepEqual(errors.filter(message=>!rpcErrors.includes(message)),[]);pass(`${engine}: live export has no application script errors; any RPC access-control failures are recorded separately`);
  await context.close();
  const phone=await browser.newContext({viewport:{width:390,height:844},userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1'});const p=await phone.newPage();await p.goto(url);await p.locator('#connect').click();for(const name of ['MetaMask','Coinbase Wallet','Rabby','Phantom'])assert.equal(await p.getByRole('link',{name:`Open in ${name}`,exact:false}).count(),1);await p.getByRole('button',{name:'Coinbase Smart Wallet',exact:true}).waitFor();pass(`${engine}: phone wallet deep links and Coinbase Smart Wallet row`);await phone.close();
 }
 let browsers:any[]=[];
 try {
- const chrome=await chromium.launch({headless:true,...(process.env.BLACKOUT_CHROME_PATH?{executablePath:process.env.BLACKOUT_CHROME_PATH}:{channel:'chrome'})});browsers.push(chrome);if(!process.env.FIXTURE_ONLY)await liveVisualSuite(chrome,'chromium');await fixtureSuite(chrome,'chromium');
+ const chrome=await chromium.launch({headless:true,...(process.env.BLACKOUT_BROWSER_CONSTRAINED?{args:['--renderer-process-limit=2','--no-zygote','--disable-gpu']}:{}),...(process.env.BLACKOUT_CHROME_PATH?{executablePath:process.env.BLACKOUT_CHROME_PATH}:{})});browsers.push(chrome);if(!process.env.FIXTURE_ONLY)await liveVisualSuite(chrome,'chromium');if(!process.env.VISUAL_ONLY)await fixtureSuite(chrome,'chromium');await chrome.close();
  try {
   browsers.push(await webkit.launch({headless:true,...(process.env.BLACKOUT_WEBKIT_PATH?{executablePath:process.env.BLACKOUT_WEBKIT_PATH}:{})}));
  }catch(e:any){report.limitations.push(`WebKit launch unavailable: ${e.message}`);console.warn('WEBKIT LIMITATION',e.message);}
- if(browsers.length>1){const safari=browsers[1];if(!process.env.FIXTURE_ONLY)await liveVisualSuite(safari,'webkit');await fixtureSuite(safari,'webkit');}
+ if(browsers.length>1){const safari=browsers[1];if(!process.env.FIXTURE_ONLY)await liveVisualSuite(safari,'webkit');if(!process.env.VISUAL_ONLY)await fixtureSuite(safari,'webkit');}
 } catch(e:any){report.errors.push(e.stack||e.message);console.error(e);process.exitCode=1;}
-finally {for(const browser of browsers)await browser.close();server.close();writeFileSync(join(repo,'reports/live/interaction-validation.json'),JSON.stringify({checkedAt:new Date().toISOString(),fixtureWritesOnly:true,browserVersions:browsers.map(b=>b.version()),...report},null,2)+'\n');}
+finally {for(const browser of browsers)await browser.close();server.close();writeFileSync(join(repo,'reports/v9',process.env.FIXTURE_ONLY?'fixture-validation.json':process.env.VISUAL_ONLY?'visual-validation.json':'interaction-validation.json'),JSON.stringify({checkedAt:new Date().toISOString(),fixtureWritesOnly:true,browserVersions:browsers.map(b=>b.version()),...report},null,2)+'\n');}
