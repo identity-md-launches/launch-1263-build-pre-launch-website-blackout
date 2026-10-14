@@ -4,18 +4,25 @@ import { landing } from '../../src/landing';
 import { sprite, spriteSheet } from '../../src/sprites';
 import { initAtmosphere, toggleSound, soundEnabled, playSound } from '../../src/effects';
 import { config as legacyConfig } from '../../src/config';
-import { verifyRegistry, wiringVerified, mismatches, read, errorMessage, nativeBlock } from './chain';
-import { loadHome, loadFarm, loadReceipt, type Farm, type Home, type Receipt, KINDS, RARITIES, scrapQuote, chainTime } from './data';
+import { verifyRegistry, wiringVerified, mismatches, read, errorMessage } from './chain';
+import { loadHome, loadFarm, loadReceipt, type Farm, type Home, type Receipt, KINDS, RARITIES, EVENTS, DISTRICTS, scrapQuote, chainTime } from './data';
 import { account, walletAddress, setupWallet, openWallet, switchNetwork, canWrite, tx, txLink, setTx, send, approve, transact, assertWallet, transactionBusy, refreshTransaction } from './wallet';
 import { eligibility } from './proofs';
 import { findReceipts } from './receipts';
 import { reveal } from './reveal';
 import { quoteEthPack, slippageBps } from './packs';
 import { docsPage } from './docs';
-import { esc, tokens, units, duration, homeStats, featureCards, farmPage, packsPage, cityPage, seasonPage, boardsPage, contractsPage, type PackState, type CityState, type SeasonState, type Board, receiptRow } from './views';
+import { esc, tokens, units, duration, homeStats, featureCards, farmPage, packsPage, cityPage, seasonPage, boardsPage, contractsPage, type PackState, type CityState, type SeasonState, type Board } from './views';
+import { POLL_MS } from './config';
+import { loadActivity, loadLeaderboard, type Activity, type Leaderboard } from './community';
+import { onboarding, activityView, morePage, rewardsPage, leaderboardPage, type Progress } from './player-views';
+import { placementReason, epochProgress, miningTime } from './player';
+import { refreshUsd, setSpot } from './money';
 const $=<T extends HTMLElement=HTMLElement>(selector:string)=>document.querySelector<T>(selector)!;
 const route=()=>location.hash.replace(/^#\/?/,'').split('/')[0]||'home';
 let home:Home|null=null,farm:Farm|null=null,city:CityState|null=null,season:SeasonState|null=null,boards:Board[]|null=null,boardWeek=0n;
+let revealAnimationUntil=0;
+let selectedItem:bigint|null=null,progress:Progress|null=null,activities:Activity[]|null=null,activityError=false,leaderboard:Leaderboard|null=null;
 let globalError='',pageError='',generation=0,lastWallet='',refreshing=false,selectedWeek:bigint|null=null;
 let pack:PackState={quote:null,count:1,receipts:null,receiptError:'',eligible:null,eligibilityError:'',priceError:'',ethQuote:null,ethQuoteError:'',slippage:300,result:null,activeReceipt:null};
 let motion=!matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -23,11 +30,14 @@ let revealController:AbortController|null=null;
 let chosenAction:(()=>Promise<void>)|null=null;
 let returnFocus:HTMLElement|null=null;
 let renderedRoute='';
+let draggingHardware=false,deferredRender=false;
 $('#app').innerHTML=`${spriteSheet()}<a class="skip-link" href="#main">Skip to content</a>
-<header class="site-header wrap live-header"><a class="brand" href="#/" aria-label="BLACKOUT home">${sprite('mascot')}<span>BLACKOUT</span></a><nav class="game-nav" aria-label="Game pages">${[['farm','Farm','▦'],['packs','Packs','▣'],['city','City','▥'],['season','Season','★'],['docs','Guide','≡'],['contracts','Contracts','⌘']].map(([id,label,symbol])=>`<a href="#/${id}" data-route="${id}"><span class="nav-symbol" aria-hidden="true">${symbol}</span>${label}</a>`).join('')}</nav><div class="header-utils"><a class="header-starter" href="${legacyConfig.freePackUrl}">Free pack ↗</a><button class="button wallet-control" id="connect">Connect</button></div></header>
-<div class="chain-strip"><div class="wrap"><span><i class="status-dot" aria-hidden="true"></i>Robinhood Chain · 4663</span><span id="connection-status">Checking contracts…</span><button class="text-button" data-refresh>Refresh data</button></div></div>
+<header class="site-header wrap live-header"><a class="brand" href="#/" aria-label="BLACKOUT home">${sprite('mascot')}<span>BLACKOUT</span></a><nav class="game-nav" aria-label="Game pages">${[['home','Home','⌂'],['packs','Packs','▣'],['farm','Farm','▦'],['rewards','Rewards','◇'],['more','More','≡']].map(([id,label,symbol])=>`<a href="#/${id}" data-route="${id}"><span class="nav-symbol" aria-hidden="true">${symbol}</span>${label}</a>`).join('')}</nav><div class="header-utils"><a class="header-starter" href="${legacyConfig.freePackUrl}">Free pack ↗</a><button class="button wallet-control" id="connect">Connect</button></div></header>
+<div class="chain-strip"><div class="wrap"><span><i class="status-dot" aria-hidden="true"></i>City connection</span><span id="connection-status">Checking contracts…</span><button class="text-button" data-refresh>Refresh data</button></div></div>
 <section id="registry-warning" class="wrap warning" role="alert" hidden></section>
 <section id="tx-status" class="wrap tx-status" aria-label="Transaction status" aria-live="polite" hidden></section>
+<section id="onboarding" class="onboarding wrap" aria-label="Start mining"></section>
+<section id="city-activity" class="city-activity wrap" aria-label="Recent city activity"></section>
 <main id="main" tabindex="-1"></main>
 <footer class="site-footer wrap"><a class="footer-brand" href="#/">BLACKOUT</a><p>A city worth keeping alive.<br><span class="muted">Live on Robinhood Chain.</span></p><div><a href="#/docs">Field guide</a><a href="#/docs/risks">Risks</a><a href="#/contracts">Contracts</a><a href="${legacyConfig.xUrl}" target="_blank" rel="noopener noreferrer">Follow on X ↗</a><button class="text-button" data-motion-toggle>Pause animation</button><button class="text-button" data-sound>Sound ${soundEnabled()?'on':'off'}</button></div><p class="footer-fine">Real assets. Wallet signatures required. No guaranteed rewards.</p></footer>
 <dialog id="wallet-dialog" class="wallet-sheet" aria-labelledby="wallet-title"><div class="sheet-head"><h2 id="wallet-title">Connect a wallet</h2><button data-close-wallet class="close-button" aria-label="Close wallet picker">×</button></div><div id="wallet-rows"></div><p id="wallet-note" class="small" role="status"></p></dialog>
@@ -41,14 +51,18 @@ function preserveForms() {
  return Array.from(document.querySelectorAll<HTMLInputElement|HTMLSelectElement>('#main input,#main select')).filter(el=>el.id).map(el=>({id:el.id,value:el.value,focused:document.activeElement===el}));
 }
 function render(keepForms=false) {
+ if(keepForms&&draggingHardware){deferredRender=true;return;}
  const focusId=keepForms?(document.activeElement as HTMLElement|null)?.id:undefined;
  const formValues=keepForms?preserveForms():[];
  const openDetails=keepForms?Array.from(document.querySelectorAll<HTMLDetailsElement>('#main details[open]')).map(d=>d.id).filter(Boolean):[];
  const current=route();document.body.dataset.page=current;
- document.querySelectorAll<HTMLAnchorElement>('[data-route]').forEach(a=>{a.classList.toggle('active',a.dataset.route===current);if(a.dataset.route===current)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
+ document.querySelectorAll<HTMLAnchorElement>('[data-route]').forEach(a=>{a.classList.toggle('active',a.dataset.route===(['city','season','docs','contracts','billboards','leaderboard'].includes(current)?'more':current));if(a.dataset.route===(['city','season','docs','contracts','billboards','leaderboard'].includes(current)?'more':current))a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
  let html='';
  if(current==='home')html=landing();
- else if(current==='farm'||current==='wallet')html=farmPage(farm,home,pageError);
+ else if(current==='farm')html=farmPage(farm,home,pageError,selectedItem&&farm?.items.some(i=>i.id===selectedItem)?selectedItem:null);
+ else if(current==='rewards'||current==='wallet')html=rewardsPage(farm,home,pageError);
+ else if(current==='more')html=morePage(activities,activityError);
+ else if(current==='leaderboard')html=leaderboardPage(leaderboard,pageError);
  else if(current==='packs')html=packsPage(pack,home);
  else if(current==='city')html=cityPage(home,city,pageError);
  else if(current==='season')html=seasonPage(home,season,pageError);
@@ -57,17 +71,27 @@ function render(keepForms=false) {
  else if(current==='docs')html=docsPage();
  else html='<div class="wrap live-page"><h1>Page not found</h1><p>That route is not part of the game.</p><a class="button" href="#/">Go home</a></div>';
  $('#main').innerHTML=html;
+ if(pack.result&&Date.now()>revealAnimationUntil)document.querySelector('.reveal-result')?.classList.add('reveal-seen');
  if(current==='home'){ $('#home-live').innerHTML=homeStats(home,globalError);$('#feature-cards').innerHTML=featureCards(home); }
  formValues.forEach(({id,value,focused})=>{const el=document.getElementById(id) as HTMLInputElement|HTMLSelectElement|null;if(el){el.value=value;if(focused)el.focus({preventScroll:true});}});
+ const slippageField=document.querySelector<HTMLInputElement>('#pack-slippage');if(slippageField){try{slippageBps(slippageField.value);}catch(error){slippageField.setAttribute('aria-invalid','true');$('#slippage-error').hidden=false;$('#slippage-error').textContent=errorMessage(error);}}
  openDetails.forEach(id=>{const d=document.getElementById(id) as HTMLDetailsElement|null;if(d)d.open=true;});
  if(focusId)document.getElementById(focusId)?.focus({preventScroll:true});
- reflectMotion();renderedRoute=current;updateControls();
+ $('#onboarding').innerHTML=onboarding(progress);$('#city-activity').innerHTML=activityView(activities,activityError,true);
+ reflectMotion();reflectGrid();renderedRoute=current;updateControls();renderStatus();
 }
 function renderStatus() {
- $('#connection-status').textContent=globalError?'Read unavailable':wiringVerified?'Registry verified':'Checking contracts…';
- const banner=$('#registry-warning');banner.hidden=!globalError&&!mismatches.length;
- if(mismatches.length)banner.innerHTML=`<strong>Contract addresses do not match the registry.</strong><p>Writes are disabled. Review the <a href="#/contracts">contract comparison</a>.</p>${globalError?`<p>Live data unavailable: ${esc(globalError)}</p>`:''}<button class="button" data-refresh>Retry verification</button>`;
- else if(globalError)banner.innerHTML=`<p>Live data unavailable: ${esc(globalError)}</p><button class="button" data-refresh>Retry connection</button>`;
+ const packReadFailed=route()==='packs'&&(!!pack.priceError||!!pack.ethQuoteError||!!pack.eligibilityError||!!pack.receiptError);
+ const reconnecting=!!globalError||!!pageError||activityError||packReadFailed;
+ $('#connection-status').textContent=reconnecting?'Reconnecting':wiringVerified?'City connected':'Connecting…';
+ $('#connection-status').classList.toggle('reconnecting',reconnecting);
+ const banner=$('#registry-warning');banner.hidden=!mismatches.length;
+ if(mismatches.length)banner.innerHTML='<strong>Contract addresses do not match the registry.</strong><p>Writes are disabled. Review the <a href="#/contracts">contract comparison</a>.</p><button class="button" data-refresh>Retry verification</button>';
+}
+function reflectGrid(){
+ const caption=document.querySelector('.city-caption>span');if(caption&&home?.event[4])caption.textContent=`${EVENTS[home.event[0]]} · ${DISTRICTS[home.event[2]]}`;
+ document.querySelectorAll('[data-sky-district]').forEach(el=>el.classList.remove('chain-outage'));
+ if(home?.event[4]&&[1,2,3].includes(home.event[0]))document.querySelector(`[data-sky-district="${home.event[2]}"]`)?.classList.add('chain-outage');
 }
 function updateControls() {
  const allowed=canWrite();
@@ -89,7 +113,7 @@ async function refreshHome() {
  if(refreshing)return;refreshing=true;
  const phaseKey=(h:Home|null)=>h?`${h.ready}:${h.paused}:${h.endowed}:${h.phases.join(',')}:${h.timestamp>=Number(h.launchTime)+172800}:${h.timestamp>=Number(h.launchTime)+1382400}:${pack.eligible?h.timestamp>=Number(pack.eligible.ends):false}`:'';
  const previous=phaseKey(home),previousError=globalError;
- try {await verifyRegistry();home=await loadHome();globalError='';}
+ try {await verifyRegistry();home=await loadHome();setSpot(home.spot);globalError='';reflectGrid();}
  catch(e){globalError=errorMessage(e);}
  finally {refreshing=false;renderStatus();if(route()==='home'){ $('#home-live').innerHTML=homeStats(home,globalError);$('#feature-cards').innerHTML=featureCards(home); }else if(route()==='contracts'||previous!==phaseKey(home)||previousError!==globalError)render(true);else updateControls();}
 }
@@ -97,12 +121,13 @@ async function loadPage(current=route()) {
  const mine=++generation,wallet=walletAddress();pageError='';
  const valid=()=>mine===generation&&route()===current&&walletAddress()===wallet;
  try {
-  if(current==='farm'||current==='wallet') {
-   if(wallet){const value=await loadFarm(wallet);if(valid())farm=value;}
+  if(current==='farm'||current==='wallet'||current==='rewards') {
+   if(wallet){const value=await loadFarm(wallet);if(valid()){farm=value;progress={hasPack:value.paidPacks>0n||value.items.length>0,placed:value.items.some(i=>i.equipped),mining:value.hash>0n&&!!home&&chainTime(home)<Number(home.epochEnd)};}}
   } else if(current==='packs') {
    const jobs=[refreshQuote(false)];
    if(wallet){jobs.push(refreshEligibility(wallet),refreshReceipts(wallet));}
    await Promise.allSettled(jobs);
+  } else if(current==='leaderboard'){const h=home||await loadHome();const value=await loadLeaderboard(h.epoch);if(valid())leaderboard=value;
   } else if(current==='city') {
    const currentHome=home||await loadHome();
    const [stakes,totals,event,plan,letter,locks,lockQuote,lobbyQuote]=await Promise.all([
@@ -125,19 +150,20 @@ async function loadPage(current=route()) {
    if(valid()){boards=values;boardWeek=week;}
   }
  }catch(e){if(valid())pageError=errorMessage(e);}
+ if(wallet&&current!=='farm'&&current!=='wallet'&&current!=='rewards'){try{const [paid,owned,hash,configured]=await Promise.all([read<bigint>('FarmCore','paidPacks',[wallet]),read<bigint>('FarmItems','ownedCount',[wallet]),read<bigint>('FarmRewards','farmWeight',[wallet,home?.epoch??0n]),read<bigint>('FarmRewards','configuredWeight',[wallet])]);if(valid())progress={hasPack:paid>0n||owned>0n,placed:configured>0n,mining:hash>0n&&!!home&&chainTime(home)<Number(home.epochEnd)};}catch{if(valid())pageError='Reconnecting';}}
  if(valid())render(true);
 }
 let quoteRequest=0;
 async function refreshQuote(show=true) {
  const request=++quoteRequest,count=pack.count,slippage=pack.slippage;
- pack.ethQuote=null;pack.ethQuoteError='';
+ pack.ethQuoteError='';
  try {
   const quote=await read<bigint>('PackSale','quote',[BigInt(count)]);
   if(request!==quoteRequest)return;
   pack.quote=quote;pack.priceError='';
   try {const estimate=await quoteEthPack(quote,slippage);if(request===quoteRequest)pack.ethQuote=estimate;}
   catch(e){if(request===quoteRequest)pack.ethQuoteError=errorMessage(e);}
- } catch(e){if(request===quoteRequest){pack.priceError=errorMessage(e);pack.quote=null;}}
+ } catch(e){if(request===quoteRequest){pack.priceError=errorMessage(e);}}
  if(request===quoteRequest&&show&&route()==='packs')render(true);
 }
 async function refreshEligibility(wallet:Address) {
@@ -147,7 +173,7 @@ async function refreshEligibility(wallet:Address) {
 }
 async function refreshReceipts(wallet:Address) {
  try{const receipts=await findReceipts(wallet);if(wallet===walletAddress()){pack.receipts=receipts;pack.receiptError='';}}
- catch(e){if(wallet===walletAddress())pack.receiptError=`Receipt lookup failed: ${errorMessage(e)}. You can look up a known receipt ID below.`;}
+ catch(e){if(wallet===walletAddress())pack.receiptError=`Reconnecting to your packs. Your last update is still here.`;}
  if(route()==='packs')render(true);
 }
 function confirmAction(title:string,body:string,label:string,action:()=>Promise<void>) {
@@ -162,13 +188,21 @@ function actionError(e:unknown,label='Action unavailable') {setTx({label,state:'
 function currentItem(id:bigint) {const item=farm?.items.find(i=>i.id===id);if(!item||!farm)throw Error('Item no longer in this wallet. Refresh your farm.');return item;}
 function installDialog(id?:bigint,slot?:[number,number]) {
  if(!farm)return;const f=farm;
- const available=f.items.filter(i=>!i.equipped);
- const empty=f.rooms.filter(r=>r.unlocked).flatMap(r=>r.slots.flatMap((value,s)=>value===0n?[{room:r.index,slot:s}]:[]));
- if(!available.length||!empty.length)throw Error('You need an unequipped item and an empty room slot.');
- confirmAction('Place hardware',`<label>Item<select id="install-item">${available.map(i=>`<option value="${i.id}" ${id===i.id?'selected':''}>#${i.id} ${KINDS[i.kind]} · ${RARITIES[i.rarity]}</option>`).join('')}</select></label><label>Room and slot<select id="install-slot">${empty.map(s=>`<option value="${s.room},${s.slot}" ${slot?.[0]===s.room&&slot?.[1]===s.slot?'selected':''}>Room ${s.room+1}, slot ${s.slot+1}</option>`).join('')}</select></label><p class="small">Placement takes effect through the farm’s epoch accounting. Rarity and room gates are checked by the contract.</p>`,'Place item',async()=>{
-  const chosen=integer(input('install-item'),'item ID',1),[r,s]=input('install-slot').split(',').map(BigInt);await send('FarmCore','place',[chosen,r,s],'Place hardware');
+ const available=f.items.filter(i=>!placementReason(i,f));
+ const chosenItem=id?available.find(i=>i.id===id):available[0];
+ if(!chosenItem)throw Error(id?placementReason(currentItem(id),f):'No hardware can be placed yet. Check the level and room requirements shown on each item.');
+ const empty=f.rooms.filter(r=>r.unlocked).flatMap(r=>r.slots.flatMap((value,s)=>value===0n&&!placementReason(chosenItem,f,r,s)?[{room:r.index,slot:s}]:[]));
+ if(!empty.length)throw Error('One of each type per room. Choose another room or remove the matching hardware.');
+ if(slot&&!empty.some(e=>e.room===slot[0]&&e.slot===slot[1]))throw Error(placementReason(chosenItem,f,f.rooms[slot[0]],slot[1]));
+ confirmAction('Place hardware',`<label>Item<select id="install-item">${available.map(i=>`<option value="${i.id}" ${chosenItem.id===i.id?'selected':''}>#${i.id} ${KINDS[i.kind]} · ${RARITIES[i.rarity]}</option>`).join('')}</select></label><label>Room and slot<select id="install-slot">${empty.map(s=>`<option value="${s.room},${s.slot}" ${slot?.[0]===s.room&&slot?.[1]===s.slot?'selected':''}>Room ${s.room+1}, slot ${s.slot+1}</option>`).join('')}</select></label><p class="small">One of each type per room. Changes to an active farm apply next epoch.</p>`,'Place item',async()=>{
+  const chosen=integer(input('install-item'),'item ID',1),[r,s]=input('install-slot').split(',').map(Number),from=assertWallet();
+  const fresh=await loadFarm(from),item=fresh.items.find(i=>i.id===chosen);assertWallet(from);
+  if(!item)throw Error('This hardware is no longer in your wallet. Refresh your farm.');
+  const reason=placementReason(item,fresh,fresh.rooms[r],s);if(reason)throw Error(reason);
+  await send('FarmCore','place',[chosen,BigInt(r),BigInt(s)],'Place hardware');selectedItem=null;
  });
 }
+
 let preparingPack=false;
 async function beginPack(kind:'tokens'|'eth') {
  if(preparingPack||transactionBusy)return;
@@ -203,6 +237,7 @@ async function revealPack(kind:Receipt['kind'],id:bigint) {
   if(!alreadyOpened){playSound('pack');alreadyOpened=await reveal(receipt,revealController.signal)==='already-opened';}
   const after=await loadFarm(from);assertWallet(from);farm=after;
   const existing=new Set(before.items.map(i=>i.id));
+  revealAnimationUntil=Date.now()+2500;
   pack.result={items:alreadyOpened?[]:after.items.filter(i=>!existing.has(i.id)),alreadyOpened};
   if(alreadyOpened)setTx({label:'Pack receipt',state:'complete',detail:'Already opened, see your Farm'});
   else playSound('reveal');
@@ -217,9 +252,9 @@ $<HTMLDialogElement>('#action-dialog').addEventListener('close',()=>{
  requestAnimationFrame(()=>{const target=returnFocus?.isConnected?returnFocus:returnFocus?.id?document.getElementById(returnFocus.id):$('#main');target?.focus({preventScroll:true});});
 });
 $('#confirm-action').addEventListener('click',()=>{
- const action=chosenAction;if(!action)return;$('#action-error').textContent='';
+ const action=chosenAction,previousTx=tx;if(!action)return;$('#action-error').textContent='';
  // Read form selections before closing, because the dialog is also the review form.
- void transact(async()=>{try{await action();$<HTMLDialogElement>('#action-dialog').close();}catch(e){$('#action-error').textContent=errorMessage(e);throw e;}});
+ void transact(async()=>{try{await action();$<HTMLDialogElement>('#action-dialog').close();}catch(e){$('#action-error').textContent=tx!==previousTx&&tx?.state==='error'?tx.detail:errorMessage(e);throw e;}});
 });
 document.addEventListener('click',async e=>{
  const el=(e.target as Element).closest<HTMLElement>('button,a');if(!el)return;
@@ -228,17 +263,20 @@ document.addEventListener('click',async e=>{
   else if(el.hasAttribute('data-hardware-scroll')){$('#hardware-track').scrollBy({left:Number(el.dataset.hardwareScroll)*234,behavior:motion?'smooth':'instant'});}
   else if(el.hasAttribute('data-connect'))openWallet();
   else if(el.hasAttribute('data-switch'))await switchNetwork();
-  else if(el.hasAttribute('data-refresh')){await refreshHome();await loadPage();}
+  else if(el.hasAttribute('data-refresh')){await refreshAll();}
   else if(el.hasAttribute('data-refresh-receipts')&&walletAddress())await refreshReceipts(walletAddress()!);
   else if(el.hasAttribute('data-motion-toggle')){motion=!motion;reflectMotion();}
-  else if(el.hasAttribute('data-sound')){toggleSound();el.textContent=`Sound ${soundEnabled()?'on':'off'}`;}
+  else if(el.hasAttribute('data-sound')){toggleSound();document.querySelectorAll<HTMLElement>('[data-sound]').forEach(b=>{b.textContent=`Sound ${soundEnabled()?'on':'off'}`;b.setAttribute('aria-pressed',String(soundEnabled()));});}
   else if(el.hasAttribute('data-copy')){await navigator.clipboard.writeText(el.dataset.copy!);el.textContent='Copied';$('#copy-message').textContent='Contract address copied.';}
   else if(el.hasAttribute('data-dismiss-tx'))$('#tx-status').hidden=true;
   else if(el.hasAttribute('data-check-tx'))await refreshTransaction();
   else if(el.hasAttribute('data-stop-reveal')){revealController?.abort();$('#reveal-progress').textContent='Stopping after the current request. On-chain transactions cannot be cancelled here.';}
   else if(el.dataset.viewItem){const target=$(`#item-${el.dataset.viewItem}`);target.querySelector<HTMLDetailsElement>('details')!.open=true;target.scrollIntoView({block:'center',behavior:motion?'smooth':'instant'});target.querySelector<HTMLElement>('summary')!.focus({preventScroll:true});}
+  else if(el.hasAttribute('data-pick-hardware')){e.preventDefault();$('#inventory-heading').scrollIntoView({block:'start',behavior:motion?'smooth':'instant'});}
+  else if(el.dataset.selectItem){selectedItem=BigInt(el.dataset.selectItem);render(true);$('#placement-guide').scrollIntoView({block:'start',behavior:motion?'smooth':'instant'});}
+  else if(el.hasAttribute('data-clear-selection')){selectedItem=null;render(true);}
   else if(el.dataset.install)installDialog(BigInt(el.dataset.install));
-  else if(el.dataset.slot)installDialog(undefined,el.dataset.slot.split(',').map(Number) as [number,number]);
+  else if(el.dataset.slot)installDialog(selectedItem??undefined,el.dataset.slot.split(',').map(Number) as [number,number]);
   else if(el.dataset.unplace){const [r,s]=el.dataset.unplace.split(',').map(BigInt);await transact(async()=>{await send('FarmCore','unplace',[r,s],'Unplace hardware');});}
   else if(el.dataset.repair){const id=BigInt(el.dataset.repair),i=currentItem(id),from=assertWallet();const quote=await read<bigint>('Economy','repairQuote',[id]);confirmAction('Repair hardware',`<p>Restore ${KINDS[i.kind]} #${id} to full durability for <strong>${units(quote)} BLACKOUT</strong>, plus gas.</p><p class="small">Spends wallet tokens. The approval is limited to this quote.</p>`,'Approve & repair',async()=>{assertWallet(from);await approve('FarmCore',quote);assertWallet(from);await send('FarmCore','repair',[id,true],'Repair hardware');});}
   else if(el.dataset.scrap){const id=BigInt(el.dataset.scrap),i=currentItem(id),minimum=scrapQuote(i,farm!),from=assertWallet();confirmAction('Permanently scrap hardware',`<p>Destroy ${KINDS[i.kind]} #${id}. This cannot be undone.</p><p>Minimum payout: <strong>${units(minimum)} BLACKOUT credits</strong>. Claim tax applies when withdrawing credits.${minimum===0n?' The current scrap allowance pays nothing; this discards the item without payment.':''}</p>`,'Permanently scrap',async()=>{assertWallet(from);await send('FarmCore','scrap',[id,minimum],'Scrap hardware');});}
@@ -280,6 +318,7 @@ document.addEventListener('change',async e=>{
    try{pack.slippage=slippageBps(el.value);el.removeAttribute('aria-invalid');$('#slippage-error').hidden=true;await refreshQuote();}
    catch(error){el.setAttribute('aria-invalid','true');$('#slippage-error').hidden=false;$('#slippage-error').textContent=errorMessage(error);}
   }
+  else if(el.id==='install-item'&&farm){const item=currentItem(BigInt(el.value));const slots=farm.rooms.flatMap(r=>r.slots.flatMap((_,i)=>placementReason(item,farm!,r,i)?[]:[`<option value="${r.index},${i}">Room ${r.index+1}, slot ${i+1}</option>`]));$('#install-slot').innerHTML=slots.join('');}
   else if(el.id==='inventory-filter')document.querySelectorAll<HTMLElement>('[data-item-equipped]').forEach(row=>row.hidden=el.value==='installed'?row.dataset.itemEquipped!=='true':el.value==='spare'?row.dataset.itemEquipped==='true':false);
   else if(el.id==='lock-days'&&walletAddress()){const [min,boost]=await read<[bigint,bigint]>('Economy','lockQuote',[walletAddress()!,BigInt(el.value)]);$<HTMLInputElement>('#lock-amount').value=units(min);$('#lock-quote-note').textContent=`Minimum: ${tokens(min)} BLACKOUT · +${Number(boost)/100}% hash.`;}
  }catch(error){actionError(error);}
@@ -294,7 +333,7 @@ window.addEventListener('hashchange',()=>{
 document.addEventListener('walletchange',()=>{
  const key=`${walletAddress()||''}:${account().chainId||''}`;if(key===lastWallet)return;lastWallet=key;generation++;
  if(!transactionBusy)$<HTMLDialogElement>('#action-dialog').close();
- farm=null;city=null;pack.eligible=null;pack.receipts=null;pack.eligibilityError='';pack.receiptError='';pack.result=null;pack.activeReceipt=null;revealController?.abort();
+ farm=null;city=null;progress=null;selectedItem=null;pack.eligible=null;pack.receipts=null;pack.eligibilityError='';pack.receiptError='';pack.result=null;pack.activeReceipt=null;revealController?.abort();
  if(renderedRoute){render(true);void loadPage();}
 });
 document.addEventListener('walletbusy',()=>{updateControls();$<HTMLButtonElement>('#confirm-action').disabled=transactionBusy;$<HTMLButtonElement>('#cancel-action').disabled=transactionBusy;});
@@ -303,36 +342,37 @@ document.addEventListener('revealprogress',((e:CustomEvent<string>)=>{
  const status=document.getElementById('reveal-progress');if(status)status.textContent=e.detail;
  if(pack.activeReceipt){pack.activeReceipt.message=e.detail;const row=document.querySelector(`[data-receipt="${pack.activeReceipt.key}"] .receipt-state`);if(row)row.textContent=e.detail;}
 }) as EventListener);
-document.addEventListener('transactionend',()=>{updateControls();void refreshHome().then(()=>loadPage());});
+document.addEventListener('transactionend',()=>{updateControls();void refreshAll();});
 matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change',e=>{if(e.matches){motion=false;reflectMotion();}});
-render();setupWallet();initAtmosphere(()=>motion);
+render();setupWallet();initAtmosphere(()=>motion,()=>home?.event);
 // Enlarged text must be able to grow the header without covering the game.
 const syncTextLayout=()=>document.body.classList.toggle('reflow-mode',parseFloat(getComputedStyle(document.documentElement).fontSize)>20||innerWidth<320);
-new ResizeObserver(syncTextLayout).observe(document.documentElement);
-new MutationObserver(syncTextLayout).observe(document.documentElement,{attributes:true,attributeFilter:['style','class']});
-window.addEventListener('resize',syncTextLayout);syncTextLayout();
-void refreshHome().then(()=>loadPage()).then(()=>{if(route()==='docs'){const id=location.hash.split('/')[2];if(id)document.getElementById(`doc-${id}`)?.scrollIntoView();}});
+const syncChrome=()=>{const value=`${$('.site-header').getBoundingClientRect().height+$('.chain-strip').getBoundingClientRect().height+$('#onboarding').getBoundingClientRect().height+$('#city-activity').getBoundingClientRect().height}px`;if(document.documentElement.style.getPropertyValue('--top-chrome')!==value)document.documentElement.style.setProperty('--top-chrome',value);};
+let layoutFrame=0;
+const scheduleLayout=()=>{if(!layoutFrame)layoutFrame=requestAnimationFrame(()=>{layoutFrame=0;syncTextLayout();syncChrome();});};
+const chromeObserver=new ResizeObserver(scheduleLayout);['.site-header','.chain-strip','#onboarding','#city-activity'].forEach(s=>chromeObserver.observe($(s)));
+new ResizeObserver(scheduleLayout).observe(document.documentElement);
+new MutationObserver(scheduleLayout).observe(document.documentElement,{attributes:true,attributeFilter:['style','class']});
+window.addEventListener('resize',scheduleLayout);syncTextLayout();syncChrome();
+let pollBusy=false;
+async function refreshAll(){
+ if(document.hidden||pollBusy)return;pollBusy=true;
+ try{
+  await Promise.allSettled([(async()=>{await Promise.allSettled([refreshHome(),refreshUsd()]);await loadPage();})(),(async()=>{try{activities=await loadActivity();activityError=false;}catch{activityError=true;}$('#city-activity').innerHTML=activityView(activities,activityError,true);})()]);
+ }finally{pollBusy=false;renderStatus();}
+}
+void refreshAll().then(()=>{if(route()==='docs'){const id=location.hash.split('/')[2];if(id)document.getElementById(`doc-${id}`)?.scrollIntoView();}});
 setInterval(()=>{
- if(home)document.querySelectorAll<HTMLElement>('[data-countdown]').forEach(el=>el.textContent=duration(Number(el.dataset.countdown)-chainTime(home!)));
+ if(document.hidden||!home)return;
+ const now=chainTime(home);
+ document.querySelectorAll<HTMLElement>('[data-countdown]').forEach(el=>el.textContent=duration(Number(el.dataset.countdown)-now));
+ document.querySelectorAll<HTMLProgressElement>('[data-epoch-progress]').forEach(el=>el.value=epochProgress(home!.epochStart,home!.epochEnd,now));
+ const counter=document.querySelector('[data-mining-clock]');if(counter&&farm?.hash&&farm.hash>0n)counter.textContent=now>=Number(home.epochEnd)?'Waiting for next epoch':miningTime(now-Number(farm.entrySeconds>0n?home.epochEnd-farm.entrySeconds:home.epochStart));
 },1000);
-setInterval(()=>{if(!document.hidden&&!transactionBusy)void refreshHome();},30000);
+setInterval(()=>{if(!document.hidden&&!transactionBusy)void refreshAll();},POLL_MS);
+// A drag is just another way to choose hardware; keyboard and touch use the same gate.
+document.addEventListener('dragstart',e=>{const el=(e.target as Element).closest<HTMLElement>('[data-drag-item]');if(!el||!farm)return;const id=BigInt(el.dataset.dragItem!),item=currentItem(id);if(placementReason(item,farm)){e.preventDefault();return;}draggingHardware=true;selectedItem=id;e.dataTransfer?.setData('text/plain',String(id));if(e.dataTransfer)e.dataTransfer.effectAllowed='move';});
+document.addEventListener('dragover',e=>{if((e.target as Element).closest('[data-drop-slot]'))e.preventDefault();});
+document.addEventListener('drop',e=>{const el=(e.target as Element).closest<HTMLElement>('[data-drop-slot]');if(!el)return;e.preventDefault();try{const id=e.dataTransfer?.getData('text/plain');if(id&&/^\d+$/.test(id))installDialog(BigInt(id),el.dataset.dropSlot!.split(',').map(Number) as [number,number]);}catch(error){actionError(error);}});
 
-
-// Update receipt states without replacing purchase inputs or moving their focus.
-let readingReceiptClock=false;
-setInterval(async()=>{
- if(readingReceiptClock||document.hidden||transactionBusy||route()!=='packs'||!home||!pack.receipts?.length)return;
- readingReceiptClock=true;
- try {
-  const owner=walletAddress(),current=await nativeBlock();if(route()!=='packs'||!home||owner!==walletAddress())return;home.native=current;
-  for(const row of document.querySelectorAll<HTMLElement>('[data-receipt]')) {
-   const receipt=pack.receipts?.find(r=>`${r.kind}:${r.id}`===row.dataset.receipt);if(!receipt)continue;
-   const next=receiptRow(receipt,home,pack.activeReceipt);
-   const template=document.createElement('template');template.innerHTML=next;
-   if(row.outerHTML!==template.innerHTML&& !row.contains(document.activeElement))row.replaceWith(template.content);
-  }
-  const status=document.getElementById('receipt-clock-status');if(status)status.textContent='';
- } catch {
-  const status=document.getElementById('receipt-clock-status');if(status)status.textContent='Could not check reveal readiness. Refresh receipts to try again.';
- } finally {readingReceiptClock=false;}
-},3000);
+document.addEventListener('dragend',()=>{draggingHardware=false;if(deferredRender){deferredRender=false;render(true);}});

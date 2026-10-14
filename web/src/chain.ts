@@ -1,7 +1,31 @@
-import { createPublicClient, http, type Abi, type Address, type Hex, decodeErrorResult, BaseError, ContractFunctionRevertedError, encodeFunctionData, decodeFunctionResult } from 'viem';
+import { createPublicClient, fallback, http, type Abi, type Address, type Hex, type Transport, encodeFunctionData, decodeFunctionResult } from 'viem';
 import abis from './abi.json';
-import { chain, RPC, contracts, roles, type ContractName, ROOTS } from './config';
-export const client = createPublicClient({ chain, transport: http(RPC, { batch: { batchSize: 40, wait: 20 }, retryCount: 2, timeout: 18000 }), pollingInterval: 2500 });
+import { chain, RPC_URLS, POLL_MS, contracts, roles, type ContractName, ROOTS } from './config';
+let visiblePage:Promise<void>|null=null;
+function waitForVisiblePage(){
+ if(typeof document==='undefined'||!document.hidden)return Promise.resolve();
+ if(!visiblePage)visiblePage=new Promise<void>(resolve=>{
+  const resume=()=>{if(!document.hidden){document.removeEventListener('visibilitychange',resume);visiblePage=null;resolve();}};
+  document.addEventListener('visibilitychange',resume);
+ });
+ return visiblePage;
+}
+// Each attempt, including receipt monitoring and fallback retries, respects visibility.
+// viem doubles retryDelay on each retry of the ordered fallback cycle.
+export const rpcTransport = () => fallback(RPC_URLS.map((url):Transport => {
+ const endpoint=http(url,{batch:{batchSize:40,wait:20},retryCount:0,timeout:6000});
+ return options=>{
+  const transport=endpoint(options);
+  const request:typeof transport.request=async (args,requestOptions)=>{await waitForVisiblePage();return transport.request(args,requestOptions);};
+  return {...transport,request};
+ };
+}), { rank: false, retryCount: 2, retryDelay: 500 });
+// Deployless Multicall3 requires no guessed deployment address or on-chain deployment.
+export const client = createPublicClient({ chain, transport: rpcTransport(),
+ batch: { multicall: { deployless: true, batchSize: 4096, wait: 20 } }, pollingInterval: POLL_MS });
+const staticReads = new Set(['GameRegistry.module','GameRegistry.token','GameRegistry.market','GameRegistry.launchTime','V4Market.desk','V4Market.fees','StarterClaim.root','StarterClaim.freeRoot','StarterClaim.freeClaimEnds','PackSale.opensAt','FarmRewards.EPOCH','FarmRewards.PRECISION']);
+const staticCache = new Map<string, Promise<unknown>>();
+export function clearStaticReads() { staticCache.clear(); }
 export const ABI = abis as Record<keyof typeof abis, Abi>;
 export const addresses: Record<ContractName, Address> = { ...contracts };
 export let wiringVerified = false;
@@ -9,11 +33,16 @@ export let mismatches: string[] = [];
 export let lastReadBlock = 0n;
 export const readLog = new Set<string>();
 export async function read<T = unknown>(name: ContractName, fn: string, args: readonly unknown[] = []): Promise<T> {
-  const value = await client.readContract({ address: addresses[name], abi: ABI[name], functionName: fn, args });
-  readLog.add(`${name}.${fn}`);
-  return value as T;
+  const key = `${name}.${fn}:${JSON.stringify(args,(_,v)=>typeof v==='bigint'?v.toString():v)}`;
+  const get = () => client.readContract({ address: addresses[name], abi: ABI[name], functionName: fn, args });
+  if (staticReads.has(`${name}.${fn}`)) {
+    if (!staticCache.has(key)) staticCache.set(key, get().catch(e=>{staticCache.delete(key);throw e;}));
+    readLog.add(`${name}.${fn}`); return await staticCache.get(key) as T;
+  }
+  const value = await get(); readLog.add(`${name}.${fn}`); return value as T;
 }
 export async function verifyRegistry() {
+  if(wiringVerified)return mismatches;
   try {
   const resolved = await Promise.all(roles.map((_, role) => read<Address>('GameRegistry', 'module', [BigInt(role)])));
   const [token, market, desk, router, starterRoot, freeRoot] = await Promise.all([
@@ -22,47 +51,22 @@ export async function verifyRegistry() {
   ]);
   mismatches = [];
   roles.forEach((name, i) => {
-    addresses[name] = resolved[i];
+    // Never follow a mismatched registry into a different deployment.
     if (resolved[i].toLowerCase() !== contracts[name]) mismatches.push(`${name}: registry returned ${resolved[i]}, expected ${contracts[name]}`);
   });
   for (const [label, actual, expected] of [['BLACKOUT token',token,contracts.Token],['V4Market',market,contracts.V4Market],['SwarmDesk',desk,contracts.SwarmDesk],['FeeRouter',router,contracts.FeeRouter],['Starter root',starterRoot,ROOTS.starter],['Free root',freeRoot,ROOTS.free]]) {
     if(actual.toLowerCase()!==expected.toLowerCase()) mismatches.push(`${label}: expected ${expected}, received ${actual}`);
   }
   wiringVerified = mismatches.length === 0;
+  if(!wiringVerified)clearStaticReads();
   return mismatches;
   } catch (error) { wiringVerified = false; throw error; }
 }
 // ChainClock.sol uses ArbSys.arbBlockNumber, not eth_blockNumber, for entropy.
 export async function nativeBlock() {
-  const value = await client.call({ to: '0x0000000000000000000000000000000000000064', data: '0xa3b1b31d' });
-  if (!value.data) throw new Error('Native block clock unavailable. Retry the read.');
-  return BigInt(value.data);
+  return client.readContract({address:'0x0000000000000000000000000000000000000064',abi:[{type:'function',name:'arbBlockNumber',inputs:[],outputs:[{type:'uint256'}],stateMutability:'view'}],functionName:'arbBlockNumber'});
 }
-export function errorMessage(error: unknown): string {
-  if (error instanceof BaseError) {
-    const revert = error.walk(e => e instanceof ContractFunctionRevertedError) as ContractFunctionRevertedError;
-    if (revert?.data?.errorName) return `${revert.data.errorName}: ${guidance(revert.data.errorName)}`;
-    if (error.walk(e => typeof e === 'object' && e !== null && 'code' in e && e.code === 4001)) return 'Request rejected in wallet. No further transaction was sent.';
-  }
-  const candidate = error as { message?: string; code?: number };
-  // Providers wrap revert bytes differently, especially eth_call after a mined revert.
-  const queue:unknown[]=[error], seen=new Set<unknown>();
-  for(let depth=0;queue.length&&depth<30;depth++) {
-    const item=queue.shift();if(!item||seen.has(item))continue;seen.add(item);
-    if(typeof item==='string'&&/^0x[0-9a-fA-F]{8,}$/.test(item)) {
-      try {const decoded=decodeErrorResult({abi:Object.values(ABI).flat(),data:item as Hex});return `${decoded.errorName}: ${guidance(decoded.errorName)}`;}catch{/* Not revert data. */}
-    } else if(typeof item==='object') {
-      const value=item as Record<string,unknown>;
-      for(const key of ['data','raw','cause','error','originalError'])if(value[key])queue.push(value[key]);
-    }
-  }
-  if (candidate?.code===4001 || /user rejected|user denied/i.test(candidate?.message??'')) return 'Request rejected in wallet. No further transaction was sent.';
-  return (candidate?.message || String(error)).split('\n')[0].slice(0,350);
-}
-function guidance(name: string) {
-  const hints: Record<string,string> = { TooEarly: 'Check the opening time or reveal block, then refresh.', InsufficientBalance: 'Check your balance, pending credits and free inventory space.', InvalidProof: 'The proof does not match this wallet and claim root.', AlreadyDone: 'This action was already completed. Refresh chain data.', InvalidValue: 'Refresh the quote and check item, room and feature eligibility.', NotConfigured: 'The game is not ready for this action. Check live status.', Unauthorized: 'This wallet cannot perform this action.', PriceLimitedBuy: 'Use an exact-input buy with sqrtPriceLimitX96 4295128740.', PartialFill: 'The pool could not fill the entire buy. Reduce the input and retry.', ERC20InsufficientBalance: 'Your BLACKOUT balance is below the required amount.', ERC20InsufficientAllowance: 'Approve the current quote, then retry.', Slippage: 'Refresh the quote and review the minimum output.' };
-  return hints[name] || 'The contract rejected the action. Refresh chain data and check its requirements.';
-}
+export { errorMessage, contractErrorName } from './errors';
 export async function simulate<T>(name: ContractName, fn: string, args: readonly unknown[], account: Address, value = 0n): Promise<T> {
   const result = await client.simulateContract({ account, address: addresses[name], abi: ABI[name], functionName: fn, args, value });
   return result.result as T;

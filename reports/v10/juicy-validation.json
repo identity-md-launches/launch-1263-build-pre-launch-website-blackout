@@ -1,0 +1,53 @@
+{
+  "checkedAt": "2026-10-14T16:57:52.448Z",
+  "fixtureWritesOnly": true,
+  "browserVersions": [
+    "153.0.8010.12",
+    "26.0"
+  ],
+  "passed": [
+    "chromium: shake/flip/particles, Common/Epic/Mythic colors, mute, reduced-motion switch, second-ticking mining, drag placement across a refresh, visible mobile Claim and Rewards axe",
+    "chromium: claim-preview failure retains last net; RPC outage retains starter eligibility and free claim display",
+    "chromium: Leaderboard and More pass axe; activity history is available",
+    "chromium: mobile Select hardware is visible; stale Packs errors do not mark recovered Farm as reconnecting; hidden pending transactions make no RPC calls and confirmation resumes when visible",
+    "webkit: shake/flip/particles, Common/Epic/Mythic colors, mute, reduced-motion switch, second-ticking mining, drag placement across a refresh, visible mobile Claim and Rewards axe",
+    "webkit: claim-preview failure retains last net; RPC outage retains starter eligibility and free claim display",
+    "webkit: Leaderboard and More pass axe; activity history is available",
+    "webkit: mobile Select hardware is visible; stale Packs errors do not mark recovered Farm as reconnecting; hidden pending transactions make no RPC calls and confirmation resumes when visible"
+  ],
+  "limitations": [],
+  "errors": [],
+  "screenshots": [],
+  "accessibility": [
+    {
+      "engine": "chromium",
+      "route": "rewards fixture",
+      "violations": []
+    },
+    {
+      "engine": "chromium",
+      "route": "leaderboard fixture",
+      "violations": []
+    },
+    {
+      "engine": "chromium",
+      "route": "more fixture",
+      "violations": []
+    },
+    {
+      "engine": "webkit",
+      "route": "rewards fixture",
+      "violations": []
+    },
+    {
+      "engine": "webkit",
+      "route": "leaderboard fixture",
+      "violations": []
+    },
+    {
+      "engine": "webkit",
+      "route": "more fixture",
+      "violations": []
+    }
+  ]
+}

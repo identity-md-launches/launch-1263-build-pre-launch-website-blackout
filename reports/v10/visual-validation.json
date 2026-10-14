@@ -1,0 +1,52 @@
+{
+  "checkedAt": "2026-10-14T16:51:49.841Z",
+  "fixtureWritesOnly": true,
+  "browserVersions": [
+    "153.0.8010.12",
+    "26.0"
+  ],
+  "passed": [
+    "chromium: product and main action visible at 390",
+    "chromium: live routes have no horizontal overflow at 320, 390, 768, 1440",
+    "chromium: 200% root text reflows at 390 on all primary routes",
+    "chromium: modal Escape and focus restoration",
+    "chromium: axe WCAG A/AA checks on Packs",
+    "chromium: preserved hardware carousel advances",
+    "chromium: live export has no application script errors; any RPC access-control failures are recorded separately",
+    "chromium: phone wallet deep links and Coinbase Smart Wallet row",
+    "webkit: product and main action visible at 390",
+    "webkit: live routes have no horizontal overflow at 320, 390, 768, 1440",
+    "webkit: 200% root text reflows at 390 on all primary routes",
+    "webkit: modal Escape and focus restoration",
+    "webkit: axe WCAG A/AA checks on Packs",
+    "webkit: preserved hardware carousel advances",
+    "webkit: live export has no application script errors; any RPC access-control failures are recorded separately",
+    "webkit: phone wallet deep links and Coinbase Smart Wallet row"
+  ],
+  "limitations": [
+    "webkit: 4 public-RPC access-control errors reported by the browser: /rpc.mainnet.chain.robinhood.com/ due to access control checks. These external provider failures were captured separately; connection state and recovery are tested above. A connected state requires successful registry and home reads."
+  ],
+  "errors": [],
+  "screenshots": [
+    "test/scratch/interaction-shots/chromium-home-320.png",
+    "test/scratch/interaction-shots/chromium-home-390.png",
+    "test/scratch/interaction-shots/chromium-home-768.png",
+    "test/scratch/interaction-shots/chromium-home-1440.png",
+    "test/scratch/interaction-shots/webkit-home-320.png",
+    "test/scratch/interaction-shots/webkit-home-390.png",
+    "test/scratch/interaction-shots/webkit-home-768.png",
+    "test/scratch/interaction-shots/webkit-home-1440.png"
+  ],
+  "accessibility": [
+    {
+      "engine": "chromium",
+      "route": "packs",
+      "violations": []
+    },
+    {
+      "engine": "webkit",
+      "route": "packs",
+      "violations": []
+    }
+  ]
+}

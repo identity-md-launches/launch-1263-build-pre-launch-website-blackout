@@ -1,0 +1,17 @@
+{
+  "unchanged": {
+    "web/src/abi.json": "b7fb5a8d19e496090515d82da670f40580c87e1fd4aff378e801bc685511b85b",
+    "web/data/abi-provenance.json": "86b2e9c917b202617e33745afcd83ff760698d9b0b1b35d21d8a01941d383541",
+    "web/src/upstream-reveal.js": "bb89569ad3664bc03df0e6b492054b1850afab916b3626ffdb5ebf0f93b0bdae",
+    "public/free-tree.json": "071ac63a8147ee97998983c6b7326239aead890b600bdabd82d1fdcb34b6167e",
+    "public/starter-tree.json": "8d6ee4c8a8c5bf8003fb163aac845f64759801543d9bd017ee5be1e4b3ab8951",
+    "web/data/starter-snapshot.json": "2694d102355f383d00a433cd56ea610a333d03099c4514c97018800630ec478a",
+    "src/sprites.ts": "d86a961726d6edd5f5c69995c7fcb848a9a01b5be05576c5fca4f93026089c6c",
+    "web/package.json": "4ecd5f8e5139e3acbe12bf40395f612114ca99d3b20f1025c489aa6f2455fc6b",
+    "web/package-lock.json": "cc3b1ae188e577538e682cf7c529ff983c75e176ce9fc15f2d3a641ba9fece3d"
+  },
+  "allConfigAddressesAndRootsUnchanged": true,
+  "addressAndRootOccurrences": 21,
+  "siteLabel": "blackout-mine-the-city-pray-the.sites.imd.fun",
+  "domain": "https://playblackout.xyz"
+}

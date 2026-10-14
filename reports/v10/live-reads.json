@@ -1,0 +1,331 @@
+{
+  "checkedAt": "2026-10-14T16:39:56.846Z",
+  "https://rpc.mainnet.chain.robinhood.com": {
+    "chain": 4663
+  },
+  "https://robinhood.drpc.org": {
+    "chain": 4663
+  },
+  "https://robinhood-rpc.publicnode.com": {
+    "chain": 4663
+  },
+  "registry": "All module addresses and both roots match",
+  "home": {
+    "epochStart": "1791984786",
+    "event": [
+      6,
+      10000,
+      5,
+      "0xeeb0ec97043b6722416b8a9a6f3bb5864ec60e5109641aa9a3dbc7a8996adb0f",
+      true
+    ],
+    "block": "88516748",
+    "timestamp": 1791995997,
+    "fetchedAt": 1791995998778,
+    "epoch": "1",
+    "epochEnd": "1792006386",
+    "endowed": true,
+    "available": "9619138125891381804217911",
+    "lockedEndowment": "199361607142857142857142858",
+    "spot": "91409142773909291680051598",
+    "tax": "100",
+    "taxLeft": "0",
+    "launchTime": "1791967009",
+    "ready": true,
+    "paused": false,
+    "opensAt": "1791970609",
+    "phases": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "notices": [
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0"
+    ],
+    "grid": [
+      "10000",
+      "10000",
+      "10000",
+      "10000",
+      "10000",
+      "10000",
+      "10000",
+      "10000"
+    ],
+    "native": "88516748"
+  },
+  "farm": {
+    "entrySeconds": "0",
+    "hash": "0",
+    "lastEarnings": "0",
+    "ageCap": "4",
+    "wallet": "0x83027ad9d0d5374335086c539dadd1db983441b0",
+    "hasFarm": false,
+    "level": "1",
+    "xp": "0",
+    "district": "6",
+    "balance": "0",
+    "ethBalance": "6352190510041871",
+    "pending": "0",
+    "capacity": "15",
+    "ownedCount": "0",
+    "paidPacks": "0",
+    "daily": "3000000000000000000000",
+    "lastSettled": "0",
+    "settledEpoch": "0",
+    "items": [],
+    "rooms": [
+      {
+        "index": 0,
+        "unlocked": true,
+        "eligible": true,
+        "price": "0",
+        "stats": {
+          "raw": "0",
+          "productive": "0",
+          "power": "0",
+          "bonus": "0",
+          "cooling": false,
+          "cold": false,
+          "offgrid": false,
+          "clean": false,
+          "locked": false,
+          "airflow": false
+        },
+        "slots": [
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ]
+      },
+      {
+        "index": 1,
+        "unlocked": false,
+        "eligible": false,
+        "price": "6000000000000000000000",
+        "stats": {
+          "raw": "0",
+          "productive": "0",
+          "power": "0",
+          "bonus": "0",
+          "cooling": false,
+          "cold": false,
+          "offgrid": false,
+          "clean": false,
+          "locked": false,
+          "airflow": false
+        },
+        "slots": [
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ]
+      },
+      {
+        "index": 2,
+        "unlocked": false,
+        "eligible": false,
+        "price": "15000000000000000000000",
+        "stats": {
+          "raw": "0",
+          "productive": "0",
+          "power": "0",
+          "bonus": "0",
+          "cooling": false,
+          "cold": false,
+          "offgrid": false,
+          "clean": false,
+          "locked": false,
+          "airflow": false
+        },
+        "slots": [
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ]
+      },
+      {
+        "index": 3,
+        "unlocked": false,
+        "eligible": false,
+        "price": "30000000000000000000000",
+        "stats": {
+          "raw": "0",
+          "productive": "0",
+          "power": "0",
+          "bonus": "0",
+          "cooling": false,
+          "cold": false,
+          "offgrid": false,
+          "clean": false,
+          "locked": false,
+          "airflow": false
+        },
+        "slots": [
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ]
+      }
+    ],
+    "claimNet": null,
+    "claimError": "",
+    "yieldPerHash": "0",
+    "scrapAllowance": "0",
+    "autoRepair": 0
+  },
+  "leaderboard": {
+    "epoch": "1",
+    "farms": [
+      {
+        "wallet": "0x70b2EE03eD78855C612f9cA0BeD658aa740d24C1",
+        "hash": "25078",
+        "district": 3
+      },
+      {
+        "wallet": "0x701B7FE0E5f515bdC0Bc6Dbc265487c4ab1b4922",
+        "hash": "16052",
+        "district": 4
+      },
+      {
+        "wallet": "0x6743B21E3841A1878C42d1805Bf8bd8E33D20978",
+        "hash": "15223",
+        "district": 5
+      },
+      {
+        "wallet": "0x6d51cBE774aeAe4dd40bCA2560E9bc2695A0d007",
+        "hash": "5966",
+        "district": 5
+      },
+      {
+        "wallet": "0xDeD6156b0d74B7FD8693EeC57948f78324f8e6C6",
+        "hash": "5295",
+        "district": 6
+      }
+    ],
+    "districts": [
+      "0",
+      "0",
+      "0",
+      "25078",
+      "16052",
+      "21189",
+      "5295",
+      "0"
+    ],
+    "total": 5
+  },
+  "activity": [
+    {
+      "key": "0x36231f1f5d62cdfffa7685c042cff5e0980f309b2b16b0640ff4ed80cdc01616:205",
+      "block": "88432005",
+      "index": 205,
+      "hash": "0x36231f1f5d62cdfffa7685c042cff5e0980f309b2b16b0640ff4ed80cdc01616",
+      "text": "0xDeD6…e6C6 opened a pack: Rare Router"
+    },
+    {
+      "key": "0x4ca4f44fda4171e4b1c1f44a2800d2f8141cf5b265f99f41dc26a8c6f74f23c3:52",
+      "block": "88430137",
+      "index": 52,
+      "hash": "0x4ca4f44fda4171e4b1c1f44a2800d2f8141cf5b265f99f41dc26a8c6f74f23c3",
+      "text": "0xDeD6…e6C6 opened a pack: Common Router"
+    },
+    {
+      "key": "0x99d9c23e444bf2b9ce88f03e93c98153ab83dbf8e27f5b51d9d72cbd2f9f2f15:7",
+      "block": "88430000",
+      "index": 7,
+      "hash": "0x99d9c23e444bf2b9ce88f03e93c98153ab83dbf8e27f5b51d9d72cbd2f9f2f15",
+      "text": "0xDeD6…e6C6 · new miner joined"
+    },
+    {
+      "key": "0xbaf8ac9a5ae68dbf6294da99376e88e89bc9b9078d651083b26d1071d4490770:19",
+      "block": "88429108",
+      "index": 19,
+      "hash": "0xbaf8ac9a5ae68dbf6294da99376e88e89bc9b9078d651083b26d1071d4490770",
+      "text": "0x70b2…24C1 opened a pack: Epic Solar Panel"
+    },
+    {
+      "key": "0xfaf8d0ed1244fd18bbd7504c82b0859dbbc6875b9825ab111727e37aa78652e0:8",
+      "block": "88427451",
+      "index": 8,
+      "hash": "0xfaf8d0ed1244fd18bbd7504c82b0859dbbc6875b9825ab111727e37aa78652e0",
+      "text": "0x70b2…24C1 opened a pack: Rare FPGA"
+    },
+    {
+      "key": "0xc848d6d077e9cf03c1476c5185e1858fc38ccd08ff4f685fadc7c3275957e591:11",
+      "block": "88426972",
+      "index": 11,
+      "hash": "0xc848d6d077e9cf03c1476c5185e1858fc38ccd08ff4f685fadc7c3275957e591",
+      "text": "0x70b2…24C1 · new miner joined"
+    },
+    {
+      "key": "0x49979e53650a121009871c4d20e28b06d3efc1d39c1b26bfb0b77093bad1ae11:25",
+      "block": "88424454",
+      "index": 25,
+      "hash": "0x49979e53650a121009871c4d20e28b06d3efc1d39c1b26bfb0b77093bad1ae11",
+      "text": "0x6743…0978 opened a pack: Common ASIC"
+    },
+    {
+      "key": "0x70e4db8bffda42a87b99231381541d8d06abea5da2a069abe611a5a13f361e2d:9",
+      "block": "88424008",
+      "index": 9,
+      "hash": "0x70e4db8bffda42a87b99231381541d8d06abea5da2a069abe611a5a13f361e2d",
+      "text": "0x6743…0978 opened a pack: Epic ASIC"
+    },
+    {
+      "key": "0x98bee10119ed9d015699418640e8c9403fe154a140f56526991677088ea0a691:13",
+      "block": "88423770",
+      "index": 13,
+      "hash": "0x98bee10119ed9d015699418640e8c9403fe154a140f56526991677088ea0a691",
+      "text": "0x6743…0978 opened a pack: Common Fan"
+    },
+    {
+      "key": "0x14717b65570652edba200deb91ea3c8f542750df1b18d79fcd3df0ccde708746:3",
+      "block": "88423647",
+      "index": 3,
+      "hash": "0x14717b65570652edba200deb91ea3c8f542750df1b18d79fcd3df0ccde708746",
+      "text": "0x6743…0978 opened a pack: Rare Fan"
+    },
+    {
+      "key": "0xcadb1307207e42adf566679e58f807cfc6655e8f7e935d8785c9ab3395052abe:24",
+      "block": "88423347",
+      "index": 24,
+      "hash": "0xcadb1307207e42adf566679e58f807cfc6655e8f7e935d8785c9ab3395052abe",
+      "text": "0x6743…0978 opened a pack: Common GPU"
+    },
+    {
+      "key": "0xb9fbeeaa3e24abc9f4b6e208c7a0d2d78193b14465f5c8c4c069d32d6a43b269:0",
+      "block": "88422634",
+      "index": 0,
+      "hash": "0xb9fbeeaa3e24abc9f4b6e208c7a0d2d78193b14465f5c8c4c069d32d6a43b269",
+      "text": "0x6743…0978 · new miner joined"
+    }
+  ],
+  "chainId": 4663,
+  "emptyItemError": "InvalidValue",
+  "status": "passed"
+}

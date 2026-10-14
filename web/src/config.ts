@@ -1,8 +1,10 @@
 import { defineChain } from 'viem';
 export const SITE_LABEL = 'blackout-mine-the-city-pray-the';
 export const RPC = 'https://rpc.mainnet.chain.robinhood.com';
+export const RPC_URLS = [RPC, 'https://robinhood.drpc.org', 'https://robinhood-rpc.publicnode.com'] as const;
+export const POLL_MS = 15000;
 export const EXPLORER = 'https://robinhoodchain.blockscout.com';
-export const chain = defineChain({ id: 4663, name: 'Robinhood Chain', nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: { default: { http: [RPC] } }, blockExplorers: { default: { name: 'Blockscout', url: EXPLORER } } });
+export const chain = defineChain({ id: 4663, name: 'Robinhood Chain', nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: { default: { http: [...RPC_URLS] } }, blockExplorers: { default: { name: 'Blockscout', url: EXPLORER } } });
 export const contracts = {
   GameRegistry: '0x1b41fc9723df25eec7e91d947072dccc2483285f',
   Token: '0x38b05971c79e738f64452be83c78ec3d66535b7a',

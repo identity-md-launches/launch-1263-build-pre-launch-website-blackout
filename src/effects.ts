@@ -24,13 +24,13 @@ export function bootScreen(motion:boolean) {
  const boot=document.createElement('div');boot.className='boot-screen';boot.innerHTML='<div><span class="boot-symbol" aria-hidden="true">ϟ</span><strong>Grid online</strong><p>Welcome to BLACKOUT.</p><button class="button compact" id="skip-boot">Skip boot →</button></div>';
  document.body.append(boot);boot.querySelector('button')!.onclick=()=>boot.remove();window.setTimeout(()=>boot.remove(),1000);
 }
-export function initAtmosphere(canAnimate:()=>boolean) {
+export function initAtmosphere(canAnimate:()=>boolean,gridEvent?:()=>readonly [number,number,number,string,boolean]|undefined) {
  let n=0,timer:number,scrollFrame=0;
  const run=()=>{
   const sky=document.querySelector<HTMLElement>('.living-skyline');
   if(sky&&canAnimate()&&!document.hidden){
-   const strike=n%3===2,index=strike?4:n%8,district=sky.querySelector(`[data-sky-district="${index}"]`);
-   district?.classList.add('blackout-wave');
+   const event=gridEvent?.(),strike=event?event[4]&&[1,2,3].includes(event[0]):!gridEvent&&n%3===2,index=event?event[2]:strike?4:n%8,district=sky.querySelector(`[data-sky-district="${index}"]`);
+   if(strike||!gridEvent)district?.classList.add('blackout-wave');
    if(strike)sky.classList.add('lightning-active');
    window.setTimeout(()=>{district?.classList.remove('blackout-wave');sky.classList.remove('lightning-active');},2200);
    n++;

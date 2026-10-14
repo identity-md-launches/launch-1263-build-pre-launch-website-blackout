@@ -1,9 +1,9 @@
 import { createConfig, getAccount, getConnectors, connect, disconnect, reconnect, watchAccount, watchConnectors, getConnectorClient } from '@wagmi/core';
 import { injected, coinbaseWallet } from '@wagmi/connectors';
-import { http, getAddress, type Address, type Hex } from 'viem';
+import { decodeFunctionData, getAddress, type Address, type Hex } from 'viem';
 import { chain, EXPLORER, type ContractName } from './config';
-import { ABI, addresses, client, errorMessage, wiringVerified, calldata } from './chain';
-export const walletConfig = createConfig({ chains: [chain], multiInjectedProviderDiscovery: true, connectors: [injected(), coinbaseWallet({preference:'smartWalletOnly',appName:'BLACKOUT',appLogoUrl:'https://playblackout.xyz/app-icon.png'})], transports: {[chain.id]:http(chain.rpcUrls.default.http[0])} });
+import { ABI, addresses, client, errorMessage, wiringVerified, calldata, read, rpcTransport, contractErrorName } from './chain';
+export const walletConfig = createConfig({ chains: [chain], multiInjectedProviderDiscovery: true, connectors: [injected(), coinbaseWallet({preference:'smartWalletOnly',appName:'BLACKOUT',appLogoUrl:'https://playblackout.xyz/app-icon.png'})], transports: {[chain.id]:rpcTransport()} });
 export type TxState = { label: string; state: 'signature'|'pending'|'confirmed'|'reverted'|'error'|'complete'; detail: string; hash?: Hex; account?: Address };
 export let tx:TxState|null = null;
 export let transactionBusy=false;
@@ -119,11 +119,28 @@ export async function send(name:ContractName,fn:string,args:readonly unknown[]=[
   const hash=await p.request({method:'eth_sendTransaction',params:[{from,to:addresses[name],data:calldata(name,fn,args),...(value?{value:`0x${value.toString(16)}`}:{})}]}) as Hex;
   void simulation;
   await confirmHash(hash,label,from);return hash;
- }catch(error){if(tx?.state!=='pending'&&tx?.state!=='reverted')setTx({label,state:'error',detail:errorMessage(error),account:from});throw error;}
+ }catch(error){
+  let reason='';
+  if(contractErrorName(error)==='TooEarly')try{
+   if(name==='PackSale'&&['buyWithETH','openPack'].includes(fn)){
+    const [paused,opens,block]=await Promise.all([read<boolean>('PackSale','paused'),read<bigint>('PackSale','opensAt'),client.getBlock()]);
+    reason=paused?'Pack purchases are paused by the city. Check back when the sale reopens.':block.timestamp<opens?`Pack purchases open ${new Date(Number(opens)*1000).toLocaleString()}.`:'Pack purchases are not open right now. Refresh the sale status.';
+   }else if(name==='StarterClaim'&&fn==='claim'){
+    const [launch,block]=await Promise.all([read<bigint>('GameRegistry','launchTime'),client.getBlock()]);
+    reason=block.timestamp>=launch+16n*86400n?'The starter claim window has closed.':`Starter claims open ${new Date(Number(launch+172800n)*1000).toLocaleString()}, 48 hours after launch.`;
+   }
+  }catch{/* Keep the decoded action guidance if the explanatory read also fails. */}
+  if(tx?.state!=='pending'&&tx?.state!=='reverted')setTx({label,state:'error',detail:errorMessage(error,{action:fn,contract:name,reason}),account:from});throw error;
+ }
 }
 async function revertedDetail(hash:Hex,blockNumber:bigint) {
- try {const original=await client.getTransaction({hash});await client.call({account:original.from,to:original.to!,data:original.input,value:original.value,blockNumber});}
- catch(e){return errorMessage(e);}
+ let context:{contract?:string;action?:string}={};
+ try {
+  const original=await client.getTransaction({hash});
+  const name=(Object.keys(addresses) as ContractName[]).find(n=>addresses[n].toLowerCase()===original.to?.toLowerCase());
+  if(name)try{context={contract:name,action:decodeFunctionData({abi:ABI[name],data:original.input}).functionName};}catch{/* Unknown calldata still receives plain error wording. */}
+  await client.call({account:original.from,to:original.to!,data:original.input,value:original.value,blockNumber});
+ }catch(e){return errorMessage(e,context);}
  return 'Reverted on chain. Refresh the quote and check the contract requirements.';
 }
 export async function confirmHash(hash:Hex,label:string,from:Address) {
@@ -139,13 +156,13 @@ export async function confirmHash(hash:Hex,label:string,from:Address) {
 }
 export async function approve(name:ContractName,amount:bigint) {
  const from=assertWallet();
- const allowance=await client.readContract({address:addresses.Token,abi:ABI.Token,functionName:'allowance',args:[from,addresses[name]]}) as bigint;
+ const allowance=await read<bigint>('Token','allowance',[from,addresses[name]]);
  if(allowance<amount){await send('Token','approve',[addresses[name],amount],`Approve ${name}`);assertWallet(from);}
 }
 export async function transact(action:()=>Promise<void>) {
  if(transactionBusy)return;
- transactionBusy=true;document.dispatchEvent(new CustomEvent('walletbusy'));
- try{await action();}catch(e){if(tx?.state!=='pending'&&tx?.state!=='reverted')setTx({label:tx?.label||'Transaction',state:'error',detail:errorMessage(e)});}
+ const previousTx=tx;transactionBusy=true;document.dispatchEvent(new CustomEvent('walletbusy'));
+ try{await action();}catch(e){if(tx?.state!=='pending'&&tx?.state!=='reverted')setTx({label:tx?.label||'Transaction',state:'error',detail:tx!==previousTx&&tx?.state==='error'?tx.detail:errorMessage(e)});}
  finally{transactionBusy=false;document.dispatchEvent(new CustomEvent('walletbusy'));document.dispatchEvent(new CustomEvent('transactionend'));}
 }
 export const txLink=(hash:Hex)=>`${EXPLORER}/tx/${hash}`;

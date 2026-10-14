@@ -26,6 +26,6 @@ try {
  assert(size+availableBasePackBytes<=8388608,'Available base packs plus complete candidate bundle exceed the size budget');
  const missingHistory=sourceGit('rev-list','--objects','--all','--missing=print').split('\n').filter(line=>line.startsWith('?'));
  const report={missingHistoricalObjects:missingHistory.length,availableBasePackBytes,conservativeAvailableBasePlusCandidateBytes:size+availableBasePackBytes,checkedAt:new Date().toISOString(),limitBytes:8388608,bundleBytes:size,remainingBytes:8388608-size,candidateFiles:paths.length,baseCommit:parent,snapshotCommits:1,method:'Create a temporary bare Git repository, stage every current deliverable file, commit there, then create and verify a complete standalone Git bundle. The source .git is never modified.',limitation:missingHistory.length?`The supplied checkout lacks ${missingHistory.length} historical objects. This verifies the complete current-file snapshot and the conservative available-base-plus-candidate size, not unavailable history or the publisher’s final metadata.`:'The complete current-file snapshot and conservative available-base-plus-candidate size are measured; publisher metadata is outside this worker.'};
- writeFileSync(join(repo,'reports/v9/bundle-trial.json'),JSON.stringify(report,null,2)+'\n');
+ writeFileSync(join(repo,'artifacts/v10/bundle-trial.json'),JSON.stringify(report,null,2)+'\n');
  console.log(`PASS complete current-file Git bundle: ${size} bytes (${8388608-size} bytes below 8 MiB).`);
 } finally {rmSync(temp,{recursive:true,force:true});}

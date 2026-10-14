@@ -16,7 +16,7 @@ try {
  await page.evaluate(()=>document.fonts.ready);
  await page.locator('.hero-launch').evaluate(el=>el.textContent='BLACKOUT on Robinhood Chain');
  await page.addStyleTag({content:`
-  body{padding:0!important}.site-header,.chain-strip,#registry-warning,#tx-status,.site-footer{display:none!important}
+  body{padding:0!important}.site-header,.chain-strip,#registry-warning,#tx-status,.site-footer,#onboarding,#city-activity{display:none!important}
   #main>*:not(.landing-hero){display:none!important}
   .landing-hero{height:630px;min-height:630px!important;border:0;margin:0}
   .hero-copy{padding:32px 24px 0!important}.hero-copy h1{font-size:64px;margin:24px 0 12px}
@@ -34,7 +34,7 @@ try {
   assert.deepEqual(png,readFileSync(target),'OG image differs from current city and live badge. Regenerate it.');
   assert.deepEqual(png,readFileSync(join(repo,'dist/og.png')),'Production OG image is stale. Rebuild.');
  } else writeFileSync(target,png);
- mkdirSync(join(repo,'reports/v9'),{recursive:true});
- writeFileSync(join(repo,'reports/v9/og-validation.json'),JSON.stringify({checkedAt:new Date().toISOString(),mode:checking?'regression-check':'regenerate',badge:'BLACKOUT on Robinhood Chain',dimensions:[1200,630],sha256:createHash('sha256').update(png).digest('hex'),bytes:png.length,artSource:'src/sprites.ts via the current landing SVG city',result:'passed'},null,2)+'\n');
+ mkdirSync(join(repo,'artifacts/v10'),{recursive:true});
+ writeFileSync(join(repo,'artifacts/v10/og-validation.json'),JSON.stringify({checkedAt:new Date().toISOString(),mode:checking?'regression-check':'regenerate',badge:'BLACKOUT on Robinhood Chain',dimensions:[1200,630],sha256:createHash('sha256').update(png).digest('hex'),bytes:png.length,artSource:'src/sprites.ts via the current landing SVG city',result:'passed'},null,2)+'\n');
  console.log(`PASS ${checking?'OG regression: current rendered city equals public and dist OG':'Regenerated public/og.png from current city'} (${png.length} bytes).`);
 } finally {await browser?.close();await new Promise(resolve=>server.close(resolve));}

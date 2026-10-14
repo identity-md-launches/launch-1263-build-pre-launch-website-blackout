@@ -1,0 +1,12 @@
+{
+  "passed": [
+    "All 41 ABI errors map to plain player wording",
+    "Wrapped reverts, action-specific reasons, RPC sanitization and wallet rejection",
+    "Rare/Epic/Legendary/Mythic level gates, duplicate types, upgrading, occupancy and locked rooms",
+    "Last-epoch mining estimate includes cheap-tariff district, audit and electricity floor",
+    "Starter 48-hour opening and 16-day closing; free 30-day deadline boundaries",
+    "XP thresholds, age limit and epoch progress never exceed the end",
+    "v9 3% default bounds and v10 transport configuration"
+  ],
+  "at": "2026-10-14T16:39:53.233Z"
+}

@@ -1,0 +1,38 @@
+[
+  {
+    "label": "body",
+    "foreground": "#EDF2FF",
+    "background": "#05060F",
+    "ratio": 18.04
+  },
+  {
+    "label": "muted",
+    "foreground": "#B3BFD3",
+    "background": "#090E1D",
+    "ratio": 10.36
+  },
+  {
+    "label": "primary",
+    "foreground": "#05060F",
+    "background": "#FFE600",
+    "ratio": 15.94
+  },
+  {
+    "label": "common",
+    "foreground": "#BDC8DD",
+    "background": "#090E1D",
+    "ratio": 11.42
+  },
+  {
+    "label": "epic",
+    "foreground": "#FF3DF2",
+    "background": "#090E1D",
+    "ratio": 6.59
+  },
+  {
+    "label": "control-border",
+    "foreground": "#65748F",
+    "background": "#05060F",
+    "ratio": 4.28
+  }
+]

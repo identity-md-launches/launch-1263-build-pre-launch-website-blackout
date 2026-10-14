@@ -1,6 +1,6 @@
-# BLACKOUT
+# BLACKOUT v10
 
-BLACKOUT is a static, wallet-connected mining game on **Robinhood Chain (4663)**. The existing pixel city, dispatcher, hardware art, How to play, Launch, Coming soon, guide and risks remain. The app reads the deployed contracts and asks the player's wallet to sign transactions. It contains no backend, keys or simulated player balances.
+BLACKOUT is a static, wallet-connected mining game on **Robinhood Chain (4663)**. The animated 16-bit city, dispatcher and hardware art remain. v10 adds resilient chain reads, a three-step mining guide, visual server rooms, rarity reveals, rewards and a chain leaderboard. The app reads the deployed contracts and asks the player's wallet to sign transactions. It contains no backend, keys or simulated player balances.
 
 Keep the existing site label **`blackout-mine-the-city-pray-the`** (`blackout-mine-the-city-pray-the.sites.imd.fun`) and **https://playblackout.xyz**. The header and hero still link to **https://playblackout.xyz/freepack**. That service is separate; this export does not create a `/freepack` route.
 
@@ -31,8 +31,11 @@ This still checks the exact required roots and every proof, but explicitly skips
 
 | Hash route | Live behavior |
 | --- | --- |
-| `#/` | Epoch/countdown, pool funding and available rewards, hook price/tax, eight district stability readings, all eight Civic phases |
-| `#/farm` | Wallet level/XP/district, rooms and paginated inventory, place/unplace, repair quote, scrap confirmation, room purchase, pending rewards and simulated claim tax |
+| `#/` | Animated city, Start mining, epoch/countdown, available rewards, district power and feature phases |
+| `#/farm` | Level/XP, a ticking mining clock, four pixel rooms with six racks each, select-then-place or desktop drag, item gates, repair, scrap and room purchases |
+| `#/rewards` | Pending rewards, simulated tax/net, aging schedule, next epoch, last-epoch earnings estimate and claim |
+| `#/leaderboard` | Top 20 active farms by current epoch hash and best district, enumerated from chain |
+| `#/more` | City, Leaderboard, Season, Billboards, Docs and Contracts |
 | `#/packs` | ETH-first purchase in one transaction, 1–10 stepper, 3% slippage under Advanced, secondary BLACKOUT payment with allowance-aware approval, snapshot/free claims and automatic reveal recovery |
 | `#/city` | Grid events, next plan, dispatcher letter/hash, district stakes and gated lock/lobby controls |
 | `#/season` | Wallet-free week selection, pot/results and district scores; wallet gating only for reward claims |
@@ -40,13 +43,13 @@ This still checks the exact required roots and every proof, but explicitly skips
 | `#/docs` | Mechanics, exact-input buying rules, fees, launch, starter eligibility and risks |
 | `#/contracts` | All 18 supplied addresses, explorer links, registry verification, launches 1628 / 1710 / 1722 / 1729 |
 
-`#/wallet` is a compatibility alias for Farm. Guide sections have hash links, including `#/docs/risks`. No server rewrites are required. The former demo source remains for historical reference and shared artwork; its state and balances are not imported into the live app.
+`#/wallet` is a compatibility alias for Rewards. Home, Packs, Farm, Rewards and More remain in the mobile bottom tab bar on every page. Onboarding persists until hardware is placed; the chain determines completion. Every page carries recent chain activity with transaction links. Guide sections have hash links, including `#/docs/risks`. No server rewrites are required. The former demo source remains for historical reference and shared artwork; its state and balances are not imported into the live app.
 
 Browser extensions are discovered with EIP-6963. The one Connect control also offers Coinbase Smart Wallet. On phones without a provider, it offers official MetaMask, Coinbase Wallet, Rabby and Phantom browser deep links carrying the current URL. Chain switching/addition uses chain 4663 and the supplied RPC/explorer. Public reads never need wallet authorization. Transactions are simulated, reviewed, signed by the selected wallet, and tracked as awaiting signature, pending, confirmed or reverted with decoded contract errors and explorer links.
 
 ## Contracts, proofs and source provenance
 
-The complete config is **`web/src/config.ts`**. Game modules resolve through `GameRegistry.module(role)` on load and refresh. Every module is compared with its supplied address; token, market, desk, fee router and both roots are also checked. A mismatch warns visibly and disables writes. The RPC is `https://rpc.mainnet.chain.robinhood.com`; explorer links use `https://robinhoodchain.blockscout.com`.
+The complete config is **`web/src/config.ts`**. Game modules resolve through `GameRegistry.module(role)` on load. Successful immutable reads are cached for the session; unsuccessful reads are retried. Every module is compared with its supplied address; token, market, desk, fee router and both roots are also checked. A mismatch warns visibly and disables writes. Public reads use ordered viem fallback across `https://rpc.mainnet.chain.robinhood.com`, `https://robinhood.drpc.org` and `https://robinhood-rpc.publicnode.com`; explorer links use `https://robinhoodchain.blockscout.com`.
 
 ABIs were compiled from [the public L4 contract source](https://github.com/identity-md-launches/launch-1729-blackout-l4-job-b/tree/77c962e6fce9652ee93dff2037b1a09e7a66bd04), pinned commit `77c962e6fce9652ee93dff2037b1a09e7a66bd04`, using Solidity 0.8.26. `web/data/abi-provenance.json` records the build and digest. To regenerate them with Foundry, curl and tar available:
 
@@ -75,33 +78,44 @@ The primary path sends only `PackSale.buyWithETH(connectedWallet, n, minTokens, 
 
 A purchase creates a receipt. The app waits for its native reveal block, then offers Reveal for one pack. Expired entropy is re-armed through the existing contract flow and can require a second signature. Opened receipts disappear from the pending list; receipt and inventory reads reload automatically, while revealed art stays visible. Fully opened receipts, including a concurrent `InvalidValue` with verified completion, point to Farm without an error. The active confirmation dialog displays transaction progress and explorer links.
 
-## Validation and current chain state
+## Reliability and player feedback
 
-The v9 checks include a passing production build and typecheck, 78 wallet-fixture checks in Chromium and WebKit, 16 visual/read-state checks, zero axe violations across eight tested states, the OG regression, and 16/16 pinned design checks. The final combined run passed all 94 browser checks, with no script errors or RPC limitations after repairing the local WebKit TLS runtime. Current evidence is in [reports/v9/validation.md](reports/v9/validation.md), with browser checks, live reads, proof checks, the design probe and size audits. [DESIGN.md](DESIGN.md) describes the final tokens and components. Reports for v8 and older revisions are historical.
+The public client batches contract reads through deployless Multicall3. This uses read-only `eth_call`; it does not deploy a contract or assume a Multicall address. Account-sensitive transaction simulations preserve the player's caller, and balance/block/log RPC methods use JSON-RPC batching where possible. Each provider has a 6-second timeout; a failed fallback cycle retries twice with 500ms then 1,000ms backoff. The default endpoint order is fixed. Addresses, verified roots, launch constants, bundled ABIs, proof files and immutable activity item metadata are cached. Failed cache entries are evicted.
+
+One 15-second scheduler loads shared status plus the visible route. It stops when the document is hidden. A transport-level visibility gate also pauses confirmation polling and fallback attempts until the page is visible. Navigation, Refresh and transaction completion can request an immediate read. Local one-second countdown updates make no RPC requests. A failed read retains the previous value and adds a small Reconnecting badge. New sessions show an explicit loading/unavailable state. Quotes are refreshed before purchase confirmation and every write is simulated; a stale display never bypasses those checks.
+
+All 41 ABI error names have plain-language mappings, including action-specific handling for placement, sale status, inventory space, claim windows, liquidity, price limits and reveal timing. Level gates are visible before selecting hardware: Common/Rare any level, Epic 3, Legendary 5, Mythic 10; each room permits one of each type. Fresh placement reads and simulation protect against a stale selection. A successful reveal shakes/glows the pack, flips three rarity-colored cards and emits particles. Reduced motion removes these animations without hiding the items. Sound starts off and can be enabled with the Packs or footer toggle.
+
+Dollar estimates use the actual Coinbase ETH/USD spot price and the on-chain BLACKOUT/ETH market rate. They are indicative, exclude execution impact and gas, and are labeled unavailable when no price exists. A retained ETH/USD quote older than two minutes says “last price.” Pending-reward tax/net comes from a caller-aware claim simulation. The deployed contract stores individual credit ages privately, so the UI explains the 20% to 5% seven-day schedule and approximately seven-minute basis-point steps rather than inventing one exact tax-drop timestamp for mixed-age credits. Estimated epoch earnings use the wallet's last settled epoch's shares, reward-per-hash, electricity tariff (including the district discount) and audit. It excludes redistributed tax, referrals and auto-repair; future earnings can differ.
+
+The activity feed reads actual registrations, pack resolutions and settled mining payments. Initial history is bounded to 216,000 recent blocks, fetched in 20,000-block ranges; later reads scan the new tail with a 16-block reorg overlap. Pack labels use mint logs and immutable item kind/rarity; destroyed items omit erased detail. No synthetic event fills an empty feed. The leaderboard reads every registered farm in groups of 50 and ranks the current epoch's positive weights; it displays the top 20.
+
+## Validation
+
+See [reports/v10/validation.md](reports/v10/validation.md) for actual commands, results, six-domain design review, fixes and limitations. [DESIGN.md](DESIGN.md) describes the final source. Earlier reports are historical, not v10 evidence. Recorded results: build/typecheck passed; 94 wallet/RPC flow checks, 8 reveal/recovery groups and 16 visual checks passed in Chromium and WebKit; zero axe violations across 14 tested states; the pinned probe passed 16/16. Browser-native request diagnostics and untested real-wallet actions are documented in the report.
 
 ```sh
 node web/tools/run.mjs typecheck
 node web/tools/run.mjs build
-node web/tools/run.mjs check-live
-node web/tools/run.mjs test
+node web/tools/v10-check.mjs unit
+node web/tools/v10-check.mjs live
+node web/tools/v10-check.mjs
 node web/tools/check-proofs.mjs
 node web/tools/render-og.mjs --check
 node web/tools/check-delivery.mjs
 node web/tools/bundle-trial.mjs
 ```
 
-`web/tools/interactions.ts` runs Playwright Chromium and WebKit, with deterministic ABI-aware wallet/RPC fixtures confined to test browser contexts. It checks the ETH transaction and both slippage bounds, BLACKOUT allowance cases, waiting/re-armed/completed receipts, read-only week selection, post-reveal controls and in-dialog transaction feedback. The OG check is the fourth v8 regression. It compares a fresh rendering of the current city and badge with both delivered PNGs. To regenerate the card: `node web/tools/render-og.mjs`, then rebuild.
+`web/tools/interactions.ts` serves the actual export under `/preview/` and uses deterministic ABI-aware wallet/RPC fixtures only inside test browser contexts. It covers the preserved ETH purchase, both slippage bounds, BLACKOUT allowances, reveal/re-arm/race flows, proof submission, post-reveal controls, dialog feedback, placement, rewards, three-provider failover, total outage, last-good data, visibility polling, claim windows and leaderboard reads. Separate checks exercise normal/reduced-motion reveals, mute, a ticking clock, native desktop drag and responsive/keyboard behavior. Fixtures never broadcast a transaction or supply a key.
 
-Install test browsers outside the repository using `/tmp/blackout-web-toolchain/node_modules/playwright/cli.js install chromium webkit`. `BLACKOUT_CHROME_PATH` and `BLACKOUT_WEBKIT_PATH` can select installed browser executables. `BLACKOUT_BROWSER_CONSTRAINED=1` limits Chromium renderer processes for constrained machines. Tool and browser caches belong outside this repository. Tests manage their own static server under `/preview/` and close browser sessions; disposable screenshots go to `test/scratch/`, retained results to `reports/v9/`. `FIXTURE_ONLY=1` runs wallet fixtures; `VISUAL_ONLY=1` runs the separate public-RPC visual pass. These produce `fixture-validation.json` and `visual-validation.json` respectively; the default runs both. No fixture broadcasts a transaction or supplies a key.
+Install Playwright browsers outside the repository with `/tmp/blackout-web-toolchain/node_modules/playwright/cli.js install chromium webkit`. `BLACKOUT_CHROME_PATH` and `BLACKOUT_WEBKIT_PATH` select installed executables; `BLACKOUT_BROWSER_CONSTRAINED=1` limits Chromium processes. `FIXTURE_ONLY=1` runs deterministic interactions (`FLOW_ONLY=1` isolates the wallet/RPC flow suite), `VISUAL_ONLY=1` runs live public-RPC rendering, and `JUICY_ONLY=1 FIXTURE_ONLY=1` isolates reveal/drag/recovery checks. `BLACKOUT_TEST_ENGINE=chromium` or `webkit` can isolate one engine while debugging. Tests write temporary screenshots in `test/scratch/` and named results in `artifacts/v10/`; the final retained copies are in `reports/v10/`. The supplied checkout excludes `artifacts/`, so no ignore file was changed. The social-image regression freshly renders the city and live badge and compares it with both delivered PNGs; regenerate with `node web/tools/render-og.mjs`, then rebuild.
 
-At the recorded v9 live read (2026-10-14, block 88416616), the chain reported **epoch 1**, **RewardPool.endowed = true**, **PackSale.ready = true**, two registered farms and all eight Civic flags disabled. Seventy-seven distinct live methods succeeded; all 14 module addresses and both proof roots matched. These values describe that observation and will change.
-
-No real transaction was signed or broadcast. Native wallet signing, Coinbase account onboarding, physical phones, native screen readers, browser-native zoom, live X unfurls and the external `/freepack` service were not end-to-end tested. Automated browser checks and worker-written reports are not independent certification. Public RPC availability remains external; observed browser read failures and recovery are recorded in the v9 report. The UI offers Retry and never substitutes invented chain data.
+No real wallet transaction was signed or broadcast. Native wallet signing, Coinbase account onboarding, physical phones, native screen readers, browser-native zoom, live social unfurls and the external `/freepack` service were not end-to-end tested. Automated checks and worker-written reports are not independent certification. Public RPC and price-service availability remain external; failed reads never substitute invented data.
 
 ## Delivery and attribution
 
 The plane publishes the supplied `dist/` under the existing label after submission. No publishing command, contract deployment, token mint or domain change was performed. Preserve the independently served `/freepack` path when attaching the export to playblackout.xyz. Social metadata retains the canonical `https://playblackout.xyz/og.png`, also included locally.
 
-The export and compact v9 review evidence fit within the **8 MiB** submission budget; a temporary standalone Git bundle checks the complete current-file snapshot. The byte report separately records the supplied checkout’s incomplete historical objects. All runtime city art, sprites, fonts, social images, source, lockfile and required proof assets remain. No ignore file was added or modified, and no submodule or dependency/cache directory is included. See the final byte audit in `reports/v9/delivery.json`.
+The export and compact v10 review evidence fit within the **8 MiB** submission budget; a temporary standalone Git bundle checks the complete current-file snapshot. The byte report separately records the supplied checkout’s incomplete historical objects. All runtime city art, sprites, fonts, social images, source, lockfile and required proof assets remain. No ignore file was added or modified, and no submodule or dependency/cache directory is included. See the final byte audit in `reports/v10/delivery.json`.
 
 Artwork/font notices remain in [NOTICE.md](NOTICE.md) and `licenses/`; this includes Better Interface guidance and official wallet marks.

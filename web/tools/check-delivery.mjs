@@ -14,7 +14,7 @@ for(const path of files){
  assert(!lstatSync(join(repo,path)).isSymbolicLink(),`Symlink in submission: ${path}`);
 }
 assert(!git('ls-files','--stage').split('\n').some(line=>line.startsWith('160000 ')),'Submodule found');
-const protectedPaths=['foundry.toml','foundry.lock','remappings.txt','.gitmodules','lib','package.json','package-lock.json','yarn.lock','pnpm-lock.yaml','.github','.env','node_modules','vite.config.mjs','vitest.config.mjs','tsconfig.json'];
+const protectedPaths=['foundry.toml','foundry.lock','remappings.txt','.gitmodules','lib','package.json','package-lock.json','yarn.lock','pnpm-lock.yaml','.github','.env','node_modules','vite.config.mjs','vitest.config.mjs','tsconfig.json','web/package.json','web/package-lock.json','web/tsconfig.json','web/src/abi.json','web/src/upstream-reveal.js','public/free-tree.json','public/starter-tree.json','web/data/starter-snapshot.json','web/data/abi-provenance.json'];
 assert.equal(git('diff','--name-only','HEAD','--',...protectedPaths).trim(),'','Protected build/dependency paths changed');
 assert(!git('diff','--name-only','HEAD').split('\n').some(p=>/(^|\/)\.gitignore$/.test(p)),'Ignore file changed without a path budget');
 for(const path of ['public/starter-tree.json','public/free-tree.json','web/package.json','web/package-lock.json','README.md','DESIGN.md'])assert(files.includes(path),`Missing deliverable ${path}`);
@@ -37,6 +37,6 @@ assert(total<=8388608,`Uncompressed current submission exceeds 8 MiB: ${total}`)
 const groups={};for(const [p,n]of Object.entries(byPath))groups[p.split('/')[0]]=(groups[p.split('/')[0]]||0)+n;
 const distFiles=files.filter(p=>p.startsWith('dist/'));
 const hashes=Object.fromEntries(distFiles.map(p=>[p,createHash('sha256').update(readFileSync(join(repo,p))).digest('hex')]));
-const report={checkedAt:new Date().toISOString(),limitBytes:8388608,currentFileBytes:total,fileCount:files.length,groups,productionBytes:groups.dist,relativeLocalReferencesChecked:localReferences,protectedPathsUnchanged:true,submodules:0,dependencyAndCacheDirectoriesIncluded:0,distSha256:hashes,note:'Current tracked and nonignored candidate files; deleted historical images excluded. Complete current-file temporary Git bundle is measured separately in bundle-trial.json. Final publisher metadata is outside this worker.'};
-mkdirSync(join(repo,'reports/v9'),{recursive:true});writeFileSync(join(repo,'reports/v9/delivery.json'),JSON.stringify(report,null,2)+'\n');
+const report={checkedAt:new Date().toISOString(),limitBytes:8388608,currentFileBytes:total,fileCount:files.length,groups,productionBytes:groups.dist,relativeLocalReferencesChecked:localReferences,protectedPathsUnchanged:true,submodules:0,dependencyAndCacheDirectoriesIncluded:0,distSha256:hashes,note:'Current tracked and nonignored candidate files; deleted or replaced paths excluded. Complete current-file temporary Git bundle is measured separately in bundle-trial.json. Final publisher metadata is outside this worker.'};
+mkdirSync(join(repo,'artifacts/v10'),{recursive:true});writeFileSync(join(repo,'artifacts/v10/delivery.json'),JSON.stringify(report,null,2)+'\n');
 console.log(`PASS ${files.length} current files, ${total} raw bytes; dist ${groups.dist} bytes; local assets and protected paths verified.`);

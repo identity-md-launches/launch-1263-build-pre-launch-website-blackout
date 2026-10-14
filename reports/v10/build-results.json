@@ -1,0 +1,19 @@
+{
+  "recordedAt": "2026-10-14T16:58:20.146288+00:00",
+  "productionBuild": {
+    "command": "node web/tools/run.mjs build",
+    "exitCode": 0,
+    "liveRootCheck": true,
+    "proofs": 2011,
+    "viteSummary": "\u2713 2872 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                         2.63 kB \u2502 gzip:   0.86 kB\ndist/assets/index-BA2m9JD7.css        129.30 kB \u2502 gzip:  25.23 kB\ndist/assets/ccip-DZP4HsEp.js            2.62 kB \u2502 gzip:   1.24 kB\ndist/assets/hooks.module-DE9oX6xH.js   15.84 kB \u2502 gzip:   6.29 kB\ndist/assets/index-CTzXwogY.js         335.20 kB \u2502 gzip: 103.29 kB\ndist/assets/index-t_ecAYde.js         427.27 kB \u2502 gzip: 127.73 kB\ndist/assets/index-Bn_vv3om.js         574.63 kB \u2502 gzip: 149.89 kB\n\u2713 built in 14.67s",
+    "warnings": "Third-party PURE annotations removed by Rollup; dependency files unchanged."
+  },
+  "typecheck": {
+    "command": "node web/tools/run.mjs typecheck",
+    "exitCode": 0
+  },
+  "gitDiffCheck": {
+    "command": "git diff --check",
+    "exitCode": 0
+  }
+}
