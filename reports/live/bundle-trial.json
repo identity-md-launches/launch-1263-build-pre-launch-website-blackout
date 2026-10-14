@@ -1,0 +1,13 @@
+{
+  "availableBasePackBytes": 5322752,
+  "conservativeAvailableBasePlusCandidateBytes": 7377362,
+  "checkedAt": "2026-10-14T13:08:00.381Z",
+  "limitBytes": 8388608,
+  "bundleBytes": 2054610,
+  "remainingBytes": 6333998,
+  "candidateFiles": 139,
+  "baseCommit": "0b20522e1b45162b3075089d13a1757590079329",
+  "snapshotCommits": 1,
+  "method": "Create a temporary bare Git repository, stage every current deliverable file, commit there, then create and verify a complete standalone Git bundle. The source .git is never modified.",
+  "limitation": "A separate full-history trial failed because supplied historical object 05b93ddf7e55d6fa4f8f718114d0b47203176d16 is unavailable. This verifies the complete current-file submission snapshot, not unavailable historical objects or the plane’s final metadata."
+}

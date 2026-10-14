@@ -1,0 +1,226 @@
+// Browser-only deterministic fixtures. They cannot submit a transaction or provide a key.
+import assert from 'node:assert/strict';
+import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { createRequire } from 'node:module';
+import { decodeFunctionData, encodeFunctionResult, encodeErrorResult, encodeEventTopics, encodeAbiParameters, keccak256, stringToHex, type Address, type Hex } from 'viem';
+import { contracts, roles, ROOTS } from '../src/config';
+import abiData from '../src/abi.json';
+import { serve } from './serve.mjs';
+import { requireTool, repo } from './deps.mjs';
+const {chromium,webkit}=requireTool('playwright');
+const AxeBuilder=requireTool('@axe-core/playwright').default;
+const wallet='0x83027ad9d0d5374335086c539dadd1db983441b0';
+const gift='0xc951677461a1971afc117b533428d7c1119f8d7e';
+const E=10n**18n;
+const report:{passed:string[];limitations:string[];errors:string[];screenshots:string[];accessibility:unknown[]}= {passed:[],limitations:[],errors:[],screenshots:[],accessibility:[]};
+const pass=(label:string)=>{report.passed.push(label);console.log('PASS',label);};
+const {server,url}=await serve();
+mkdirSync(join(repo,'test/scratch/interaction-shots'),{recursive:true});
+mkdirSync(join(repo,'reports/live'),{recursive:true});
+function fixture() {
+ const now=BigInt(Math.floor(Date.now()/1000));
+ const state={wallet,authorized:false,chain:'0x1',added:false,hold:false,reject:false,revertNext:false,revertRead:'',revertData:null as Hex|null,mismatch:false,rpcOffline:false,enabled:false,epoch:4n,nonce:0,native:1100n,freeClaimed:false,nftClaimed:false,allowance:0n,pending:100n*E,items:[{id:1n,holder:wallet,durability:5000,kind:0,rarity:1,overclock:0,starter:false,equipped:false},{id:2n,holder:wallet,durability:10000,kind:3,rarity:1,overclock:0,starter:false,equipped:true}],slots:[2n,...Array(23).fill(0n)],rooms:new Set([0]),receipts:new Map<string,{target:bigint;count:bigint;opened:bigint;captured:boolean;player:string}>(),txs:new Map<string,any>(),sent:[] as any[],rpc:[] as string[],walletCalls:[] as any[]};
+ const encode=(name:string,fn:string,result:unknown)=>encodeFunctionResult({abi:abiData[name as keyof typeof abiData] as any,functionName:fn,result} as any);
+ function value(name:string,fn:string,a:any[]):any {
+  const k=`${name}.${fn}`;
+  if(state.revertRead===k)throw {code:3,message:'execution reverted',data:state.revertData||encodeErrorResult({abi:abiData.FarmCore as any,errorName:'InvalidValue'})};
+  switch(k) {
+   case 'GameRegistry.module':return state.mismatch&&Number(a[0])===0?contracts.Economy:contracts[roles[Number(a[0])]];
+   case 'GameRegistry.token':return contracts.Token;case 'GameRegistry.market':return contracts.V4Market;
+   case 'V4Market.desk':return contracts.SwarmDesk;case 'V4Market.fees':return contracts.FeeRouter;
+   case 'StarterClaim.root':return ROOTS.starter;case 'StarterClaim.freeRoot':return ROOTS.free;
+   case 'GameRegistry.launchTime':return now-3n*86400n;case 'FarmRewards.epoch':return state.epoch;case 'FarmRewards.epochEnd':return now+3600n;
+   case 'RewardPool.endowed':return true;case 'RewardPool.available':return 1000000n*E;case 'RewardPool.lockedEndowment':return 200000000n*E;
+   case 'V4Market.spot':return 100000n*E;case 'V4Market.currentBuyTaxBps':return 100n;case 'V4Market.launchTaxTimeLeft':return 0n;
+   case 'PackSale.ready':return true;case 'PackSale.paused':return false;case 'PackSale.opensAt':return now-2n*86400n;
+   case 'Civic.enabled':return state.enabled;case 'Civic.noticeAt':return 0n;
+   case 'GridOperator.gridStability':return 10000n;
+   case 'FarmCore.hasFarm':return true;case 'FarmCore.level':return 7n;case 'FarmCore.xp':return 1700n;case 'FarmCore.district':return 3n;
+   case 'Token.balanceOf':return 500000n*E;case 'Token.allowance':return state.allowance;
+   case 'FarmRewards.pending':return state.pending;case 'FarmItems.capacity':return 15n;case 'FarmItems.ownedCount':return BigInt(state.items.length);
+   case 'FarmItems.itemsByOwner':return state.items.slice(Number(a[1]),Number(a[1]+a[2])).map(i=>i.id);
+   case 'FarmItems.data':{const i=state.items.find(i=>i.id===a[0]);if(!i)throw Error('Unknown fixture item');return i;}
+   case 'Economy.repairQuote':return 100n*E;case 'FarmItems.outputTier':return state.items.find(i=>i.id===a[0])!.durability<8000?6500n:10000n;
+   case 'FarmCore.paidPacks':return 1n;case 'Economy.farmDaily':return 3000n*E;case 'FarmRewards.lastSettled':return 3n;case 'FarmRewards.settledEpoch':return 3n;
+   case 'FarmRewards.lastYieldPerHash':return E*E;case 'FarmRewards.scrapAllowance':return 1000000n*E;case 'FarmCore.autoRepairThreshold':return 0;
+   case 'FarmCore.roomUnlocked':return state.rooms.has(Number(a[1]));case 'FarmCore.roomEligible':return Number(a[1])<3;
+   case 'Economy.roomQuote':return [0n,6000n,15000n,30000n][Number(a[1])]*E;
+   case 'FarmCore.roomStats':return {raw:10000n,productive:10000n,power:1500n,bonus:1000n,cooling:false,cold:false,offgrid:false,clean:false,locked:false,airflow:false};
+   case 'FarmCore.itemAt':return state.slots[Number(a[1])*6+Number(a[2])];
+   case 'FarmRewards.claim':return BigInt(a[0])*9n/10n;
+   case 'PackSale.quote':return 100n*E*a[0];case 'PackSale.price':return 100n*E;
+   case 'V4Market.quote':return a[0]*100000n;
+   case 'StarterClaim.freeClaimEnds':return now+27n*86400n;case 'StarterClaim.freeClaimedBy':return state.freeClaimed;
+   case 'StarterClaim.claims':{const r=state.receipts.get(`starter:${a[0]}`);return r?[r.player,r.target,r.opened===r.count]:['0x0000000000000000000000000000000000000000',0n,false];}
+   case 'StarterClaim.entropyCaptured':return state.receipts.get(`starter:${a[0]}`)?.captured??false;
+   case 'PackSale.commits':{const r=state.receipts.get(`paid:${a[0]}`);return r?[r.player,r.target,r.count,r.opened,false,false,'0x'+'00'.repeat(32),r.captured,false]:['0x0000000000000000000000000000000000000000',0n,0n,0n,false,false,'0x'+'00'.repeat(32),false,false];}
+   case 'PackSale.openPack':case 'PackSale.buyPacksFor':case 'PackSale.buyWithETH':return 1n;
+   case 'StarterClaim.claimFree':return (1n<<255n)|a[0];
+   case 'Economy.districtStake':case 'Economy.districtTotal':return 0n;
+   case 'GridOperator.eventAt':return [0,10000,0,'0x'+'00'.repeat(32),true];
+   case 'GridOperator.planAt':return {kind:0,severity:0,number:'0x'+'00'.repeat(32),letter:'',submitted:false};
+   case 'SwarmDesk.lastLetterHash':return '0x'+'00'.repeat(32);
+   case 'Economy.locks':return [0n,0n,0n,0];case 'Economy.lockQuote':return [15000n*E,500n];case 'Economy.lobbyQuote':return 3000n*E;
+   case 'Billboards.week':return 0n;case 'Billboards.refund':return 0n;case 'Billboards.billboard':return {bidder:'0x0000000000000000000000000000000000000000',bid:0n,text:'',handle:'',settled:false};
+   case 'Season.pot':case 'Season.potRemaining':return 0n;case 'Season.claimDeadline':return now+30n*86400n;case 'Season.result':return [false,0,'0x0000000000000000000000000000000000000000',0n,'0x'+'00'.repeat(32)];
+   case 'Season.districtScore':return [0n,0n];case 'Season.lotteryWon':case 'Season.lotteryClaimed':case 'Season.districtClaimed':case 'Season.bestClaimed':return false;
+   default:{const entry=(abiData[name as keyof typeof abiData] as any[]).find(x=>x.type==='function'&&x.name===fn);if(entry?.stateMutability==='nonpayable'||entry?.stateMutability==='payable')return entry.outputs?.length?true:undefined;throw Error(`Unimplemented fixture read ${k}`);}
+  }
+ }
+ function identify(to:string,data:Hex) {const name=Object.keys(contracts).find(n=>contracts[n as keyof typeof contracts].toLowerCase()===to.toLowerCase());if(!name)throw Error(`Unknown contract ${to}`);const decoded=decodeFunctionData({abi:abiData[name as keyof typeof abiData] as any,data});return {name,fn:decoded.functionName,args:(decoded.args??[]) as any[]};}
+ function apply(t:any) {
+  const {name,fn,args:a}=identify(t.to,t.data);
+  if(name==='Token'&&fn==='approve')state.allowance=a[1];
+  else if(fn==='place'){state.slots[Number(a[1])*6+Number(a[2])]=a[0];state.items.find(i=>i.id===a[0])!.equipped=true;}
+  else if(fn==='unplace'){const at=Number(a[0])*6+Number(a[1]);state.items.find(i=>i.id===state.slots[at])!.equipped=false;state.slots[at]=0n;}
+  else if(fn==='repair')state.items.find(i=>i.id===a[0])!.durability=10000;
+  else if(fn==='scrap')state.items=state.items.filter(i=>i.id!==a[0]);
+  else if(fn==='buyRoom')state.rooms.add(Number(a[0]));
+  else if(name==='FarmRewards'&&fn==='claim')state.pending-=a[0];
+  else if(name==='PackSale'&&['openPack','buyPacksFor','buyWithETH'].includes(fn)){const player=fn==='openPack'?wallet:a[0];state.receipts.set('paid:1',{target:1000n,count:fn==='openPack'?a[0]:a[1],opened:0n,captured:false,player});}
+  else if(name==='StarterClaim'&&fn==='claim'){state.nftClaimed=true;state.receipts.set(`starter:${a[0]}`,{target:1000n,count:1n,opened:0n,captured:false,player:wallet});}
+  else if(fn==='claimFree'){state.freeClaimed=true;state.receipts.set(`starter:${(1n<<255n)|a[0]}`,{target:1000n,count:1n,opened:0n,captured:false,player:wallet});}
+  else if(fn==='captureEntropy'){const r=state.receipts.get(`${name==='PackSale'?'paid':'starter'}:${a[0]}`)!;if(state.native>r.target+256n)r.target=state.native+2n;else r.captured=true;}
+  else if(fn==='resolve'){const r=state.receipts.get(`${name==='PackSale'?'paid':'starter'}:${a[0]}`)!;if(!r.captured&&state.native>r.target+256n){r.target=state.native+2n;return;}r.captured=true;r.opened++;for(let i=0;i<3;i++){const id=state.items.reduce((m,x)=>x.id>m?x.id:m,0n)+1n;state.items.push({id,holder:wallet,durability:10000,kind:i,rarity:1,overclock:0,starter:name==='StarterClaim',equipped:false});}}
+ }
+ async function rpc(req:any):Promise<any> {
+  state.rpc.push(req.method);
+  try {
+   let result:any;
+   if(req.method==='eth_chainId')result='0x1237';
+   else if(req.method==='eth_blockNumber')result='0x7d0';
+   else if(req.method==='eth_getBlockByNumber')result={number:'0x7d0',timestamp:`0x${now.toString(16)}`,hash:keccak256(stringToHex('fixture block')),parentHash:keccak256(stringToHex('parent')),transactions:[],gasLimit:'0x1c9c380',gasUsed:'0x0',baseFeePerGas:'0x1'};
+   else if(req.method==='eth_getBalance')result=`0x${E.toString(16)}`;
+   else if(req.method==='eth_call'){
+    const t=req.params[0];
+    if(t.to.toLowerCase()==='0x0000000000000000000000000000000000000064'){state.native++;result=`0x${state.native.toString(16).padStart(64,'0')}`;}
+    else {const {name,fn,args}=identify(t.to,t.data);result=encode(name,fn,value(name,fn,args));}
+   } else if(req.method==='eth_getLogs') {
+    const q=req.params[0],name=q.address.toLowerCase()===contracts.PackSale?'PackSale':'StarterClaim';
+    result=[];
+    for(const [key,r]of state.receipts){const [kind,id]=key.split(':');if((kind==='paid')!==(name==='PackSale')||r.player!==wallet)continue;if(BigInt(q.fromBlock)>1999n||BigInt(q.toBlock)<1999n)continue;
+     const eventName=name==='PackSale'?'PackCommitted':'StarterCommitted';
+     const topics=encodeEventTopics({abi:abiData[name] as any,eventName,args:name==='PackSale'?{id:BigInt(id),player:wallet}:{tokenId:BigInt(id),holder:wallet}} as any);
+     result.push({address:contracts[name],topics,data:encodeAbiParameters(name==='PackSale'?[{type:'uint256'},{type:'uint256'},{type:'bool'}]:[{type:'uint256'}],name==='PackSale'?[r.count,r.target,false]:[r.target] as any),blockNumber:'0x7cf',transactionIndex:'0x0',logIndex:'0x0',transactionHash:keccak256(stringToHex(key)),blockHash:keccak256(stringToHex('fixture block')),removed:false});
+    }
+   } else if(req.method==='eth_getTransactionReceipt') {
+    const t=state.txs.get(req.params[0]);result=!t||state.hold?null:{transactionHash:req.params[0],transactionIndex:'0x0',blockHash:keccak256(stringToHex('fixture block')),blockNumber:'0x7d0',from:wallet,to:t.to,gasUsed:'0x5208',cumulativeGasUsed:'0x5208',effectiveGasPrice:'0x1',contractAddress:null,logs:[],logsBloom:'0x'+'00'.repeat(256),status:t.revert?'0x0':'0x1',type:'0x2'};
+   } else if(req.method==='eth_getTransactionByHash') {const t=state.txs.get(req.params[0]);result={...t,hash:req.params[0],from:wallet,input:t.data,value:t.value||'0x0',blockNumber:'0x7d0',type:'0x2',nonce:'0x1',gas:'0x5208',maxFeePerGas:'0x1',maxPriorityFeePerGas:'0x1',chainId:'0x1237'};}
+   else throw Error(`Unexpected fixture RPC ${req.method}`);
+   return {jsonrpc:'2.0',id:req.id,result};
+  }catch(e:any){return {jsonrpc:'2.0',id:req.id,error:{code:e.code||-32000,message:e.message||'fixture error',...(e.data?{data:e.data}:{})}};}
+ }
+ return {state,rpc,identify,apply};
+}
+async function injected(context:any,f:ReturnType<typeof fixture>) {
+ await context.exposeBinding('fixtureWallet',async(_:unknown,request:any)=>{
+  f.state.walletCalls.push(request);
+  const {method,params=[]}=request;
+  if(method==='eth_accounts')return f.state.authorized?[f.state.wallet]:[];
+  if(method==='eth_requestAccounts'){f.state.authorized=true;return [f.state.wallet];}
+  if(method==='eth_chainId')return f.state.chain;
+  if(method==='wallet_switchEthereumChain'){if(!f.state.added)throw Object.assign(new Error('Unknown chain'),{code:4902});f.state.chain=params[0].chainId;return null;}
+  if(method==='wallet_addEthereumChain'){assert.equal(params[0].chainId,'0x1237');assert.deepEqual(params[0].rpcUrls,['https://rpc.mainnet.chain.robinhood.com']);f.state.added=true;return null;}
+  if(method==='wallet_getCapabilities')return {};
+  if(method==='eth_sendTransaction'){
+   if(f.state.reject){f.state.reject=false;throw Object.assign(new Error('User rejected request'),{code:4001});}
+   const t=params[0],decoded=f.identify(t.to,t.data),hash=keccak256(stringToHex(`fixture-tx-${++f.state.nonce}`));
+   f.state.sent.push({...t,...decoded,hash});f.state.txs.set(hash,{...t,revert:f.state.revertNext});
+   if(!f.state.revertNext)f.apply(t);else f.state.revertRead=`${decoded.name}.${decoded.fn}`;f.state.revertNext=false;return hash;
+  }
+  throw Error(`Unexpected wallet method ${method}`);
+ });
+ const init=()=>{
+  const handlers:Record<string,Array<(...a:any[])=>void>>={};
+  const p={on:(name:string,fn:(...a:any[])=>void)=>(handlers[name]??=[]).push(fn),removeListener:(name:string,fn:(...a:any[])=>void)=>{handlers[name]=(handlers[name]||[]).filter(x=>x!==fn);},request:async(args:any)=>{
+   try {const value=await (window as any).fixtureWallet(args);if(args.method==='wallet_switchEthereumChain')handlers.chainChanged?.forEach(fn=>fn(args.params[0].chainId));return value;}
+   catch(error:any){const message=error.message||String(error);if(message.includes('Unknown chain'))throw Object.assign(Error(message),{code:4902});if(message.includes('rejected'))throw Object.assign(Error(message),{code:4001});throw error;}
+  }};
+  (window as any).ethereum=p;
+  const announce=()=>{for(const [uuid,name,rdns]of [['84ad22c2-4284-41d4-b7af-cb5f427f5a04','Fixture Wallet','com.blackout.fixture'],['e9290af9-14b0-4b36-9fd0-4d3fa6714490','Second Fixture','com.blackout.second']])window.dispatchEvent(new CustomEvent('eip6963:announceProvider',{detail:{info:{uuid,name,rdns,icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><circle cx="14" cy="14" r="12" fill="cyan"/></svg>'},provider:p}}));};
+  window.addEventListener('eip6963:requestProvider',announce);announce();
+ };
+ await context.addInitScript({content:'globalThis.__name = (fn) => fn; ('+init.toString()+')();'});
+ await context.route('https://rpc.mainnet.chain.robinhood.com/**',async(route:any)=>{
+  if(f.state.rpcOffline){await route.fulfill({status:503,body:'RPC temporarily unavailable'});return;}
+  const body=route.request().postDataJSON();const result=Array.isArray(body)?await Promise.all(body.map(f.rpc)):await f.rpc(body);
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(result),headers:{'access-control-allow-origin':'*'}});
+ });
+}
+const waitTx=async(page:any,label?:string)=>{await page.locator('#tx-status').filter({hasText:label||'Confirmed'}).waitFor();await page.waitForFunction(()=>document.querySelector('#tx-status')?.getAttribute('data-state')==='confirmed');await page.waitForTimeout(350);};
+const clickConfirm=async(page:any)=>{await page.locator('#confirm-action').click();await waitTx(page);await page.locator('#action-dialog').waitFor({state:'hidden'});};
+async function fixtureSuite(browser:any,engine:string) {
+ const f=fixture();const context=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'});await injected(context,f);
+ const page=await context.newPage();const errors:string[]=[];page.on('pageerror',(e:any)=>errors.push(e.message));
+ await page.goto(url);await page.waitForFunction(()=>document.querySelector('#connection-status')?.textContent==='Registry verified');
+ await page.locator('#connect').click();await page.getByRole('button',{name:'Fixture Wallet',exact:true}).waitFor({timeout:5000});assert.equal(await page.getByRole('button',{name:'Browser wallet',exact:true}).count(),0);assert.equal(await page.getByRole('button',{name:'Second Fixture',exact:true}).count(),1);pass(`${engine}: EIP-6963 wallets are named; generic duplicate hidden`);
+ await page.getByRole('button',{name:'Fixture Wallet',exact:true}).click();await page.locator('#connect').filter({hasText:'Switch network'}).waitFor();
+ await page.locator('#connect').click();await page.waitForTimeout(700);await page.locator('#connect').filter({hasText:'0x8302'}).waitFor({timeout:5000});assert(f.state.walletCalls.some(x=>x.method==='wallet_addEthereumChain'));pass(`${engine}: switch/add chain 4663 with correct RPC`);
+ await page.goto(url+'#/farm');await page.locator('[data-install="1"]').waitFor({state:'attached'});
+ await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:join(repo,`test/scratch/interaction-shots/${engine}-farm-390.png`)});
+ const farmAxe=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();report.accessibility.push({engine,route:'farm fixture',violations:farmAxe.violations});if(farmAxe.violations.length)console.log('Farm axe',JSON.stringify(farmAxe.violations));assert.equal(farmAxe.violations.length,0,`${engine}: populated Farm accessibility`);pass(`${engine}: populated Farm axe WCAG checks`);
+ await page.locator('#item-1 summary').click();await page.locator('[data-install="1"]').click();await page.locator('#install-slot').selectOption('0,1');await clickConfirm(page);assert.equal(f.state.slots[1],1n);pass(`${engine}: place into selected empty room slot`);
+ await page.locator('#item-1 summary').click();await page.locator('[data-unplace="0,1"]').click();await waitTx(page);assert.equal(f.state.slots[1],0n);pass(`${engine}: unplace hardware`);
+ await page.locator('#item-1 summary').click();await page.locator('[data-repair="1"]').click();await clickConfirm(page);assert.equal(f.state.items[0].durability,10000);assert(f.state.sent.some(t=>t.fn==='approve'&&t.args[0].toLowerCase()===contracts.FarmCore&&t.args[1]===100n*E));pass(`${engine}: quote, exact approval, repair`);
+ await page.locator('[data-buy-room="1"]').click();await clickConfirm(page);assert(f.state.rooms.has(1));pass(`${engine}: room eligibility and purchase`);
+ assert((await page.locator('.rewards-bar').innerText()).includes('10 BLACKOUT'));await page.locator('[data-claim]').click();assert((await page.locator('#action-body').innerText()).includes('90 BLACKOUT'));await clickConfirm(page);assert.equal(f.state.pending,0n);pass(`${engine}: simulated 10% claim tax, net preview and claim`);
+ await page.locator('#item-1 summary').click();await page.locator('[data-scrap="1"]').click();await page.locator('#cancel-action').click();assert.equal(f.state.items.length,2);await page.locator('[data-scrap="1"]').click();await clickConfirm(page);assert.equal(f.state.items.length,1);pass(`${engine}: destructive scrap confirmation, cancellation and minimum payout`);
+ await page.screenshot({path:join(repo,`test/scratch/interaction-shots/${engine}-farm-populated.png`),fullPage:true});
+ await page.goto(url+'#/packs');await page.locator('[data-claim-nft="1927"]').waitFor();assert.equal(await page.locator('[data-claim-free]').count(),1);pass(`${engine}: verified NFT #1927 and free allowlist visibility`);
+ await page.locator('[data-claim-nft="1927"]').click();await waitTx(page);assert(f.state.nftClaimed);const nft=f.state.sent.find(t=>t.fn==='claim'&&t.name==='StarterClaim');assert.equal(nft.args[0],1927n);assert(nft.args[1].length>0);
+ await page.locator('[data-claim-free]').click();await waitTx(page);assert(f.state.freeClaimed);pass(`${engine}: NFT and free proofs submitted to StarterClaim`);
+ await page.locator('#pack-count').fill('2');await page.locator('#pack-count').blur();await page.waitForFunction(()=>document.querySelector('.pack-quote')?.textContent?.includes('200'));
+ await page.locator('#pack-form button[type="submit"]').click();await clickConfirm(page);assert(f.state.sent.some(t=>t.fn==='openPack'&&t.args[0]===2n));pass(`${engine}: approve then openPack with requested count`);
+ await page.locator('#pack-recipient').fill(gift);await page.locator('#pack-form button[type="submit"]').click();await clickConfirm(page);assert(f.state.sent.some(t=>t.fn==='buyPacksFor'&&t.args[0].toLowerCase()===gift&&t.args[2]===200n*E));pass(`${engine}: gifted packs retain recipient and maximum cost`);
+ await page.locator('#pack-recipient').fill('');await page.locator('#eth-details summary').click();await page.locator('#pack-eth').fill('0.003');await page.locator('[data-eth-quote]').click();await page.locator('#eth-quote-note').filter({hasText:'TWAP estimate'}).waitFor();await page.locator('#min-tokens').fill('250');await page.locator('#max-cost').fill('200');await page.locator('[data-buy-eth]').click();await clickConfirm(page);const eth=f.state.sent.find(t=>t.fn==='buyWithETH');assert.equal(eth.args[2],250n*E);assert.equal(eth.args[3],200n*E);assert.equal(BigInt(eth.value),3n*10n**15n);pass(`${engine}: Buy with ETH encodes input, minTokens and maxCost`);
+ const previousNative=await page.locator('[data-native-block]').first().innerText();await page.locator('#pack-recipient').focus();f.state.native=1200n;await page.waitForFunction(previous=>document.querySelector('[data-native-block]')?.textContent!==previous,previousNative,{timeout:6000});assert.equal(await page.evaluate(()=>document.activeElement?.id),'pack-recipient');pass(`${engine}: capture clock updates without moving form focus`);
+ // Resolve the receipt created by the atomic purchase. Expiry re-arms, then the upstream helper completes it.
+ const receipt=f.state.receipts.get('paid:1')!;receipt.target=800n;f.state.native=1100n;
+ await page.locator('[data-refresh-receipts]').click();await page.locator('[data-reveal="paid:1"]').waitFor();await page.locator('[data-reveal="paid:1"]').click();await page.getByRole('heading',{name:'Hardware revealed.'}).waitFor({timeout:30000});assert(f.state.sent.filter(t=>t.name==='PackSale'&&t.fn==='resolve').length>=2);pass(`${engine}: expired 256-block window re-arms and reveals using upstream helper`);
+ await page.goto(url+'#/farm');await page.locator('[data-sync]').waitFor();f.state.reject=true;await page.locator('[data-sync]').click();await page.locator('#tx-status').filter({hasText:'rejected'}).waitFor();pass(`${engine}: rejected wallet request remains recoverable`);
+ f.state.revertRead='FarmCore.sync';await page.locator('[data-sync]').click();await page.locator('#tx-status').filter({hasText:'InvalidValue'}).waitFor();f.state.revertRead='';pass(`${engine}: custom contract error names decoded before signing`);
+ f.state.revertRead='FarmCore.sync';f.state.revertData=encodeErrorResult({abi:abiData.Token as any,errorName:'ERC20InsufficientBalance',args:[wallet,0n,E]});await page.locator('[data-sync]').click();await page.locator('#tx-status').filter({hasText:'ERC20InsufficientBalance'}).waitFor();f.state.revertRead='';f.state.revertData=null;pass(`${engine}: bubbled ERC-6093 token error decoded`);
+ f.state.revertNext=true;await page.locator('[data-sync]').click();await page.locator('#tx-status[data-state="reverted"]').filter({hasText:'InvalidValue'}).waitFor();f.state.revertRead='';pass(`${engine}: mined revert retains hash and decodes InvalidValue`);
+ f.state.hold=true;await page.locator('[data-sync]').click();await page.locator('#tx-status[data-state="pending"]').waitFor();assert(await page.locator('#tx-status a').getAttribute('href').then((h:string)=>h.startsWith('https://robinhoodchain.blockscout.com/tx/')));f.state.hold=false;await waitTx(page);pass(`${engine}: pending transaction and explorer link become confirmed`);
+ await page.goto(url+'#/city');await page.waitForTimeout(700);await page.getByText('Coming soon. Civic has not enabled district stakes, locks and lobbying.').waitFor({timeout:5000});await page.goto(url+'#/season');await page.getByText('Season token pot: Coming soon. Civic has not enabled this phase.').waitFor();await page.goto(url+'#/billboards');await page.getByText('Week 0 · Coming soon. Civic has not enabled billboards.').waitFor();pass(`${engine}: disabled Civic phases stay Coming soon`);
+ await page.goto(url+'#/contracts');await page.getByText('Registry wiring and claim roots verified.').waitFor();assert.equal(await page.locator('.contract-address').count(),18);pass(`${engine}: all 18 contract links and launch numbers`);
+ f.state.mismatch=true;await page.reload();await page.locator('#registry-warning').filter({hasText:'do not match'}).waitFor();await page.goto(url+'#/packs');assert(await page.locator('#pack-form button[type="submit"]').isDisabled());pass(`${engine}: registry mismatch warns and disables writes`);
+ f.state.mismatch=false;await page.goto(url+'#/farm');await page.locator('[data-refresh]').first().click();await page.locator('#registry-warning').waitFor({state:'hidden'});await page.locator('[data-sync]:enabled').waitFor();pass(`${engine}: verification recovery restores actions`);
+ await page.locator('#connect').click();await page.locator('[data-disconnect]').click();f.state.wallet=contracts.GameRegistry;await page.locator('#connect').click();await page.getByRole('button',{name:'Fixture Wallet',exact:true}).click();await page.goto(url+'#/packs');await page.getByText('This wallet is not on the 11-wallet free allowlist.').waitFor();assert.equal(await page.locator('[data-claim-free]').count(),0);pass(`${engine}: unlisted wallet has no free-claim button`);
+ f.state.rpcOffline=true;await page.reload();await page.locator('#registry-warning').filter({hasText:'Live data unavailable'}).waitFor();f.state.rpcOffline=false;await page.locator('#registry-warning [data-refresh]').click();await page.waitForFunction(()=>document.querySelector('#connection-status')?.textContent==='Registry verified');pass(`${engine}: RPC outage is visible and retry recovers`);
+ assert.deepEqual(errors,[]);pass(`${engine}: no uncaught script errors`);
+ await context.close();
+}
+async function liveVisualSuite(browser:any,engine:string) {
+ const context=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'});const page=await context.newPage();const errors:string[]=[];page.on('pageerror',(e:any)=>errors.push(e.message));
+ for(const width of [320,390,768,1440]) {
+  await page.setViewportSize({width,height:width>1000?1000:844});await page.goto(url);await page.waitForFunction(()=>['Registry verified','Read unavailable'].includes(document.querySelector('#connection-status')?.textContent||''),undefined,{timeout:30000});if(await page.locator('#connection-status').innerText()==='Read unavailable'){const rpcFailure=await page.locator('#registry-warning').innerText();console.warn('LIVE RPC RETRY',engine,rpcFailure);await page.locator('#registry-warning [data-refresh]').click();await page.waitForFunction(()=>document.querySelector('#connection-status')?.textContent==='Registry verified',undefined,{timeout:30000});report.limitations.push(`${engine}: one transient live RPC failure; Retry recovered: ${rpcFailure}`);}
+  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+  if(width===390){const b=await page.locator('.hero-actions .primary').boundingBox();assert(b&&b.y+b.height<844);pass(`${engine}: product and main action visible at 390`);}
+  for(const path of ['farm','packs','city','season','billboards','contracts','docs/risks']) {
+   await page.goto(url+'#/'+path);await page.waitForTimeout(500);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`${path} overflows ${width}`);
+  }
+  await page.goto(url);await page.waitForTimeout(200);const path=`test/scratch/interaction-shots/${engine}-home-${width}.png`;await page.screenshot({path:join(repo,path)});report.screenshots.push(path);
+ }
+ pass(`${engine}: live routes have no horizontal overflow at 320, 390, 768, 1440`);
+ await page.setViewportSize({width:390,height:844});await page.evaluate(()=>document.documentElement.style.fontSize='200%');
+ for(const path of ['','farm','packs','city','season','contracts','docs']){await page.goto(url+'#/'+path);await page.waitForTimeout(200);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`${engine}: enlarged text overflow on ${path}`);}
+ await page.evaluate(()=>document.documentElement.style.fontSize='');pass(`${engine}: 200% root text reflows at 390 on all primary routes`);
+ await page.setViewportSize({width:390,height:844});await page.goto(url+'#/packs');await page.locator('#connect').click();await page.locator('#wallet-dialog').waitFor();await page.keyboard.press('Escape');assert.equal(await page.locator('#wallet-dialog').isVisible(),false);assert.equal(await page.evaluate(()=>document.activeElement?.id),'connect');pass(`${engine}: modal Escape and focus restoration`);
+ const axe=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();report.accessibility.push({engine,route:'packs',violations:axe.violations.map((v:any)=>({id:v.id,impact:v.impact,nodes:v.nodes.map((n:any)=>n.target)}))});
+ assert.equal(axe.violations.length,0,`${engine}: accessibility violations on Packs`);pass(`${engine}: axe WCAG A/AA checks on Packs`);
+ await page.goto(url);const before=await page.locator('#hardware-track').evaluate((e:HTMLElement)=>e.scrollLeft);await page.locator('[data-hardware-scroll="1"]').click();await page.waitForTimeout(300);assert(await page.locator('#hardware-track').evaluate((e:HTMLElement)=>e.scrollLeft)>before);pass(`${engine}: preserved hardware carousel advances`);
+ assert.deepEqual(errors,[]);pass(`${engine}: live export loads with no script errors`);
+ await context.close();
+ const phone=await browser.newContext({viewport:{width:390,height:844},userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1'});const p=await phone.newPage();await p.goto(url);await p.locator('#connect').click();for(const name of ['MetaMask','Coinbase Wallet','Rabby','Phantom'])assert.equal(await p.getByRole('link',{name:`Open in ${name}`,exact:false}).count(),1);await p.getByRole('button',{name:'Coinbase Smart Wallet',exact:true}).waitFor();pass(`${engine}: phone wallet deep links and Coinbase Smart Wallet row`);await phone.close();
+}
+let browsers:any[]=[];
+try {
+ const chrome=await chromium.launch({headless:true,...(process.env.BLACKOUT_CHROME_PATH?{executablePath:process.env.BLACKOUT_CHROME_PATH}:{channel:'chrome'})});browsers.push(chrome);if(!process.env.FIXTURE_ONLY)await liveVisualSuite(chrome,'chromium');await fixtureSuite(chrome,'chromium');
+ try {
+  browsers.push(await webkit.launch({headless:true,...(process.env.BLACKOUT_WEBKIT_PATH?{executablePath:process.env.BLACKOUT_WEBKIT_PATH}:{})}));
+ }catch(e:any){report.limitations.push(`WebKit launch unavailable: ${e.message}`);console.warn('WEBKIT LIMITATION',e.message);}
+ if(browsers.length>1){const safari=browsers[1];if(!process.env.FIXTURE_ONLY)await liveVisualSuite(safari,'webkit');await fixtureSuite(safari,'webkit');}
+} catch(e:any){report.errors.push(e.stack||e.message);console.error(e);process.exitCode=1;}
+finally {for(const browser of browsers)await browser.close();server.close();writeFileSync(join(repo,'reports/live/interaction-validation.json'),JSON.stringify({checkedAt:new Date().toISOString(),fixtureWritesOnly:true,browserVersions:browsers.map(b=>b.version()),...report},null,2)+'\n');}

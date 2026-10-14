@@ -1,124 +1,98 @@
 # BLACKOUT
 
-A playable 16-bit idle mining demo: open packs, build a farm and survive the IMD swarm’s grid. This launch update preserves the existing city, dispatcher and pixel art. No wallet or real money is used.
+BLACKOUT is a static, wallet-connected mining game on **Robinhood Chain (4663)**. The existing pixel city, dispatcher, hardware art, How to play, Launch, Coming soon, guide and risks remain. The app reads the deployed contracts and asks the player's wallet to sign transactions. It contains no backend, keys or simulated player balances.
 
-**Keep the site label `blackout-mine-the-city-pray-the`** (`blackout-mine-the-city-pray-the.sites.imd.fun`) and public domain **playblackout.xyz**. X: [@IMDBlackout](https://x.com/IMDBlackout).
-
-## This update
-
-- Three illustrated “How to play in 60 seconds” steps immediately after the hero.
-- Visible **Free starter pack** links in the header and hero, both pointing to **https://playblackout.xyz/freepack**. That service is separate; this export contains no `/freepack` page.
-- Token-first packs, a one-click simulated ETH alternative, durability output tiers, mining-scaled repairs, and token purchases for rooms 2–4.
-- Launch tax steps: 90% for 0–10 minutes, 50% for 10–20, 25% for 20–30, then normal fees. All launch tax goes to the reward pool. No max buy limit. Packs open one hour after token launch.
-- Four number-free teasers: Enhancement, Grid stake, Billboards, Season pot.
-- Best-district season rewards and a three-winner Epic/Legendary item lottery. New seasons do not award the old token prizes.
-- Updated player guide, explicit team ETH fee accounting, risk statements and a central contract-address block.
-- Responsive header/HUD offsets, visible purchase quotes, stacked feedback and enlarged-text reflow fixes.
+Keep the existing site label **`blackout-mine-the-city-pray-the`** (`blackout-mine-the-city-pray-the.sites.imd.fun`) and **https://playblackout.xyz**. The header and hero still link to **https://playblackout.xyz/freepack**. That service is separate; this export does not create a `/freepack` route.
 
 ## Install, preview and rebuild
 
-Use Node.js 22.12+ and the existing lockfile. In a normal development checkout:
+Use Node.js 22.12+ and npm. The current app's pinned manifest and lockfile live in `web/`. Existing root build configuration and dependencies were preserved as required by the assignment. Use the commands below for this live app, rather than the historical root scripts.
 
 ```sh
-npm ci
-npm run dev
+node web/tools/run.mjs install
+node web/tools/run.mjs typecheck
+node web/tools/run.mjs build
+node web/tools/run.mjs preview
 ```
 
-Production and checks:
+The installer runs `npm ci` with `web/package-lock.json` in an external tool directory, default `/tmp/blackout-web-toolchain`. Set `BLACKOUT_TOOLCHAIN` to another writable directory **outside this repository** to retain dependencies between sessions. No repository `node_modules`, package archives or registry mirror is needed. `node web/tools/run.mjs dev` starts development on localhost:5173; preview uses localhost:4173.
+
+Production builds typecheck, verify the ABI digest, reconstruct the NFT ownership snapshot, build both proof trees, verify all 2,011 proofs, compare both roots with the required roots **and live StarterClaim**, then emit **`dist/`** with `base: './'`. A mismatch fails the build. The checked-in export is the hosting deliverable; the publisher does not rebuild it.
+
+For a disconnected rebuild with the installed toolchain:
 
 ```sh
-npm run typecheck
-npm run build
-npm run preview
-npm test
-npx --no-install playwright install chromium
-node scripts/launch-smoke.mjs
-node scripts/check-delivery.mjs
+BLACKOUT_OFFLINE=1 node web/tools/run.mjs build
 ```
 
-`npm run build` runs TypeScript checking and Vite. Vite retains `base: './'`. The complete static export is in **`dist/`**, including its JS/CSS, three local fonts, favicon, app icon, manifest and OG image. Runtime asset URLs are relative and the production checks serve it under `/preview/`. There are no remote runtime dependencies or backend credentials.
+This still checks the exact required roots and every proof, but explicitly skips the public-RPC root comparison. The recorded final production build used the live comparison. Serving the existing export needs only a static HTTP server, not Node packages. To verify gateway subpaths: `node web/tools/serve.mjs 4173`, then open `http://127.0.0.1:4173/preview/`.
 
-The browser validation script owns a bounded local preview and Chromium session, closes both, writes results to `reports/launch/`, and exits nonzero on failures. The older smoke scripts are historical revision checks; use `scripts/launch-smoke.mjs` for the current UI.
+## Routes and controls
 
-Regenerate the standalone player guide from the same source as the website:
-
-```sh
-npx --no-install vite-node scripts/export-docs.ts
-```
-
-Artwork is in `src/sprites.ts`; the existing raster social assets are in `public/`. A build copies them to `dist/`. The existing `scripts/render-assets.mjs` can regenerate social/app images if the art changes; run another build afterward.
-
-## Routes and demo behavior
-
-| Hash route | Purpose |
+| Hash route | Live behavior |
 | --- | --- |
-| `#/` | Landing, launch schedule and teasers |
-| `#/farm` | Rooms, inventory, repair and room purchases |
-| `#/packs` | Token/ETH/free demo packs and saved reveals |
-| `#/city` | Eight districts, events, lobbying and dispatches |
-| `#/season` | District standings and hardware lottery rewards |
-| `#/wallet` | Claims, withdrawal previews, fee accounting and referrals |
-| `#/docs` | Player guide |
-| `#/docs/risks` | No guaranteed returns, player/volume dependence and smart contract risk |
-| `#/docs/contract-addresses` | Addresses from the single config block |
+| `#/` | Epoch/countdown, pool funding and available rewards, hook price/tax, eight district stability readings, all eight Civic phases |
+| `#/farm` | Wallet level/XP/district, rooms and paginated inventory, place/unplace, repair quote, scrap confirmation, room purchase, pending rewards and simulated claim tax |
+| `#/packs` | BLACKOUT quote and exact approval, `openPack`, gifts, atomic ETH purchase with minimum output and maximum pack cost, snapshot/free claims, capture and reveal receipts |
+| `#/city` | Grid events, next plan, dispatcher letter/hash, district stakes and gated lock/lobby controls |
+| `#/season` | Week selection, pot/results, district token-spend scores and eligible claims |
+| `#/billboards` | Current board messages and bids, gated next-week bid form and refunds |
+| `#/docs` | Mechanics, exact-input buying rules, fees, launch, starter eligibility and risks |
+| `#/contracts` | All 18 supplied addresses, explorer links, registry verification, launches 1628 / 1710 / 1722 / 1729 |
 
-No server rewrites are needed. The existing `blackout.demo.v3` localStorage save is retained. Old owned rooms remain owned. Legacy pending practice token prizes are credited once during migration, while future lottery prizes are items. Legacy team accounting is converted to simulated ETH; no new team token balance accrues. No chain state is read or changed.
+`#/wallet` is a compatibility alias for Farm. Guide sections have hash links, including `#/docs/risks`. No server rewrites are required. The former demo source remains for historical reference and shared artwork; its state and balances are not imported into the live app.
 
-Demo tools can advance epochs, refill practice balances and **Preview next wear tier**. The latter makes each new output tier immediately testable. A 45-second demo epoch represents the existing six-hour launch design. Demo progress never becomes launch assets.
+Browser extensions are discovered with EIP-6963. The one Connect control also offers Coinbase Smart Wallet. On phones without a provider, it offers official MetaMask, Coinbase Wallet, Rabby and Phantom browser deep links carrying the current URL. Chain switching/addition uses chain 4663 and the supplied RPC/explorer. Public reads never need wallet authorization. Transactions are simulated, reviewed, signed by the selected wallet, and tracked as awaiting signature, pending, confirmed or reverted with decoded contract errors and explorer links.
 
-## Launch configuration and assumptions
+## Contracts, proofs and source provenance
 
-Edit only **`config.contracts` in `src/config.ts`** to fill the token, packs, farm, grid and params addresses after deployment. Each currently reads **“TBA at launch”**. The guide renders that block directly. Rebuild the export after filling it. Address strings are display values; entering them does not enable transactions or deploy anything. The future ChainAdapter composition point stays in `src/game/adapter.ts`.
+The complete config is **`web/src/config.ts`**. Game modules resolve through `GameRegistry.module(role)` on load and refresh. Every module is compared with its supplied address; token, market, desk, fee router and both roots are also checked. A mismatch warns visibly and disables writes. The RPC is `https://rpc.mainnet.chain.robinhood.com`; explorer links use `https://robinhoodchain.blockscout.com`.
 
-The supplied workspace has no contract source, ABI or deployed addresses. Documentation follows the explicit launch brief and labels other economic values as illustrative. Contract-level parity, deployed permissions, live quotes and audit status remain unverified. Unsupported promises about ownerlessness/upgrades were removed.
-
-Consequential demo choices are centralized and documented:
-
-- Exact durability boundaries use the higher-output tier: ≥80% → 100%, ≥60% → 85%, ≥40% → 65%, ≥20% → 40%, below 20% → off. Overheated equipment contributes neither mining nor combos.
-- Repair quotes scale with full-output item mining × 12 demo epochs × missing durability fraction, then apply the existing 5% spending bonus. This coefficient is a demo setting, not an asserted deployed price.
-- Room nominal demo prices are 150 / 300 / 600 tokens, with the existing spending bonus; rooms are bought in sequence. No age/level gate grants new rooms automatically.
-- Lottery selection uses the existing local seeded simulation and three distinct eligible farms. Epic/Legendary selection is equally weighted in the demo only. Item claims respect reserved inventory slots and are idempotent.
-- Team token-denominated fee shares convert to simulated ETH at the existing demo exchange rate. Live conversion/execution is not implemented.
-
-No exact launch timestamp was supplied, so there is no invented countdown or date. X remains the official launch-time link.
-
-## Validation actually run
-
-The task environment’s protected dependencies/build configuration were left unchanged. Dependencies and Chromium were installed outside the repository:
+ABIs were compiled from [the public L4 contract source](https://github.com/identity-md-launches/launch-1729-blackout-l4-job-b/tree/77c962e6fce9652ee93dff2037b1a09e7a66bd04), pinned commit `77c962e6fce9652ee93dff2037b1a09e7a66bd04`, using Solidity 0.8.26. `web/data/abi-provenance.json` records the build and digest. To regenerate them with Foundry, curl and tar available:
 
 ```sh
-mkdir -p /tmp/blackout-launch-tools
-cp package.json package-lock.json /tmp/blackout-launch-tools/
-npm ci --prefix /tmp/blackout-launch-tools --cache /tmp/blackout-launch-npm-cache
-PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-launch-browsers /tmp/blackout-launch-tools/node_modules/.bin/playwright install chromium
+node web/tools/build-abis.mjs
 ```
 
-Final verification on 2026-10-11:
+This compiles in a temporary directory, without modifying the existing repository's dependencies or deploying anything. `web/src/upstream-reveal.js` preserves the source `ui/reveal.js` receipt loop; the bridge adds simulation, account/chain checks, abortable waiting and decoded transaction states. The only helper edit is naming its default status argument for TypeScript inference. Entropy uses **ArbSys native blocks**, matching `ChainClock.sol`, including the 256-block capture window and expired-receipt rearming.
 
-| Actual command | Result |
-| --- | --- |
-| `/tmp/blackout-launch-tools/node_modules/.bin/tsc --noEmit` | Passed |
-| `/tmp/blackout-launch-tools/node_modules/.bin/vite build` | Passed; 13 modules; complete relative-URL export |
-| `BLACKOUT_TOOLCHAIN=/tmp/blackout-launch-tools /tmp/blackout-launch-tools/node_modules/.bin/vitest run --reporter=dot` | 85 tests passed |
-| `BLACKOUT_TOOLCHAIN=/tmp/blackout-launch-tools PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-launch-browsers node scripts/launch-smoke.mjs` | 12 scenarios passed; zero console errors and failed resources |
-| `node scripts/check-delivery.mjs` | Passed; file sizes and final export hashes recorded in `reports/bundle-budget.json` |
+`web/data/starter-snapshot.json` contains all 2,000 latest owners at Ethereum head **26190561**, its block hash, and every collection Transfer after snapshot **26182375** through that head. Each build reverses the 17 transfers in descending block/transaction/log order, then constructs the snapshot tree. The leaf is single `keccak256(abi.encode(uint256,address))`; leaves and sibling pairs are sorted, and an odd node is promoted, exactly matching `tools/starter_merkle.py`. The captured evidence makes rebuilds reproducible without 2,000 historical owner calls.
 
-The export is 426,068 bytes. A verified complete-current-file snapshot Git bundle measured 5,306,916 bytes, below 8 MiB; the publisher’s final bundle is unavailable here. See [the size check and its history limitation](reports/launch/bundle-trial.json).
+To refresh the public evidence, run `node web/tools/run.mjs snapshot`, then rebuild. The default Ethereum RPC is publicnode; `ETHEREUM_RPC_URL` may select another public endpoint. No credential belongs in this repository or export.
 
-The browser suite covers actual token/ETH/free purchases, reveal persistence, paid rooms, insufficient funds, all wear tiers, overheating and repair, installation, epoch claims, season item claims, full inventory, City/Wallet actions, doc anchors, keyboard interaction, pause/reduced motion and offline navigation after initial load. Seven routes were checked at 320, 390, 768, 1100 and 1440px. Landing, Farm, Packs and Docs were checked with 200% root text at 390px. The first 390×844 screen contains the product, main action and both starter-pack links.
+| Tree | Verified root | Delivered proof file |
+| --- | --- | --- |
+| Identity MD, token IDs 0–1999 | `0xb7d282d1c46f6062963bf2d134d058aa4de3af4cb7b092c5a0fd12ed74dc0f2c` | `public/starter-tree.json`, copied to `dist/` |
+| Exact ordered 11-wallet free list | `0xdc0842e9fd0017b08be09e787e877c53cfb446ca52aabdb9770e5c33b49d1325` | `public/free-tree.json`, copied to `dist/` |
 
-Axe reported zero violations in the seven tested route states; incomplete checks over art/translucent surfaces and the native meter remain disclosed. Three opaque action/link contrast pairs were measured. The local unthrottled 390px landing had CLS 0 and loaded only local resources; these are worker measurements, not field performance scores.
+The browser lazily loads the proof files on Packs, verifies the selected wallet's proofs against pinned and live roots, shows eligible snapshot token IDs and hides the free-claim button from unlisted wallets. NFT claims run from launch +48 hours until launch +16 days. Free claims end at the live `freeClaimEnds()` value. Receipts are recovered from wallet-filtered chain logs, with an optional local scan cursor and manual receipt-ID lookup. Local storage is only a cache; ownership and claims remain on chain.
 
-See [the consolidated six-domain review](reports/launch-validation.md), [machine-readable browser evidence](reports/launch/interaction-results.json), [implemented design](DESIGN.md), and [player guide](docs.md). Earlier reports and screenshots are historical, not evidence for this revision.
+## Validation and current chain state
 
-Limitations: the supplied MCP browser could not start because its expected Chrome binary was absent; the actual export was instead tested with temporary Playwright Chromium. No physical-device, native screen-reader, browser-native zoom, Safari/Firefox, public-domain availability, live X unfurl, live freepack claim or on-chain verification was performed. The unchanged development toolchain reported four npm advisories. No dependencies, caches, npm archives, ignore-file changes or submodules were added to the submission.
+Final checks passed: strict typecheck and production build; 75 distinct successful live read methods plus three expected conditional error cases; both roots and all 2,011 proofs; 72 browser checks across Chromium 154 and WebKit 26; zero axe violations in the four tested engine/page states; 16/16 pinned design-probe checks.
 
-## Publish
+Current evidence is in [reports/live/validation.md](reports/live/validation.md), with machine-readable live reads, proof checks, interaction checks and design-probe results. [DESIGN.md](DESIGN.md) documents the final implemented design. Earlier reports describe historical demo revisions and are not current validation.
 
-The IdentityMD job plane publishes the **committed contents of `dist/`** after submission; it does not rebuild. Retain the existing label **`blackout-mine-the-city-pray-the`** so **playblackout.xyz** keeps pointing to the same site. No direct publishing command was run and no new live CID is claimed.
+```sh
+node web/tools/run.mjs typecheck
+node web/tools/run.mjs build
+node web/tools/run.mjs check-live
+node web/tools/run.mjs test
+node web/tools/check-proofs.mjs
+node web/tools/check-delivery.mjs
+node web/tools/bundle-trial.mjs
+```
 
-For another static host, upload the entire contents of `dist/` with the asset paths intact. Preserve the separately served `/freepack` service when updating the public domain. The canonical OG image is `https://playblackout.xyz/og.png`, and the same image is included in the export. The protected legacy `npm run publish` entry names an old workflow; it is not used for this handoff. See [publication notes](reports/publication.md).
+The browser tests use Playwright Chrome and, when installed, WebKit. Install browsers outside the repository using the external toolchain's Playwright binary. `BLACKOUT_CHROME_PATH` can select Chromium; otherwise the test uses installed Chrome. `BLACKOUT_WEBKIT_PATH` can select a WebKit launcher; otherwise Playwright uses its installed browser. Tests own their local server and close browser sessions. Screenshots go to disposable `test/scratch/`; results go to `reports/live/`. Fixture providers intercept requests only inside test browser contexts and never broadcast a transaction. The test suite also exercises real public-RPC reads in the exported app.
 
-## Attribution
+At verification on 2026-10-14, the chain reported **epoch 0**, **RewardPool.endowed = false**, **PackSale.ready = false**, and all eight Civic flags disabled. The app shows these states and blocks unavailable purchases. This interface cannot fund the pool or activate swarm-controlled phases. There were no live farms or minted items, so populated inventory and successful write flows were tested with deterministic ABI-aware browser fixtures. Existing-item quote methods correctly rejected nonexistent items with `InvalidValue`; disabled lobbying rejected with `FeatureDisabled`.
 
-Existing SVG artwork and local font licenses remain. The pinned Better Interface/Impeccable notices are retained in [NOTICE.md](NOTICE.md) and `licenses/`.
+No real transaction was signed or broadcast. Native-wallet signing, Coinbase account onboarding on this chain, physical phones, native screen readers, live X unfurls and the external `/freepack` service were not end-to-end tested. Public RPC availability remains an external dependency. Browser inspection observed an intermittent duplicate `Access-Control-Allow-Origin: *,*` response from the supplied RPC; the app reports the read failure and offers Retry, which recovered in validation. A static app cannot correct an upstream CORS header. A disconnected static UI can load local assets, but it cannot invent chain data or submit transactions.
+
+## Delivery and attribution
+
+The plane publishes the supplied `dist/` under the existing label after submission. No publishing command, contract deployment, token mint or domain change was performed. Preserve the independently served `/freepack` path when attaching the export to playblackout.xyz. Social metadata retains the canonical `https://playblackout.xyz/og.png`, also included locally.
+
+Old report screenshots were removed to keep the complete submission below **8 MiB**. All runtime city art, sprites, fonts, social images, source, lockfile and required proof assets remain. No ignore file was added or modified, and no submodule or dependency/cache directory is included. See the final byte audit in `reports/live/delivery.json`.
+
+Artwork/font notices remain in [NOTICE.md](NOTICE.md) and `licenses/`; this includes Better Interface guidance and official wallet marks.

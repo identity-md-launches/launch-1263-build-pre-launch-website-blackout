@@ -1,0 +1,40 @@
+{
+  "checkedAt": "2026-10-14T13:03:33.033515+00:00",
+  "typecheck": {
+    "command": "node web/tools/run.mjs typecheck",
+    "exitCode": 0
+  },
+  "build": {
+    "command": "node web/tools/run.mjs build",
+    "exitCode": 0,
+    "abiDigestVerified": true,
+    "liveMerkleRootsVerified": true,
+    "warnings": "Rollup removed misplaced pure annotations in third-party ox/porto dependencies; no build errors."
+  },
+  "bundles": {
+    "dist/assets/ccip-Cou5M6Sl.js": {
+      "bytes": 2616,
+      "gzipBytes": 1244
+    },
+    "dist/assets/hooks.module-DE9oX6xH.js": {
+      "bytes": 15835,
+      "gzipBytes": 6277
+    },
+    "dist/assets/index-DKC_HiZw.js": {
+      "bytes": 335202,
+      "gzipBytes": 102436
+    },
+    "dist/assets/index-Ci5S0t8z.css": {
+      "bytes": 112457,
+      "gzipBytes": 22078
+    },
+    "dist/assets/index-BPJllD8o.js": {
+      "bytes": 427272,
+      "gzipBytes": 126584
+    },
+    "dist/assets/index-BekkmI5A.js": {
+      "bytes": 544741,
+      "gzipBytes": 138573
+    }
+  }
+}

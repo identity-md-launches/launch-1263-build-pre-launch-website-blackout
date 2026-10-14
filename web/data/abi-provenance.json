@@ -1,0 +1,28 @@
+{
+  "repository": "https://github.com/identity-md-launches/launch-1729-blackout-l4-job-b",
+  "commit": "77c962e6fce9652ee93dff2037b1a09e7a66bd04",
+  "solidity": "0.8.26",
+  "command": "forge build --skip test --skip script",
+  "contracts": [
+    "GameRegistry",
+    "V4Market",
+    "SwarmDesk",
+    "RewardPool",
+    "FarmRewards",
+    "FarmCore",
+    "FarmItems",
+    "PackSale",
+    "StarterClaim",
+    "FeeRouter",
+    "GridOperator",
+    "Season",
+    "FarmEngine",
+    "Economy",
+    "Enhancement",
+    "Civic",
+    "Billboards",
+    "Params",
+    "IERC20 + IERC20Errors (Token)"
+  ],
+  "sha256": "b7fb5a8d19e496090515d82da670f40580c87e1fd4aff378e801bc685511b85b"
+}

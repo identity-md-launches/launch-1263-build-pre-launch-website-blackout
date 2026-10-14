@@ -1,0 +1,1 @@
+{"name":"blackout-live-build","private":true,"type":"module","dependencies":{"viem":"2.38.5","@wagmi/core":"2.21.2","@wagmi/connectors":"5.11.2"},"devDependencies":{"typescript":"5.9.3","vite":"7.1.7","tsx":"4.20.6","@playwright/test":"1.56.1","@axe-core/playwright":"4.10.2"}}

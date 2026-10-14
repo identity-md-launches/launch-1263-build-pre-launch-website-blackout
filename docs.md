@@ -1,301 +1,68 @@
-# BLACKOUT player guide
+# BLACKOUT field guide
 
-**Beta values, may change.** Playable demo; no wallet or real money. Generated from `src/docs.ts` with `npx vite-node scripts/export-docs.ts`.
+BLACKOUT is live on Robinhood Chain (4663). Reading the city requires no wallet. Playing uses real BLACKOUT and ETH for gas. The full in-app guide is `#/docs`; contract addresses and explorer links are at `#/contracts`. The separate free-pack service remains https://playblackout.xyz/freepack.
 
-## What is BLACKOUT
+## Start playing
 
-BLACKOUT is a pixel-art idle mining game coming to Robinhood Chain. Open packs, build a farm and keep your hardware running while the IMD swarm operates the city power grid.
+1. Connect a browser wallet, or open the site in a phone wallet's own browser. Switch/add Robinhood Chain when prompted.
+2. On Packs, buy hardware with BLACKOUT, buy atomically with ETH, or claim a verified starter entitlement. The sale's opening time and readiness are read from chain.
+3. Capture/reveal the resulting receipt. Each pack contains three soulbound hardware items. Place them in a farm room and sync completed epochs to settle mining.
 
-This site is a playable demo: no wallet, real money or live token. Progress stays in this browser and is shared across Farm, Packs, City, Season, Wallet and Docs. Clearing browser storage or resetting the demo removes that progress.
+Contract funding and feature status are authoritative. At this revision's verification, the reward pool was not endowed, paid sales were not ready, epoch was zero and every Civic feature flag was false. The app reflects these values instead of substituting demo progress.
 
-## How to start
+## Buying and launch
 
-- [Play the demo](#/farm) and inspect your starter farm.
-- [Open a pack](#/packs) and reveal its three items. Leave three inventory slots free.
-- On Farm, open an inventory item’s menu, choose a room and select Install item. A room accepts each item type once.
-- Wait for an epoch, claim your mining and spend tokens on upkeep or upgrades.
-- Read dispatches and try combinations that protect your room.
+Use the ETH/BLACKOUT v4 pool: hook `0x3c9599670893546a3def98608259a8e6582790cc`, fee **12500 (1.25%)**, tick spacing **60**. Buys must be **exact input**, have a minimum output, and use **`sqrtPriceLimitX96 = 4295128740`**, the router default for this direction. Other limits revert `PriceLimitedBuy`; partial buys revert `PartialFill`. Express slippage tolerance through minimum output.
 
-The demo supplies practice balances. Its rewards, prices, rankings and transactions are a local simulation and do not carry over to launch.
+Normal buys pay the 1.25% pool fee plus a 1% rewards share. Sells pay a 1% hook share plus a surcharge capped at **15% total hook fees**, in addition to the pool fee. Initial buy taxes are 90% for 0–10 minutes, 50% for 10–20, 25% for 20–30, then 1%; launch tax goes to rewards. There is no max-buy limit. Pack opening starts one hour after launch, subject to readiness and the contract's bounded pause.
 
-## Packs and prices
+A token pack purchase first approves exactly the current quote, then calls `openPack`. A gift uses `buyPacksFor(recipient,count,maxCost)` and belongs to its recipient. An increased price beyond allowance/cost limits reverts. ETH purchases call `buyWithETH(recipient,count,minTokens,maxCost)` with the entered ETH value. The swap and pack purchase are atomic; excess BLACKOUT returns to the payer. The TWAP estimate does not guarantee execution.
 
-Packs are bought with the game token, or with the one-click Buy with ETH option. Every pack contains three soulbound items. Each item has its own rarity roll. There is no purchase quantity limit; available balance, three free inventory slots and finishing the current reveal determine when you can open another.
+## Receipts and randomness
 
-Pack prices · beta values, may change
+The purchase or starter claim emits a receipt targeting a future native block. After that target, capture entropy within **256 native blocks** or resolve directly. Captured entropy has no expiry. An expired uncaptured receipt re-arms to a future target and remains claimable. The Reveal action uses the contract source's `ui/reveal.js` loop, and may require more than one signed transaction.
 
-| Rule | Value |
-| --- | --- |
-| Buy with tokens | Packs use the BLACKOUT game token. The demo starts near 85.71 tokens after its discount and spending bonus. |
-| Buy with ETH | One-click convenience purchase; the demo uses simulated ETH. |
-| Price floor / ceiling | 0.006 / 0.030 ETH |
-| Demand | Price rises as packs sell and decays during quiet periods. |
-| Token packs | Token-equivalent price with a 10% discount. |
-| Live quote | Open Packs shows the current price before you open. |
+Native entropy blocks use `ArbSys.arbBlockNumber`, matching the deployed `ChainClock`. A paid receipt can reveal one pack at a time. Keep at least three free inventory spaces; capture remains possible while inventory is full. Stop waiting cancels further prompts, not a transaction already submitted. Pending receipts are recovered from chain events and can also be looked up by ID.
 
-All ETH and token balances here are simulated. The live token conversion and final contract parameters will be set for launch.
+## Starter packs
 
-## Items and rarity
+Identity MD eligibility uses collection `0x0000ec93127baa929e58e97dd0095a2bfb38ec1d` on Ethereum, token IDs 0–1999 at block **26182375**. Use the wallet that held the NFT at that snapshot. A later transfer does not transfer the snapshot entitlement. The app shows that wallet's eligible IDs and calls `StarterClaim.claim(tokenId,proof)`.
 
-Items are soulbound: they belong to your farm and cannot be transferred or sold to other players. Compute items produce their full base hash. Other types produce 60% of that base. Durability, room bonuses and grid events can change effective output.
+NFT claims open at `launchTime() + 48 hours` and close at `launchTime() + 16 days`. The separate 11-wallet free allowlist calls `claimFree(index,proof)` until `freeClaimEnds()` (launch +30 days). Only listed wallets see that button. Both claim types create receipts to reveal.
 
-The 12 item types
+The production build reconstructs snapshot ownership by reversing every later Transfer from captured latest-owner evidence. It verifies all proofs and refuses any root other than:
 
-| Tag | Types | Base hash used |
-| --- | --- | --- |
-| Compute | GPU, ASIC, FPGA | 100% |
-| Power | Power Supply, Battery, Solar Panel | 60% |
-| Cooling | Fan, Liquid Cooling | 60% |
-| Network | Router | 60% |
-| Infra | Motherboard, Server Rack, Surge Protector | 60% |
+- NFT: `0xb7d282d1c46f6062963bf2d134d058aa4de3af4cb7b092c5a0fd12ed74dc0f2c`
+- Free: `0xdc0842e9fd0017b08be09e787e877c53cfb446ca52aabdb9770e5c33b49d1325`
 
-Rarity · beta values, may change
+Leaves are single keccak256 hashes of ABI-encoded uint256/address pairs. Leaves and sibling pairs are sorted; an unpaired node is promoted. Proofs are shipped as static JSON and checked against live roots again in the browser.
 
-| Rarity | Odds at level 10+ | Base hash | Equip level |
-| --- | --- | --- | --- |
-| Common | 70% | 10 | 1 |
-| Rare | 22% | 28 | 1 |
-| Epic | 6.7% | 80 | 3 |
-| Legendary | 1% | 250 | 5 |
-| Mythic | 0.3% | 800 | 10 |
+## Rooms, hardware and rewards
 
-Mythic drops unlock at level 10. Below that level, Common is 70.3% and Mythic is 0%; the other odds stay the same. Higher-rarity items can sit in your inventory before you meet their equip level; a lock shows what level you need. Every type has a pixel sprite for each rarity.
+Each room has six slots. Room 1 is free. Room 2 requires a three-day-old farm and costs two farm-yield days; room 3 requires level 7 and costs five days; room 4 requires level 10 and costs ten days. The app reads exact eligibility and quotes from the contracts. District, level, XP and inventory also come from chain.
 
-## Rooms and combos
+Durability output tiers use the higher tier at each boundary: at least 80% health gives 100% output, 60% gives 85%, 40% gives 65%, 20% gives 40%, and below 20% gives zero. Repair restores durability using the current Economy quote. This app's repair and room purchases spend wallet tokens. Optional auto-repair spends pending mining credits instead.
 
-Each room has six slots. Install any types, with no duplicate type in the same room. Active combos apply within that room. Hash bonuses add together up to a +40% cap; electricity savings and event protections are separate.
+Scrapping permanently destroys an unequipped item. The app shows the minimum expected payout, bounded by remaining scrap allowance. Payout enters pending credits and is taxed on withdrawal. Starter items require a paid pack before scrapping; items in an unsettled snapshot or pending enhancement may be locked.
 
-Room purchases · illustrative demo prices
+Sync accounts for completed epochs and may need repeated transactions when a farm is far behind. Claim tax starts at 20% on fresh credits and decays to 5% over seven days. Credits are consumed oldest first. The app simulates the pending claim to show gross, estimated tax and net; the final amount is determined when the transaction executes. The reward pool, durability, grid events and other players affect earnings. No return is guaranteed.
 
-| Room | Unlock |
-| --- | --- |
-| 1 | Available at the start |
-| 2 | Buy with tokens after room 1. Demo price: 142.86 tokens, including the spending bonus. |
-| 3 | Buy with tokens after room 2. Demo price: 285.71 tokens, including the spending bonus. |
-| 4 | Buy with tokens after room 3. Demo price: 571.43 tokens, including the spending bonus. |
+## The city, seasons and future phases
 
-Combo guide · beta values, may change
+City reads eight stability values, the current event, the next submitted plan, dispatcher letter text when present and the last letter hash. A hash alone is not letter content. Stability affects event odds, not immunity. Hardware combinations affect cooling, protection and output.
 
-| Combo | Required items | Effect |
-| --- | --- | --- |
-| Compute Duo | GPU + ASIC | +10% room hash |
-| Triple Core | GPU + ASIC + FPGA | +20% room hash |
-| Full Stack | At least one of all five tags | +15% room hash |
-| Airflow | Fan + Server Rack | +5% room hash; fire damage halved |
-| Cold Power | Power Supply + Liquid Cooling | Electricity tariff −15%; immune to server fire |
-| Off-grid | Solar Panel + Battery | Electricity tariff −20%; outage loses 50% of output instead of 100% |
-| Clean Power | Surge Protector + Power Supply | Immune to power surges |
-| Locked Rack | Router + Server Rack | Immune to cable theft |
-| Rarity set | At least three items of the same rarity | Common gives no set bonus; Rare +5%, Epic +10%, Legendary +20%, Mythic +30%. Only the strongest set applies. |
+Civic flags are displayed on the home page. Disabled features stay Coming soon. Announcements have a 48-hour activation delay. When enabled, district locks have 7/14/30-day terms with no early withdrawal; quotes come from Economy. Season views show token pot, remaining funds, results, and counted token-spend scores. Award claims are simulated for eligibility. Billboards display current messages and, when enabled, accept bids for the following week. Losing bidders withdraw refunds separately.
 
-Rooms 2–4 are token purchases, not automatic age or level rewards. Existing demo rooms stay owned. Live prices will come from the launch contracts. Triple Core replaces Compute Duo when GPU, ASIC and FPGA are working in the room; they never stack. GPU + ASIC alone still gives Compute Duo’s +10%. The Farm combo panel shows active combinations and the items still missing, so you can plan the next slot before installing.
+## Transaction states and recovery
 
-## Inventory
+The interface checks chain 4663 and verifies the registry before writes. Every action is simulated before asking the wallet to sign. Approvals and purchases are separate transactions. Pending transactions retain a hash and explorer link. Reverted transactions show a decoded error name when the RPC supplies revert data. Read failures offer Retry. Review the explorer before retrying a transaction whose confirmation is delayed.
 
-You start with 15 inventory slots. Installed items occupy room slots instead. Opening a pack needs three free inventory slots, including space reserved by an unfinished pack.
-
-Make room for your next pack
-
-| Action | What happens |
-| --- | --- |
-| Install | Move an eligible item into a room with an empty slot. |
-| Scrap | Permanently remove a spare item for a tiny token value. Check the preview first. |
-| Expand | Spend tokens to add 5 inventory slots. |
-
-Scrapping permanently consumes the item after confirmation. Mythic is the highest rarity. Each item has its own action menu; repair restores durability, and installed items can be removed into inventory.
-
-## Levels
-
-Earn account XP from active mining epochs, opening packs and spending tokens in the game. Every game tab shows your level and XP bar. Levels still require XP; age gates prevent reaching level 5 before farm day 1, level 7 before day 3, or level 10 before day 5. These are elapsed farm days, not calendar dates. Mining XP is uncapped. XP from packs and token spending shares a 400 XP daily cap, resetting each farm day. Extra XP is retained while an age gate is locked.
-
-Level milestones · beta values, may change
-
-| Level | Unlock |
-| --- | --- |
-| 1 | Common and Rare equipment |
-| 3 | Equip Epic items |
-| 5 | From farm day 1: equip Legendary items |
-| 7 | From farm day 3: account progression |
-| 10 | From farm day 5: Mythic drops and equipment |
-
-A rare pull does not bypass its equip gate. Keep a locked item until you reach the required level, or use the available inventory actions.
-
-## Mining, balance, withdraw tax
-
-Working items mine during each epoch. At the epoch boundary, the demo settles mining, costs and the grid event. Earned mining waits for sync. Claim syncs first, then moves all earned mining into your spendable balance. Reading the page does not sync it. The top bar includes earned, unsynced mining in the claim preview.
-
-Balances and spending · beta values, may change
-
-| Action | Rule |
-| --- | --- |
-| Claim | Collect completed-epoch mining into your token balance. |
-| Spend in game | No withdrawal tax; a 5% purchasing bonus means the nominal cost is divided by 1.05. |
-| Withdraw | Tax starts at 20% and falls to 5% over 7 in-game days. |
-| Preview | Wallet shows the withdrawal tax and net amount before confirmation. |
-
-Withdrawing in the demo only records a simulated withdrawal. No asset leaves your browser, and demo balances have no cash value.
-
-## Farm costs
-
-Keeping a farm running · beta values, may change
-
-| Cost | Rule |
-| --- | --- |
-| Electricity | Base tariff is 15% of mining output, withheld each epoch. Combos and events change it; overclock’s extra power use raises it. |
-| Durability | Working items lose 0.5 durability per epoch before extra damage or overclock wear. Output changes in tiers; below 20% an item overheats and turns off. |
-| Repair | Pay tokens to restore full durability. The price scales with the item’s full-output mining and the durability missing. Farm shows each quote. |
-| Overclock | Each level adds +10% hash, up to 5 levels (+50%). Cost rises each level. Review the cost, extra wear and power use before confirming. |
-| Upgrades | Inventory expansion and lobbying use the displayed token price. |
-
-Electricity has no separate reserve or refill. The tariff is withheld only from new mining output, never from stored balances.
-
-Cold Power and Off-grid reduce the base tariff by 15% and 20% respectively; together they reduce it by 35%. Cheap tariff halves the result.
-
-Each overclock level adds 25% wear and 25% power use relative to level zero: wear = 0.5 × (1 + 0.25 × level) durability per epoch; tariff = 15% × (1 − combo reductions) × (1 + 0.25 × level) × event multiplier. Overclock levels cost 25, 50, 75, 100 and 125 nominal tokens, divided by 1.05 for the spending bonus.
-
-Durability and mining output
-
-| Durability | Output |
-| --- | --- |
-| 80–100% | 100% (full output) |
-| 60–under 80% | 85% |
-| 40–under 60% | 65% |
-| 20–under 40% | 40% |
-| Below 20% | Overheated and off (0%) |
-
-At an exact boundary, use the higher-output tier: 80% durability gives full output, 60% gives 85%, 40% gives 65%, and 20% gives 40%. Overheated items do not contribute mining or combos until repaired.
-
-The demo repair formula is full-output item mining per epoch × 12 × missing durability fraction, divided by 1.05 for the spending bonus. A Common GPU at 50% durability costs 5.71 demo tokens to repair. A stronger item at the same wear costs more. Room repair adds the individual quotes. In Demo tools, Preview next wear tier lets you try all output tiers immediately. This coefficient is illustrative; live prices must be read from deployed parameters.
-
-Repair damaged equipment. Repairs, overclock and inventory expansion fund the reward pool. Packs and lobbying use the 88% / 10% / 2% split below. Tokens are not burned.
-
-## The city and swarm events
-
-The city has eight districts. Each epoch brings a grid event, and your district determines which local effects reach your farm. Read the dispatcher letter for the effect, damage and the combo that could have protected you.
-
-Events and protections
-
-| Event | Effect | Protection or response |
-| --- | --- | --- |
-| Outage | Affected rooms lose mining output. | Off-grid limits the loss to 50%. |
-| Power surge | A hardware item can burn. | Clean Power makes the room immune. |
-| Server fire | Damages equipment. | Cold Power gives immunity; Airflow halves fire damage. |
-| Cable theft | Disrupts mining. | Locked Rack makes the room immune. |
-| Tax audit | Only farms above the hash threshold are audited: 10% of that epoch’s mining goes to the reward pool. Never takes from player balances. | No item combo; lobbying reduces bad-event odds. |
-| Green wave | +10% output for affected farms. | Benefit automatically while mining. |
-| Cheap tariff | Electricity tariff is 50% lower. | Benefit automatically while mining. |
-| Calm | No extra event penalty. | Use the quiet epoch to maintain your farm. |
-| Supply drop | A bonus drop triggered by a spike in pack sales. | Watch the dispatch panel for your drop. |
-
-Audit eligibility uses a hash threshold, not balances, rank or cumulative season scores. The demo threshold is above 100 H/s; a farm exactly at the threshold is exempt. District targeting still applies. The audit and electricity tariff are each calculated from that epoch’s gross mining, before wear; earlier unclaimed mining stays intact. Beta values, may change. Lobbying changes the odds, not the outcome. Event protection applies to the room that completes the required combo.
-
-## How the swarm runs the grid
-
-The launch design uses 6-hour epochs. Mining, events and claims settle on those boundaries. The demo compresses each epoch to 45 seconds so you can try the loop. Four epochs count as one in-game day, and a week takes 28 epochs. Buy rooms 2–4 with tokens on Farm. The demo advance controls let you try those milestones immediately.
-
-Anyone can trigger the next due epoch for a small reward. If the swarm is silent, a fallback keeps the grid moving under the same rules. The swarm can act only within hard limits: it cannot choose arbitrary payouts, bypass protections or rewrite the economy.
-
-This is the intended contract architecture. Trigger rewards, fallback timing and exact bounds will be documented with the launch contracts. The demo runs its grid locally and pays no real keeper reward.
-
-## Gas and syncing
-
-Each sync costs a small Robinhood Chain fee at launch; syncing once a day is enough. There is no wallet or gas payment in this demo.
-
-The top bar says **Synced** or how many epochs remain to sync. Use Sync, claim, or take any farm action to catch up. Packs, installation, removal, repair, scrap, expansion, overclock and lobbying all sync. Viewing the site and the demo clock controls do not count as farm activity.
-
-After 3 farm days without an action, your farm stops earning new rewards until synced. Earned rewards are never lost. Syncing collects up to the first 12 inactive epochs (4 epochs per farm day); the idle period after that earns nothing retroactively. Demo catch-up processes at most 160 grid epochs in one read and skips older grid history. Normal launch epochs last 6 hours; demo epochs last 45 seconds. Beta values, may change.
-
-## Lobbying
-
-Use **Lobby** on City to spend tokens on your district before the next event. Lobbying lowers the chance of a bad event. It does not buy immunity or guarantee a helpful event.
-
-The district panel shows the price and whether the next request is already logged. Complete room combos for protection that still works when a bad event gets through.
-
-## Weekly season
-
-Each week is a new city season. Season shows the countdown and district leaderboard.
-
-Season rewards
-
-| Result | Planned prize |
-| --- | --- |
-| Best district | Free packs for qualifying farms in that district |
-| Season lottery | 3 winners each get an Epic or Legendary item |
-
-The best district is ranked by average synced mining per active farm, not total mining. One wallet counts for at most 10% of its district’s final credited total. The demo caps each wallet’s credited mining, recalculates the district total, then divides by active farm count. Districts need at least ten active wallets for a positive score under that cap; the demo starts with twelve farms per district. Farms with no synced mining are excluded. Your scoring district is fixed for the week; moving in City changes event exposure immediately and your scoring district next week.
-
-**Sync your farm before the week ends to enter the season score.** Only the score recorded by your last sync before the boundary enters that week. Later syncing still collects earned mining; it cannot add score to a closed week. Lottery entries need a positive synced mining score. The local demo simulates rival scores. A season lasts 28 demo epochs, and you can claim any earned practice prizes from Season. It is not a live multiplayer ranking. The demo draws three distinct qualifying farms. Winning items stay saved until claimed; free inventory space is required. A demo item does not carry over to launch. Final eligibility and tie rules will be published with the launch contracts.
-
-## Referrals
-
-Copy your referral link from Wallet and share it with friends. The planned referral reward is 5% of invitees’ mining. The dashboard separates referral activity from your own farm output.
-
-Demo links and referral figures are practice features stored in the browser. Use the invitee simulation to preview the 5% credit; a shared demo link does not track a friend’s mining across devices. They do not verify a person, connect wallets or create a launch reward entitlement.
-
-## NFT holder pack
-
-[Free starter pack →](https://playblackout.xyz/freepack) opens the separately served claim site. Identity MD NFT holders are planned to receive one free starter pack. The demo lets you try that claim without a wallet or ownership check.
-
-A demo claim does not prove NFT ownership or reserve a launch pack. The launch claim will use the announced ownership and eligibility rules.
-
-## Token and launch
-
-The BLACKOUT game token will launch through IMD on Robinhood Chain. 10% of supply goes to IMD swarm contributor agents; part of supply seeds the game reward pool. Exact split announced at launch. Beta values, may change.
-
-The launch buy tax is stepped, not a smooth decay: 90% during 0–10 minutes; 50% during 10–20 minutes; 25% during 20–30 minutes; then normal fees after 30 minutes. At minute 10 the rate is 50%, at minute 20 it is 25%, and at minute 30 normal fees apply. All launch tax goes to the reward pool. There is no max buy limit. Packs open 1 hour after token launch. The demo is available now and does not apply real launch taxes.
-
-Follow the official dispatch for the confirmed launch time. Follow [BLACKOUT on X ↗](https://x.com/IMDBlackout) for official updates. This demo does not deploy, mint or sell a token.
-
-## Where the money goes
-
-Packs, lobbying and sell surcharge · beta values, may change
-
-| Destination | Share |
-| --- | --- |
-| Game reward pool | 88% |
-| Team | 10% |
-| Swarm heartbeat | 2% |
-
-There are no team tokens. The team earns ETH from fees, not a token allocation. The swap fee is 1% to the team and 1% to the reward pool. The swarm heartbeat funds the work needed to keep epochs moving.
-
-Electricity tariffs and audit contributions go to the reward pool. Repair, overclock and expansion spending goes to the reward pool. Packs, lobbying and sell surcharge split 88% reward pool / 10% team / 2% swarm heartbeat. Demo withdrawal tax models the sell surcharge; there is no swap interaction in the demo. There are no token burns. The demo converts the team’s token-denominated fee share to simulated ETH using its fixed exchange rate. This is illustrative accounting, not a live swap or real revenue.
-
-## Who controls what
-
-Your farm actions will be governed by the deployed contracts. The swarm’s permissions, parameter bounds, ownership and upgrade controls must be checked against the published source at launch.
-
-Game responsibilities
-
-| Participant | Role |
-| --- | --- |
-| You | Farm layout, packs, upkeep, claims and withdrawals |
-| Contracts at launch | Ownership, balances, settlement and permissions |
-| IMD swarm | Grid events within the contract rules |
-
-This site is a browser demo. It does not connect a wallet or enforce contract permissions. It is not evidence of an audit or of rules being enforced on chain.
-
-## Contract addresses
-
-Confirmed addresses will be listed here after deployment. Until then, every entry is TBA at launch.
-
-Robinhood Chain contracts
-
-| Contract | Address |
-| --- | --- |
-| Token | TBA at launch |
-| Packs | TBA at launch |
-| Farm | TBA at launch |
-| Grid | TBA at launch |
-| Params | TBA at launch |
-
-Launch rules on this site follow the announced game design. Contract source and deployed parameters have not been supplied with this demo; verify the published contracts before using the live game.
+No keys or custody exist in this static app. Optional local storage holds transaction/receipt caches only; receipts and ownership remain on chain. Changing accounts invalidates loaded eligibility and inventory. Earlier browser demo progress has no on-chain value.
 
 ## Risks
 
-**No guaranteed returns.** Rewards depend on players and volume. Lower activity, farm costs, grid events and token-price changes can reduce or eliminate rewards. No player is promised a return or profit.
+You can lose money. Token price, liquidity and rewards can fall. Approvals, gas and failed transactions cost real assets. Inspect amounts, recipient and contract addresses in every wallet prompt. Future blockhash randomness is sequencer-influenced and is not a verifiable randomness oracle. Missed capture windows, full inventories and delayed settlement can require further transactions.
 
-**Smart contract risk.** Contract bugs, exploits and infrastructure failures can cause loss of funds or prevent access. This demo is not an audit or a guarantee that launch contracts are safe.
+The deployed source has accepted implementation risks, including documented lock-boost and season-prize behavior. Review [the pinned source and risk records](https://github.com/identity-md-launches/launch-1729-blackout-l4-job-b/tree/77c962e6fce9652ee93dff2037b1a09e7a66bd04/docs). Public RPCs, wallets and the chain can become unavailable. This interface does not remove those dependencies or promise earnings.
 
-Packs contain random items. Soulbound hardware cannot be sold to another player. Spending on the game can result in a loss.
-
-Demo economic values are illustrative and may change. Only spend what you are comfortable spending on a game.
+Source provenance, installation and reproducible checks are in [README.md](README.md). Current verification evidence is in [reports/live/validation.md](reports/live/validation.md).

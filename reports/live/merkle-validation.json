@@ -1,0 +1,13 @@
+{
+  "starterRoot": "0xb7d282d1c46f6062963bf2d134d058aa4de3af4cb7b092c5a0fd12ed74dc0f2c",
+  "freeRoot": "0xdc0842e9fd0017b08be09e787e877c53cfb446ca52aabdb9770e5c33b49d1325",
+  "starterClaims": 2000,
+  "freeClaims": 11,
+  "proofsVerified": 2011,
+  "snapshotBlock": 26182375,
+  "headBlock": 26190561,
+  "headHash": "0x8f28af567032e46f9d7d5f8a17062e6e8a0403d74907c19c90324fc89067497f",
+  "reversedTransfers": 17,
+  "onchainRootChecks": true,
+  "method": "Latest ownerOf at pinned head; descending Transfer rollback; sorted leaves; sorted sibling pairs; unpaired node promoted."
+}

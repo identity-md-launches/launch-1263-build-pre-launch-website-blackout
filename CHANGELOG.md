@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-14 — Live Robinhood Chain app
+
+- Retained the existing site label, original city/dispatcher/hardware artwork and separate freepack links.
+- Added verified registry-resolved live reads and player-wallet farm, pack, claim, receipt and gated city/season/billboard flows.
+- Built ABIs from pinned L4 source; reconstructed the Identity MD snapshot and shipped both root-checked proof trees.
+- Added explicit approval/transaction/error states, native-block capture timing, wallet discovery/network switching and responsive accessibility fixes.
+- Delivered source, frontend lockfile, static export and current design/validation documentation. All prior reports are historical; old validation screenshots were pruned for the submission budget.
+
+
 ## 2026-10-11 — Launch economy and starter-pack update
 
 - Preserved the existing city, dispatcher, artwork and `blackout-mine-the-city-pray-the` label.

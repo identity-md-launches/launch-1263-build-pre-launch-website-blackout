@@ -6,9 +6,8 @@ export const config = {
   xUrl: 'https://x.com/IMDBlackout',
   freePackUrl: 'https://playblackout.xyz/freepack',
   chainId: 4663,
-  // The only address block. Replace these display placeholders after deployment.
-  // Filling addresses does not enable transactions; the site remains a demo.
-  contracts: { token: 'TBA at launch', packs: 'TBA at launch', farm: 'TBA at launch', grid: 'TBA at launch', params: 'TBA at launch' },
+  // Legacy art/demo settings. The live app uses web/src/config.ts and resolves registry roles.
+  contracts: { token: '0x38b05971c79e738f64452be83c78ec3d66535b7a', packs: '0xf28d8d409e471f7ceff7a029dcc56328e167c3d5', farm: '0x40499cca542b3cd2db0287fa0b6da87002f042e8', grid: '0x11c0970644d6f3e7ad2a03c142adb8105a2fffe4', params: '0xa0d1fba2d5b8950b87cb8fc5303678862af1a316' },
   launchTax: [{ fromMinute: 0, toMinute: 10, rate: 0.90 }, { fromMinute: 10, toMinute: 20, rate: 0.50 }, { fromMinute: 20, toMinute: 30, rate: 0.25 }],
   demo: {
     eventIntervalMs: 45_000,

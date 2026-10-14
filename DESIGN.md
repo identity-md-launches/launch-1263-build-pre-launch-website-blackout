@@ -1,101 +1,82 @@
-# BLACKOUT design system
+# BLACKOUT — implemented live-app design
 
-## Overview
+This records the final implementation in `src/style.css`, `src/landing.ts`, `src/sprites.ts`, and `web/src/`. It describes the shipped export, not a proposed redesign. The original 16-bit city, three skyline layers, grid tower, dispatcher, hardware sprites, district landmarks, navy/purple sky and CRT scanlines remain. The landing now leads into a live wallet app.
 
-BLACKOUT is a pixel-art idle mining game with a playable browser demo. This revision preserves the existing living city, hooded dispatcher, hardware atlas and 16-bit navy/purple identity. It adds a three-step introduction, explicit launch terms and token-based demo purchases. The landing introduces the game; Farm, Packs, City, Season, Wallet and Docs retain their shared local save.
+## Product hierarchy
 
-The implementation is TypeScript, template-rendered HTML and CSS. Reuse `src/landing.ts`, the page shell in `src/main.ts`, the SVG functions in `src/sprites.ts`, and `src/style.css`. The final launch/reflow rules at the end of the stylesheet override older declarations. Those older declarations are not a second design system.
+At 390 CSS pixels, the first screen shows BLACKOUT, a plain description of the mining game, the yellow **Enter your farm** action, the external **Free starter pack** link, Connect and the city art. The primary button is above the fold. The header's Free pack link and the hero's starter link both go to the independently hosted `https://playblackout.xyz/freepack`.
 
-## Colors
+The landing continues with live chain statistics, How to play in 60 seconds, hardware, the dispatcher, Launch, Civic feature phases, FAQ and a final action. Farm, Packs, City, Season, Billboards, Contracts and Field guide are separate hash views. Farm groups rewards, rooms and inventory; item actions live in details disclosures. Packs separates purchase limits, eligibility and pending receipts. Each form places units and relevant instructions next to its controls.
 
-The single dark theme uses the existing sRGB hex tokens in `src/style.css:7`.
+## Color tokens
 
-| Token | Value | Role |
+| Token | Value | Implemented use |
 | --- | --- | --- |
-| `--bg` / `--navy-950` | `#05060f` | Page background |
-| `--surface` / `--navy-900` | `#090e1d` | Panels |
-| `--surface-raised` / `--navy-850` | `#0e1428` | Secondary controls |
-| `--hover` / `--navy-800` | `#141d33` | Hover surface |
-| `--border` / `--navy-600` | `#354664` | Structural boundaries |
-| `--border-control` | `#65748f` | Control boundaries |
-| `--text` / `--gray-100` | `#edf2ff` | Primary text |
-| `--muted` / `--gray-400` | `#b3bfd3` | Supporting text |
-| `--accent` / `--cyan-400` | `#39e6ff` | Links, selected state and mining output |
-| `--highlight`, `--focus` | `#ffe600` | Primary action, warnings and keyboard focus |
-| `--magenta-400` | `#ff3df2` | Epic items and neon art |
-| `--danger` | `#ff869c` | Errors and destructive actions |
-| Rarity | Common `#bdc8dd`, Rare `#39e6ff`, Epic `#ff3df2`, Legendary `#ffe600`, Mythic `#ff6475` | Written rarity labels and trim |
+| `--bg` / `--navy-950` | `#05060F` | Main background and dark text on the yellow action |
+| `--surface` / `--navy-900` | `#090E1D` | Panels, wallet sheet and transaction feedback |
+| `--surface-raised` / `--navy-850` | `#0E1428` | Inputs and elevated controls |
+| `--hover` / `--navy-800` | `#141D33` | Hovered secondary controls |
+| `--border` / `--navy-600` | `#354664` | Structural separators |
+| `--border-control` | `#65748F` | Visible input/button boundaries |
+| `--text` / `--gray-100` | `#EDF2FF` | Main text |
+| `--muted` / `--gray-400` | `#B3BFD3` | Supporting information |
+| `--accent` / `--cyan-400` | `#39E6FF` | Links, connection controls, city lights and Rare items |
+| `--highlight`, `--focus` | `#FFE600` | Primary action, focus ring, launch emphasis and Legendary items |
+| `--magenta-400` | `#FF3DF2` | Epic item accents and retained city light |
+| `--danger` | `#FF869C` | Errors and destructive-action labels |
+| `--color-success` | `#93F5C6` | Verified/live states and confirmed transaction border |
+| `--common` / `--mythic` | `#BDC8DD` / `#FF6475` | Named item rarity treatments |
 
-The primary action is dark text (`#0b1020`) on yellow. The hero starter-pack action uses `#edf2ff` on `#101932`. The header starter link uses cyan on the page background. Browser-computed opaque contrast ratios were 14.94:1, 15.53:1 and 13.41:1 respectively. These measurements do not cover every translucent surface or illustration; see the review limitations.
+No state depends on hue alone: rarity has text, transaction states have words, disabled phases say Coming soon, and funding/read errors have explanations. Text is not rendered as a gradient. Cards use a background/separator without stacked border-and-shadow decoration; retained neon effects belong to the artwork.
 
-District colors and landmarks remain in `districtArt` in `src/sprites.ts`. Written names, event descriptions, borders and icons accompany color. An overheated item explicitly says “Overheated · off”; its condition is not communicated by glow alone.
+Measured opaque color pairs use WCAG relative luminance: primary text/background 18.04:1, muted/raised surface 9.84:1, cyan/surface 12.76:1, dark/yellow action 15.94:1, error/surface 8.37:1, control border/raised surface 3.87:1. These measurements do not cover translucent gradients or artwork. The pinned rendered probe separately passed its measured-text contrast check and marked 20 text boxes over art/gradients unmeasured.
 
 ## Typography
 
-Local WOFF2 fonts are preloaded in `index.html`: Press Start 2P (`Pixel`, weight 400) and IBM Plex Mono (`Mono`, weights 400/600). Fallbacks are monospace and Courier New. `font-display: swap` is retained. Browser checks confirmed the fonts loaded.
+Local **Press Start 2P** (`Pixel`, weight 400) supplies the brand and headings. Local **IBM Plex Mono** (`Mono`, weights 400 and 600) supplies data, controls and compact game labels. System UI sans serif handles longer descriptions, guide paragraphs and dispatcher quotes. The export bundles the three WOFF2 font files and uses `font-display: swap`.
 
-| Token | Size | Use |
-| --- | --- | --- |
-| `--font-small`, `--font-label` | `.875rem` / 14px | Captions, controls and supporting text |
-| `--font-body` | `1rem` / 16px | Body text, forms and item headings |
-| `--font-title` | `1.25rem` / 20px | Page/section headings and pack price |
-| `--font-display` | `2rem` / 32px | Mobile wordmark and large counters |
-| `--font-logo` | `4rem` / 64px | Desktop wordmark |
+The scale has six sizes: **12, 14, 16, 20, 32 and 64px**. Existing tokens are `--font-small`/`--font-label` 14px, `--font-body` 16px, `--font-title` 20px, `--font-display` 32px and `--font-logo` 64px. Twelve pixels is reserved for the six-item mobile navigation and narrow slot labels. At 390px the hero is 32px; desktop uses 64px. Long body text remains 16px, with 1.6 general line height and 1.75 in the guide. Headings use 1.4–1.6. Numeric readouts use tabular figures where appropriate.
 
-Six semantic tokens resolve to five sizes. The root uses 16px/1.6. Pixel headings use regular weight and generous line height for the blocky glyphs. Body headings use Mono 600/1.5. The wordmark uses line-height 1.3 and −2px tracking on desktop, resetting tracking on phones. Ordinary labels use sentence case; BLACKOUT and acronyms retain their spelling.
+Content uses normal capitalization. The BLACKOUT wordmark remains uppercase as identity. Small tracked uppercase eyebrow labels were removed. The rendered landing probe found three font families, two weights, four recurring sizes at each tested width and at most five sizes including one-offs.
 
-Headings balance, descriptions wrap prettily, and long-form docs use a 75ch column with 70ch paragraphs. Numbers use tabular figures. Mobile input text remains 16px. Root text enlargement was checked at 200%; browser-native zoom was not tested.
+## Spacing and responsive layout
 
-## Layout
+The inherited spacing scale is **4, 8, 12, 16, 24, 32, 48 and 80px**. The outer wrapper caps at 1200px. Existing narrow-screen wrapper rules provide mobile gutters. Grid columns use `minmax(0, 1fr)` and wrapping text; addresses, hashes and receipt IDs can break anywhere. Wide data tables have their own horizontal scroll container.
 
-`.wrap` caps content at 1200px with 32px desktop, 20px intermediate and 16px phone gutters. Spacing tokens are 4, 8, 12, 16, 24, 32, 48 and 80px. Landing sections generally use 88px vertical padding, dropping to 56px at 680px. Panels generally use 24px padding, dropping to 16–20px on phones.
+- Above 1100px, the navigation sits in the header, district cards use four columns, and the game has room for multiple inventory columns.
+- At 1100px and below, header navigation wraps, districts become two columns and inventory becomes two columns.
+- At 760px and below, rooms and purchase/claim panels become one column; the guide navigation loses its sticky sidebar; addresses form a single-column list.
+- At 600px and below, game navigation becomes six fixed bottom tabs with safe-area padding. The landing keeps its uncluttered header/hero and hides that bottom bar. Forms, receipt rows and item actions stack; wallet selection becomes a bottom sheet. Controls keep their labels and amounts.
+- At 360px and below, the small brand icon is hidden, district cards and guide links use one column, and selected labels use the 12px size.
 
-| Component | Wide layout | Narrow layout |
-| --- | --- | --- |
-| Header | Brand, game links, starter-pack link and sound | Navigation wraps to a second row at 601–1100px; becomes fixed bottom navigation at 600px |
-| Hero | Centered wordmark and actions over the retained skyline | Cropped skyline; product, Play demo and Free starter pack visible at 390×844 |
-| How to play | Three illustrated columns | Three rows with art beside the text at 680px |
-| Hardware | Native horizontal carousel with arrows | Partial next card and scrollbar hint at more content |
-| Launch | Introduction beside a full-width stepped tax list | One column at 680px; time and rate can wrap with enlarged text |
-| Coming soon | Four noninteractive teaser cards | Two columns at 680px |
-| Farm | Rooms beside inventory | Stacked below 820px; local item disclosures expand in place |
-| Packs | Pack purchase beside reveal cards | Stacked; token and ETH buttons remain above the bottom navigation at 390px |
-| City, Season, Wallet | Existing paired panels | Stacked below 820px |
-| Docs | Contents beside text | Stacked below 820px; tables scroll in labeled regions |
+When root text exceeds 20px, `reflow-mode` lets the header wrap, makes it non-sticky, places game navigation in document flow, stacks statistics and guide links, and permits grid children to shrink. The 200% text-size check uses this layout.
 
-`updateChromeOffsets()` measures the header, HUD and bottom navigation through `ResizeObserver`. The HUD clears the actual header height; guide anchors clear both sticky areas; bottom padding accounts for the navigation. With root text above 20px or a viewport below 320px, `reflow-mode` makes the header/HUD nonsticky and places HUD fields in two columns. Bottom navigation uses auto-fit columns based on `3rem`, so enlarged labels wrap into rows.
+Controls normally have a minimum 44px height; main actions use 48px and wallet rows 56px. Native select/input controls have visible labels, 16px input text, appropriate numeric input modes and explicit units. Links within prose retain normal inline treatment and adequate spacing. The probe's 24px-or-spacing target rule passed; ten inline targets were below its preferred 44px size.
 
-All seven routes were checked at 320, 390, 768, 1100 and 1440 CSS pixels without document overflow. Landing, Farm, Packs and Docs were also checked at 390px with 200% root text. This is Chromium emulation, not a physical-device guarantee.
+## Components and states
 
-## Elevation & Depth
+**Header and wallet sheet.** One Connect control discovers named EIP-6963 wallets and hides the generic duplicate when named wallets exist. Official wallet marks identify mobile browser links and Coinbase Smart Wallet. The native dialog has a labeled heading, a close control, Escape support, focus trapping and focus restoration. Wrong-chain state offers Switch network; network addition is followed by an explicit switch.
 
-Square tonal panels, one-pixel borders, stepped silhouettes and hard button shadows preserve the pixel style. The skyline retains three parallax layers, lit windows, drones, rain, smoke and the dispatcher tower. CRT scanlines and decoration are pointer-transparent.
+**Live statistics.** Semantic definition lists show actual chain reads. Loading, unavailable, retry, unfunded and not-ready states are explicit. No demo value fills a failed read. Civic notices and flags control the phase labels; all eight flags are shown. Periodic reads update state; Refresh data is available on game pages.
 
-The header is z-index 40, HUD 25, coach 55 and bottom navigation 60. Status messages and level-up feedback now share `.feedback-stack` at 75 instead of occupying overlapping fixed positions. The stack has a 50dvh limit and scrolls when necessary; messages remain dismissible. Native dialogs use the browser top layer. Boot remains at 100 and is skippable.
+**Farm.** Six slot buttons per room contain sprite, item name and durability. Empty slots offer placement. Item details contain place/unplace, repair and scrap actions; repair and room dialogs show fresh quotes. Scrap uses an irreversible-action confirmation and minimum payout. Reward claims show gross credits, estimated tax and net output from simulation. Insufficient eligibility disables the relevant action with adjacent explanation.
 
-## Shapes
+**Packs and reveal.** Token purchases show the quoted cost and exact approval. The ETH disclosure labels ETH input, minimum BLACKOUT output and maximum pack cost separately. Snapshot token IDs and free eligibility appear only after proof verification. Receipt rows show type, decimal ID, target/native blocks, remaining packs, capture state and the 256-block window. Active receipt clocks refresh every three seconds without replacing forms or moving focus. Reveal follows the upstream loop and presents the original hardware artwork as three cards; users can stop waiting between wallet requests.
 
-Use square corners and crisp pixel art. Empty equipment slots have dashed borders; installed equipment uses written rarity and a solid border. Shared hardware symbols have a 64×64 viewBox. The city is 960×420; district scenes are 104×100; dispatcher art is 128×128. Preserve explicit viewBoxes, `shape-rendering: crispEdges` and `image-rendering: pixelated`.
+**Transaction feedback.** A polite live region distinguishes awaiting wallet, pending, confirmed, reverted and error. Pending/finished states include an explorer link and hash. Known contract errors use their decoded names with recovery guidance. Busy state prevents duplicate actions. Failed reads offer Retry; a registry mismatch warns and disables writes. Optional local storage retains transaction hashes and receipt scan cursors, never keys.
 
-## Components
+**City, Season and Billboards.** The dispatcher and district art accompany chain values. Disabled modules remain Coming soon. Season scores are correctly labeled as token spend per active farm and counted BLACKOUT spend. Chain-supplied text is HTML-escaped. Billboard input mirrors the deployed character and length restrictions before requesting approval.
 
-- **Shared artwork:** `spriteSheet()`, `itemSprite()`, `districtSprite()` and `sprite()` in `src/sprites.ts`. The atlas, skyline and dispatcher were retained unchanged. Reuse them for new game surfaces.
-- **Landing:** `landing()` supplies the hero, three steps, hardware row, dispatches, launch sequence, four teasers and FAQ disclosures. The starter-pack destination is `config.freePackUrl`; it is an external link, not a local route.
-- **Purchases:** Packs shows the token quote first, a filled “Buy with tokens” button, and a separate one-click “Buy with ETH” action. Pending reveals and full inventory disable further purchases. A saved free demo pack adds its own button. The first tutorial bubble is hidden during purchase to keep the price visible.
-- **Rooms:** `.room-shop` presents ownership, token quotes and the next eligible purchase. A native confirmation dialog shows the cost. Cancel/Escape returns focus to the trigger; purchase focuses the new room heading. Prices are expressly illustrative demo values.
-- **Durability:** `durabilityOutput()` and `repairCost()` in `src/game/rules.ts` drive both visible output labels and actual mining. `#durability-guide` discloses the five tiers. Item menus show individual token repair prices; room repair sums item quotes. Demo tools provides “Preview next wear tier.”
-- **Season:** The existing district leaderboard remains. Three lottery winners receive Epic or Legendary hardware. Pending prize items are shown by art, rarity and name; claiming requires inventory capacity and can only consume a prize once.
-- **Navigation and docs:** Hash routes preserve static hosting. Links retain native behavior and current-page state. Each route has one h1. Native details/summary handles FAQs, item menus and advanced settings. Docs provides deep links, risk text and the address table sourced from `config.contracts`.
-- **Controls and feedback:** Reuse `.button`, `.primary`, `.compact` and `.full`. Ordinary actions target 44px minimum; the compact sound button is 32×44px. Keyboard focus uses a 3px yellow outline and 4px offset. Status/error live regions, persistent labels and withdrawal errors remain. `feedback-stack` keeps simultaneous messages individually usable.
-- **Motion and sound:** Existing loops and effects live in `src/effects.ts` and CSS. The city pause and footer toggle stop animation. Reduced motion disables looping art, parallax, flashes and sequencing delays. Sound remains opt-in. No new animation was added for launch terms or teasers.
-- **Social assets:** `index.html` retains title, description, favicon, OG and Twitter metadata. `public/og.png` is the existing 1200×630 city image; app icon is 512px. Required assets are local. The canonical crawler image uses `https://playblackout.xyz/og.png`.
+**Guide and contracts.** The guide has persistent section anchors and a readable prose column. Contract rows show full addresses and explorer/copy actions. The guide includes launch taxes, buying limits, claim windows, randomness, liquidity and contract risks.
 
-## Do’s and Don’ts
+## Accessibility and motion
 
-Reuse existing tokens, fonts, atlas, panels and native controls. Keep one filled yellow primary action per local decision. State currency, cost and simulated status before a purchase. Keep numerical rules in config/rules and derive repeated launch terms from `config.launchTax`.
+A skip link, semantic header/nav/main/footer, logical headings, form labels, named buttons, text alternatives, semantic meters and status/error live regions support keyboard and assistive-technology use. Yellow 3px focus rings with 4px offsets are visible on interactive elements. Native dialogs trap focus. Page navigation moves focus to main without a page scroll jump; guide deep links scroll to their named section.
 
-Preserve the label `blackout-mine-the-city-pray-the`. Never add a local `/freepack` page. Teasers contain only Enhancement, Grid stake, Billboards and Season pot, with no numbers. Filling the address block does not turn the demo into a connected game; that requires a separately implemented ChainAdapter.
+CRT scanlines and pixel art preserve the requested visual identity. A Pause city control stops ambient motion; the user's `prefers-reduced-motion` setting disables animations, transitions and smooth scrolling. The rendered probe observed 165 ambient animations normally and zero running under reduced motion. Sound starts off and requires a user action. Forced-colors rules preserve control boundaries and focus.
 
-For a new page, extend the hash dispatcher, use the existing shell and one h1, then compose panels and disclosures. Test narrow layouts, keyboard focus and saved state. Do not add a font CDN, competing type scale, wallet SDK or alternate artwork system to this static demo.
+## Review evidence and boundaries
 
-Current evidence: [launch validation](reports/launch-validation.md). Earlier reports document earlier revisions. Attribution and licenses remain in `NOTICE.md` and `licenses/`.
+The pinned Better Interface guide was applied across accessibility, layout, writing, typography, colors and UI during implementation. The final pinned design probe passed **16/16** checks at 320, 390 and 1440px. The 390px first-screen screenshot was inspected manually; product and primary action are visible. Functional browser checks cover 320, 390, 768 and 1440px. See `reports/live/validation.md` for exact commands, findings, fixes, browser/axe coverage and remaining limits.
+
+This is not a claim of complete WCAG conformance. Native screen readers, physical phones, external wallet onboarding and text-over-art contrast were not fully evaluated. The supplied on-chain phase/funding state limits real successful transaction testing; the populated game checks use controlled browser fixtures, with that boundary recorded explicitly.
