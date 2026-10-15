@@ -13,6 +13,7 @@ export function fixture() {
   const k=`${name}.${fn}`;state.readFns.push(k);if(state.failClaimRead&&k==='FarmRewards.claim')throw {code:-32005,message:'Rate limit exceeded'};
   if(state.revertRead===k)throw {code:3,message:'execution reverted',data:state.revertData||encodeErrorResult({abi:abiData.FarmCore as any,errorName:'InvalidValue'})};
   switch(k) {
+   case 'FarmRewards.EPOCH':return 21600n;case 'FarmRewards.PRECISION':return 10n**27n;
    case 'GameRegistry.module':return state.mismatch&&Number(a[0])===0?contracts.Economy:contracts[roles[Number(a[0])]];
    case 'GameRegistry.token':return contracts.Token;case 'GameRegistry.market':return contracts.V4Market;
    case 'V4Market.desk':return contracts.SwarmDesk;case 'V4Market.fees':return contracts.FeeRouter;

@@ -6,7 +6,7 @@ import {fixture,injected} from './v13-fixture';
 import {encodeErrorResult} from 'viem';
 import abi from '../src/abi.json';
 const {chromium,webkit}=requireTool('playwright');
-const sharp=(await import('node:module')).createRequire('/tmp/blackout-validation/package.json')('sharp');
+const sharp=(await import('node:module')).createRequire(process.env.BLACKOUT_VISUAL_TOOLS||'/tmp/blackout-validation/package.json')('sharp');
 const AxeBuilder=requireTool('@axe-core/playwright').default;
 const engine=process.env.BLACKOUT_TEST_ENGINE||'chromium';
 const browser=await (engine==='webkit'?webkit:chromium).launch({headless:true});

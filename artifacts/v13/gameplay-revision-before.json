@@ -1,0 +1,21 @@
+{
+  "checkedAt": "2026-10-15T13:29:12.750Z",
+  "passed": [
+    "Reproduced theft ambiguity: promised +12.96 H/s, fixture application loses 7.2 H/s",
+    "Reproduced disabled Claim after optimizer delay; no transaction requested",
+    "Reproduced Today omitting the fourth item at 10% health",
+    "Reproduced missing EPOCH/PRECISION reads in Farm/HUD"
+  ],
+  "observations": {
+    "theftPreview": "+12.96 H/s (22.50%)\n\n≈ +284.01 BLACKOUT / epoch\n\nCurrent health, Params and stake boost; before claim tax, grid events and gas. Active farms apply placement changes next epoch. Maximum hash can have a different token yield.\n\nRemove #4 Power Supply from room 1, slot 4\nPlace #7 Router into room 1, slot 4\n\n2 wallet transactions. Each step is simulated and confirmed before the next.\n\nProductive hash and allocation hash verified against FarmEngine with eth_call.",
+    "authoritativeAfter": "50400",
+    "rewardViewReads": {
+      "epoch": 0,
+      "precision": 0
+    }
+  },
+  "errors": [],
+  "limitations": [
+    "Controlled fixture only; no real signatures or chain mutations."
+  ]
+}

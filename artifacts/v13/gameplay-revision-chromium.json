@@ -1,0 +1,47 @@
+{
+  "checkedAt": "2026-10-15T13:39:08.569Z",
+  "passed": [
+    "Active theft with no installed Router preserves the 57.6 H/s optimum; final Engine previews use theft=true",
+    "Claim and Repair usable after optimizer delay; busy transaction guard retained",
+    "Claim and Repair usable after optimizer escape; busy transaction guard retained",
+    "Claim and Repair usable after optimizer error; busy transaction guard retained",
+    "Both Today surfaces show critical health first and all four identities via keyboard disclosure; repair review lists hardware; reflow and axe pass",
+    "Economy snapshot reads EPOCH and PRECISION for Farm/HUD",
+    "Unknown cable status blocks unverified optimization without a transaction",
+    "Healthy cable permits Router gain; cable change before Apply rejects the stale plan",
+    "Insufficient repair credits still identify active theft and preserve the optimum",
+    "A protected installed Router does not conceal active theft from candidate scoring",
+    "Nondefault getters reach the persisted snapshot and HUD daily rate; legacy cache ignored and refresh reuses static reads"
+  ],
+  "observations": {
+    "theftPreview": "+0 H/s (0.00%)\n\n≈ +0 BLACKOUT / epoch\n\nCurrent health, Params and stake boost; before claim tax, grid events and gas. Active farms apply placement changes next epoch. Maximum hash can have a different token yield.\n\nYour current placement is already optimal.\n\nProductive hash and allocation hash verified against FarmEngine with eth_call.",
+    "firstScreen": {
+      "width": 390,
+      "height": 844,
+      "optimize": {
+        "x": 16,
+        "y": 445.9375,
+        "width": 358,
+        "height": 48
+      }
+    },
+    "rewardViewReads": {
+      "epoch": 2,
+      "precision": 2
+    },
+    "alternateRewards": {
+      "epoch": "43200",
+      "precision": "100000000000000000000000000",
+      "per": 1239.5833333333335,
+      "daily": 2479.166666666667,
+      "reads": [
+        2,
+        2
+      ]
+    }
+  },
+  "errors": [],
+  "limitations": [
+    "Controlled fixture only; no real signatures or chain mutations."
+  ]
+}

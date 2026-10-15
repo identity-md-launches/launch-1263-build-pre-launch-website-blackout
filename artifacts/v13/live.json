@@ -1,6 +1,6 @@
 {
-  "checkedAt": "2026-10-15T12:46:54.929Z",
-  "block": "89235322",
+  "checkedAt": "2026-10-15T13:39:35.371Z",
+  "block": "89266638",
   "wallet": "0x6d51cBE774aeAe4dd40bCA2560E9bc2695A0d007",
   "items": 23,
   "params": {
@@ -33,9 +33,9 @@
     "enhancement": {
       "0": "0"
     },
-    "epoch": "4",
+    "epoch": "5",
     "theft": false,
-    "block": "89235322"
+    "block": "89266638"
   },
   "results": [
     {

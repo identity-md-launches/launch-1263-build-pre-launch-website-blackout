@@ -1,17 +1,18 @@
 {
-  "checkedAt": "2026-10-15T12:58:30.434Z",
+  "checkedAt": "2026-10-15T13:44:23.468Z",
   "limitBytes": 8388608,
-  "currentFileBytes": 12439023,
-  "fileCount": 336,
+  "currentFileBytes": 12685621,
+  "fileCount": 344,
   "groups": {
     ".gitignore": 805,
+    ".imd-responses.json": 2683,
     "CHANGELOG.md": 7985,
-    "DESIGN.md": 13953,
+    "DESIGN.md": 14654,
     "NOTICE.md": 2106,
-    "README.md": 19913,
-    "artifacts": 4227560,
+    "README.md": 21226,
+    "artifacts": 4450193,
     "assets": 1363,
-    "dist": 3853755,
+    "dist": 3855595,
     "docs.md": 8336,
     "index.html": 18535,
     "licenses": 22641,
@@ -25,28 +26,28 @@
     "tsconfig.json": 341,
     "vite.config.mjs": 135,
     "vitest.config.mjs": 255,
-    "web": 1243531
+    "web": 1260959
   },
-  "productionBytes": 3853755,
+  "productionBytes": 3855595,
   "relativeLocalReferencesChecked": 13,
   "protectedPathsUnchanged": true,
-  "artifactBytes": 4227560,
+  "artifactBytes": 4450193,
   "artifactBudget": 4700000,
   "budgets": [
     {
       "name": "review documents",
       "limit": 60000,
-      "bytes": 41540
+      "bytes": 51483
     },
     {
       "name": "PR description",
       "limit": 10000,
-      "bytes": 2242
+      "bytes": 2161
     },
     {
       "name": "screenshots",
       "limit": 3100000,
-      "bytes": 2892268
+      "bytes": 3096886
     },
     {
       "name": "recordings",
@@ -56,7 +57,7 @@
     {
       "name": "JSON evidence",
       "limit": 215000,
-      "bytes": 94915
+      "bytes": 103068
     }
   ],
   "submodules": 0,
@@ -65,20 +66,20 @@
     "dist/app-icon.png": "1b2e50dbb5dfe1a30d3c2ef49eb40e59720e18e0063b23db036c86d3fdfa3ebb",
     "dist/assets/blackout-rooftop.jpg": "c4479847b81951b9cb8db7b8f12ae9f31cfe20ad7f615fda09727c4f6c7e6b1f",
     "dist/assets/blackout-rooftop.webp": "02fa3cceaf54b2fa3bb3b2de76abe649df5eebd6fb73c9af5db66f9fef21258a",
-    "dist/assets/ccip-1tBf4G09.js": "aa391c39f4b78025cd206eb84e03a1e300e138402b6796affec85835bb03007d",
+    "dist/assets/ccip-DZf1wAuf.js": "5b88448fb2adb9ff662f376439498379bc5f74ffe5b62b1f91f620c79b915953",
     "dist/assets/hooks.module-DE9oX6xH.js": "18290b66f5736ddfcd375526f88fd55c2ecf072d6feee11d3554a78df4a3594f",
-    "dist/assets/index-BJZikeVK.js": "6c26a17fd7ddc350e19c208d7969d778218a23d0bf8f40fb932e3dc9ae547e77",
-    "dist/assets/index-CPRg3Y20.js": "29a8127b0909acaa2fb6203cc01817671d9764a8b133aa01f850bb0665599b0a",
-    "dist/assets/index-DejRotju.js": "ff38cd586774885357b0913c2092613ddea92a54e704d1118db32e755f2d509d",
-    "dist/assets/main-BlXaxRCH.css": "8729087b0131d825517c4ac7182186a6b4f8bb60f6ca253a89245892e0ee345a",
-    "dist/assets/main-ZfjVMCLG.js": "52bb30c52e1e9b087d1abd1278e6664b2b76823302511a0dbfc2e09e7e314260",
+    "dist/assets/index-CsZL55Ut.js": "8b38bde9b614d7d8e07e7d8a36072828f8f9bf760ffaa2f8ce1f7a76f7d5937d",
+    "dist/assets/index-Zf1YyQlO.js": "ce1dc1981ab4f606ecfa8e0dc108be8215c5e3b0fd82f80181f49f0d4f4ac191",
+    "dist/assets/index-aiPW2gdm.js": "2bc9e2fa9c5590eef5b2948f75909a7211b02ab25d5d74c53e6bd048256b52c3",
+    "dist/assets/main-BsdtDys3.css": "4861ffc0b0929c16b1e0b8cfc5b1083acce39c4c4d8c1b0496171b9ea1b92bc7",
+    "dist/assets/main-C26TM6jI.js": "ebac92c3ce7a61cc1f4a6a6232b2ec77310dedc85789f62855a0cdd92bdfeba4",
     "dist/assets/mono-latin.woff2": "08949f728dc52d528e69b1667d15c89a5686a4ee9a296ff90983985f99c380f7",
     "dist/assets/mono-semibold-latin.woff2": "0d1f0b8d0722224e32e9f28261bdc86c79115be73444ae5eceb73976a1bcdf83",
     "dist/assets/optimizer-worker-B9Mtu0uR.js": "c35b0c69da73afc3f1953d03d194d72f3b27974ad2fe90423117db5ffde02673",
     "dist/assets/pixel-latin.woff2": "5bd44fee71c38c481d5b546bf29a65b6a6e69dd4ab89acd8de2d49baeebb8317",
     "dist/favicon.svg": "3e60b94bd10ab70525729657f552eb6f983685eff3f66ad788437d3b0e8dcf82",
     "dist/free-tree.json": "071ac63a8147ee97998983c6b7326239aead890b600bdabd82d1fdcb34b6167e",
-    "dist/index.html": "707fe7a589c73b82c5d1c4cfcbdd44d22696f57575a6e133264c4ef8c838913d",
+    "dist/index.html": "282a1b98514072af652bc3adea7fa2fd3c265a215d145811ebb516e4730b8e89",
     "dist/manifest.webmanifest": "c812ab0ddc5745209fc079503bc14ce4f3600ec2d3149c5ae45f841845983af0",
     "dist/og.png": "94dd5e88fe0616a01c6258436782c4e0e4c4a306b0f01a78342cdae2f023781e",
     "dist/starter-tree.json": "8d6ee4c8a8c5bf8003fb163aac845f64759801543d9bd017ee5be1e4b3ab8951",

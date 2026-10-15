@@ -1,6 +1,59 @@
 # BLACKOUT gameplay update validation
 
-## Current gameplay revision — 2026-10-15
+## Four-finding revision — 2026-10-15
+
+**Complete for the stated revision scope.** All four findings reproduced on the original export before application changes. [Before evidence](v13/gameplay-revision-before.json), [final focused browser results](v13/gameplay-revision-chromium.json) and [review responses](../.imd-responses.json) distinguish the original defects from the fixes. This revision retains the existing design, routes, contract addresses/ABI, wallet flows, proof files, manifests, lockfiles and build configuration. No deployment, publication or real signature was performed.
+
+### Reproduction and repairs
+
+| Finding / source | Reproduced behavior | Fix and recheck |
+| --- | --- | --- |
+| Theft ambiguity, `web/src/farm-rules.ts:8`, `today.ts:5` | With six Common items installed and a Rare Router in inventory, current stats matched both theft predicates. Preview promised +12.96 H/s; the two synthetic transactions reduced output from 57.6 to 50.4 H/s | Resolve the predicate using successful sync preparation and repairCable simulation at one fresh block. Unknown status stops optimization. Params, enhancement, epoch, room stats and Engine verification use that block. Fresh checks before Apply reject changed cable status. Final fixture preserves 57.6 H/s with no moves; also tested protected Routers, insufficient repair credits, unknown preparation/repair errors, healthy cable and status changing before Apply |
+| Disabled confirmations, `web/src/gameplay.ts:73`, `main.ts:222` | Stop search left the next Claim dialog disabled | Finally restores confirmation state; failed searches close the inactive dialog; opening each actionable dialog resets both controls from transactionBusy. Stop search, Escape and worker-error tests then claim successfully and open Repair all; a held signature still disables confirmation |
+| Hidden critical health, `web/src/today.ts:21`, `gameplay-views.ts:12` | Three 99% rows hid item #4 at 10%, with no expansion | Sort by health and stable ID. Show the three most urgent rows, then a native counted disclosure for the rest on both Farm and HUD. Item-specific meter names and repair review list all identities/costs. Keyboard expansion exposes all four rows; no overflow at 320/375/390/1440; axe passes |
+| Literal rewards constants, `web/src/earnings-data.ts:9`, `earnings.ts:3`, `player.ts:34` | Farm/HUD issued zero EPOCH and PRECISION reads | Read both shared cached getters into the economy snapshot; propagate through current and historical earnings, daily rates, projection steps and payback. Retire the old economy cache namespace. Unit tests change both constants and check integer rounding. Browser fixture returns EPOCH=43200 and a different precision, verifies persisted values and a two-epoch daily estimate, then confirms refresh does not repeat static reads |
+
+### Commands and results from this revision
+
+Dependencies were installed from the unchanged lockfile in a fresh external task directory after the default install destination was not writable. No repository dependencies/configuration changed. Commands used `BLACKOUT_TOOLCHAIN=/tmp/blackout-revision-9867-toolchain` and browser runs used `PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-revision-9867-browsers`. The broader browser runner used `BLACKOUT_VISUAL_TOOLS=/tmp/blackout-revision-9867-visual/package.json` for external Sharp. The initial runtime lookup failure and unavailable WebKit are not reported as passing checks.
+
+| Command actually run | Result |
+| --- | --- |
+| `npm ci --prefix /tmp/blackout-revision-9867-toolchain --cache /tmp/blackout-revision-9867-npm-cache --no-audit --no-fund` after copying the unchanged web manifest/lockfile | Passed; tooling remains outside the submission |
+| `node web/tools/gameplay-revision.mjs --before` on original dist | Four findings reproduced, no real transactions |
+| `node web/tools/run.mjs typecheck` | Passed on final source |
+| `node web/tools/run.mjs build` | Passed on final source; ABI digest, 2,011 Merkle proofs and live roots checked. Nonfatal existing font URL and third-party annotation notices remain. Rebuilt relative-URL dist |
+| `node web/tools/v13-check.mjs unit` | Seven groups, including 65 seeded exhaustive-oracle farms, legal transaction prefixes, minimal moves, referral prechecks, Today and RPC behavior. [Results](v13/unit.json) |
+| `node web/tools/v12-check.mjs unit` | Eight groups, including new nondefault epoch/precision cases and existing integer math/projection/capacity/RPC/error/DEV-exclusion regressions. [Copied current report](v13/earnings-revision-unit.json); original historical report retained |
+| `node web/tools/gameplay-revision.mjs` | All 11 focused Chromium groups pass, zero page exceptions; includes original counterexample, error/cancel recovery, health disclosure and changed getters. [Results](v13/gameplay-revision-chromium.json) |
+| `node web/tools/v13-check.mjs browser` | All 13 original gameplay groups pass, including referral join/history, Claim, Repair all, Open all, notifications, failed simulation and partial-sequence stop. Four routes have zero axe violations. [Results](v13/chromium-browser.json) |
+| `node web/tools/v13-check.mjs live` | Live registry and 18 candidate layouts/72 room previews pass under both theft predicates; optimized allocation checked for a real 23-item farm. Read-only. [Results](v13/live.json) |
+| Pinned `taste.mjs --out test/scratch/taste --offline`, with explicit external `IMD_PLAYWRIGHT` | 16/16 checks pass at 320/390/1440. This is the offline entry route, supplemented by connected fixture/axe checks. [Results](v13/gameplay-revision-taste.json) |
+| `BLACKOUT_TEST_ENGINE=webkit node web/tools/gameplay-revision.mjs` | WebKit launch failed because required runtime libraries were unavailable. No WebKit interaction pass is claimed. [Limitation](v13/gameplay-revision-webkit.json) |
+| `node web/tools/v13-delivery.mjs` / `node web/tools/v13-bundle.mjs` | Final protected-path, static-asset, artifact-budget and complete accepted+revised tree size results are in [delivery](v13/delivery.json) and [bundle](v13/bundle-trial.json) |
+
+The initial post-fix browser harness had two timing/selector failures: its synthetic worker error closed the dialog before the harness waited for Stop search, and the new nested health list required selecting its outer container. Those harness assumptions were corrected; the final focused run passes. The broad screenshot run initially exceeded the existing screenshot path budget. The final curated 375/1440 full-page captures and 390 first-screen capture replace those intermediate images, preserving every required screenshot/recording within the unchanged budgets.
+
+### Better Interface coverage and final screenshots
+
+The pinned workflow and core principles in all six domains were read and applied to the changed surfaces. Existing tokens, pixel identity and other pages are retained. Source findings above supply the root causes; the table records the design review without duplicating them.
+
+| Domain | Coverage and result |
+| --- | --- |
+| Accessibility — Checked | Native disclosure with a 44px minimum summary target, item-specific meter names, keyboard Enter expansion on Farm and HUD; confirmation disabled/busy states checked. Four-route axe and focused Farm axe pass. No manual screen-reader, native zoom or physical-device session |
+| Layout — Checked | Lowest health appears first; all remaining rows are discoverable in the same block. Both surfaces retain existing responsive grids. Production checks at 320/375/390/1440 find no document overflow. At 390×844, Optimize spans y=445.94–493.94, above the fold |
+| Writing — Checked | “Show all N worn items” reports the actual repair count. Cable uncertainty gives Refresh/repair guidance. Repair review names each item, health and cost. No unrelated copy or route changes |
+| Typography — Checked | Existing 12px health/summary role, type scale, families and normal casing retained. Item labels wrap without clipping in inspected phone/desktop captures; numeric formatting tested under de-DE |
+| Colors — Checked within automated limits | No new palette. Health has percentages and names in addition to meters. Axe and the offline probe report no measured contrast failures; no claim is made for unmeasured image/gradient pairs |
+| UI — Checked | Cancel, Escape, worker failure, busy signature and subsequent confirmations tested. Native disclosure state is preserved on re-render; repair list reuses the existing scrollable review/footer pattern. No new animation, dependency or visual component system |
+
+Final [375px](screenshots/gameplay-farm-375.webp), [390px first screen](screenshots/gameplay-farm-390.webp) and [1440px](screenshots/gameplay-farm-1440.webp) captures were made from the production export served at `/preview/` and visually inspected. They use synthetic wallet data with three 99% items and one at 10%; they are not claimed live player balances. [PR description](PR.md) embeds 375/1440 evidence. Other screenshots and all required recordings remain historical evidence. [DESIGN.md](../DESIGN.md) documents the final source's disclosure, meter, review and responsive behavior.
+
+Limits: Chromium fixtures exercise synthetic signatures and RPC responses; no funds were signed. Live verification samples contract parity rather than proving every possible state. Future transaction inclusion can change state, and confirmed steps cannot be rolled back as a group. Unknown cable status intentionally blocks optimization until status can be verified. WebKit, native notifications, physical phones, screen readers and native zoom remain unverified. The exact search retains exponential worst-case cost. Final bundle measurement covers complete accepted/current trees; unavailable historical objects and publisher metadata are outside that measurement. No new failing design finding was observed in the revised surfaces.
+
+---
+
+## Historical initial gameplay update — 2026-10-15
 
 The delivered source and relative-URL static export add exact farm optimization, combo hints, referrals, Today, installed-item leaderboard previews and RPC error handling to the existing site. Contract addresses, ABI, proof files, existing manifests/lockfiles and build configuration are unchanged. No chain deployment, real wallet signature, publication or remote PR creation was performed. [PR-ready description and screenshots](PR.md) accompany this submission. Reports below this section are historical.
 

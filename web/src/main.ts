@@ -29,7 +29,7 @@ import { capacityReason, type EconomySnapshot, type EarningsHistory } from './ea
 import { miningHud, rewardsView, paybackView } from './rewards-view';
 import { waitingOpening, showPulls, updateOpeningWait, pauseOpening, readyOpening } from './pack-opening';
 import { animateNumbers } from './juice';
-let economy:EconomySnapshot|null=cached<EconomySnapshot>('economy'),history:EarningsHistory|null=null,peek:Farm|null=null,projectionDays=7,calculatorHash=100;
+let economy:EconomySnapshot|null=cached<EconomySnapshot>('economy.v2'),history:EarningsHistory|null=null,peek:Farm|null=null,projectionDays=7,calculatorHash=100;
 let playerLoading:Promise<void>|null=null;
 
 const $=<T extends HTMLElement=HTMLElement>(selector:string)=>document.querySelector<T>(selector)!;
@@ -102,7 +102,7 @@ function render(keepForms=false) {
  reflectMotion();reflectGrid();renderedRoute=current;updateControls();renderStatus();renderEarnings();animateNumbers();
 }
 function renderEarnings(){
- const hud=$('#mining-hud');hud.hidden=!account().isConnected;const todayOpen=!!hud.querySelector<HTMLDetailsElement>('#hud-today')?.open;hud.innerHTML=miningHud(farm,home,economy)+hudToday();if(todayOpen)hud.querySelector<HTMLDetailsElement>('#hud-today')?.setAttribute('open','');
+ const hud=$('#mining-hud');hud.hidden=!account().isConnected;const openDetails=Array.from(hud.querySelectorAll<HTMLDetailsElement>('details[open]')).map(d=>d.id);hud.innerHTML=miningHud(farm,home,economy)+hudToday();openDetails.forEach(id=>document.getElementById(id)?.setAttribute('open',''));
  document.body.classList.toggle('has-mining-hud',!hud.hidden);
  document.documentElement.style.setProperty('--hud-height',`${hud.hidden?0:hud.getBoundingClientRect().height}px`);
  const payback=document.getElementById('pack-payback');if(payback&&economy&&publicPrice)payback.innerHTML=paybackView(economy,publicPrice.tokens,farm?.level);
@@ -156,7 +156,7 @@ async function refreshHome() {
  if(refreshing)return;refreshing=true;
  const phaseKey=(h:Home|null)=>h?`${h.ready}:${h.paused}:${h.endowed}:${h.phases.join(',')}:${h.timestamp>=Number(h.launchTime)+172800}:${h.timestamp>=Number(h.launchTime)+1382400}:${pack.eligible?h.timestamp>=Number(pack.eligible.ends):false}`:'';
  const previous=phaseKey(home),previousError=globalError;
- try {home=await loadHome();remember('home',home);poolTrail=[...poolTrail,Number(home.available)/1e18].slice(-20);remember('pool-trail',poolTrail);homeFresh=true;setSpot(home.spot);globalError='';reflectGrid();try{economy=await loadEconomy(home);remember('economy',economy);}catch{globalError='Earnings signal reconnecting';}renderEarnings();}
+ try {home=await loadHome();remember('home',home);poolTrail=[...poolTrail,Number(home.available)/1e18].slice(-20);remember('pool-trail',poolTrail);homeFresh=true;setSpot(home.spot);globalError='';reflectGrid();try{economy=await loadEconomy(home);remember('economy.v2',economy);}catch{globalError='Earnings signal reconnecting';}renderEarnings();}
  catch(e){globalError=errorMessage(e);}
  finally {refreshing=false;renderStatus();renderPublic();if(route()==='home'){$('#feature-cards').innerHTML=featureCards(home);}else if(route()==='contracts'||previous!==phaseKey(home)||previousError!==globalError)render(true);else updateControls();}
 }
@@ -221,7 +221,7 @@ async function refreshReceipts(wallet:Address) {
 }
 function confirmAction(title:string,body:string,label:string,action:()=>Promise<void>,trigger?:HTMLElement|null) {
  if(!$<HTMLDialogElement>('#action-dialog').open)returnFocus=trigger??document.activeElement as HTMLElement;
- $('#action-tx-status').hidden=true;$('#action-tx-status').innerHTML='';$('#action-title').textContent=title;$('#action-body').innerHTML=body;$('#confirm-action').textContent=label;$('#action-error').textContent='';chosenAction=action;
+ $('#action-tx-status').hidden=true;$('#action-tx-status').innerHTML='';$('#action-title').textContent=title;$('#action-body').innerHTML=body;$('#confirm-action').textContent=label;$<HTMLButtonElement>('#confirm-action').disabled=transactionBusy;$<HTMLButtonElement>('#cancel-action').disabled=transactionBusy;$('#action-error').textContent='';chosenAction=action;
  $<HTMLDialogElement>('#action-dialog').showModal();$('#cancel-action').focus();
 }
 function input(id:string) {return $<HTMLInputElement|HTMLSelectElement>(`#${id}`).value.trim();}

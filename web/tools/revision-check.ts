@@ -82,7 +82,7 @@ function historicalFixture(mode: 'archive' | 'unavailable' | 'zero' = 'archive')
 }
 
 try {
-  const s: EconomySnapshot = { epoch: 4n, epochData: { start: 0n, end: 21600n, raw: 1020000n, miningSeconds: 21600n, mining: 0n, emission: 350n, tariff: 1500n, rewardPerHash: 0n, kind: 0, district: 0 }, previous: {} as any, available: 1000000n * E, farms: 3n, activeFarms: 3n, locked: 0n, dripEnd: 0n, timestamp: 0, fetchedAt: 0 };
+  const s: EconomySnapshot = { epochSeconds: 21600n, precision: 10n**27n, epoch: 4n, epochData: { start: 0n, end: 21600n, raw: 1020000n, miningSeconds: 21600n, mining: 0n, emission: 350n, tariff: 1500n, rewardPerHash: 0n, kind: 0, district: 0 }, previous: {} as any, available: 1000000n * E, farms: 3n, activeFarms: 3n, locked: 0n, dripEnd: 0n, timestamp: 0, fetchedAt: 0 };
   const end = project(s, 1000000n, 1000000n, 1000000n, 30).at(-1)!;
   const totals = [end.low, end.current, end.high].map(n => Number(n) / 1e18);
   result.observations.projection = totals;

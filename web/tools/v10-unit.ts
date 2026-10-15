@@ -28,9 +28,9 @@ for(let rarity=0;rarity<5;rarity++){item.rarity=rarity;farm.level=BigInt(LEVEL_G
 item.rarity=1;farm.level=1n;item.enhancing=4n;assert.match(placementReason(item,farm),/Upgrade/);item.enhancing=0n;
 farm.items.push({...item,id:2n,equipped:true});farm.rooms[0].slots[0]=2n;assert.equal(placementReason(item,farm),'One of each type per room');
 farm.rooms[0].slots[0]=0n;assert.equal(placementReason(item,farm,farm.rooms[0],0),'');farm.rooms[0].unlocked=false;assert.equal(placementReason(item,farm,farm.rooms[0],0),'Unlock this room first');pass('Rare/Epic/Legendary/Mythic level gates, duplicate types, upgrading, occupancy and locked rooms');
-assert.equal(miningEstimate([100n,100n,20n,false],{rewardPerHash:10n**27n,tariff:10000n,kind:0,district:3},3),80n);
-assert.equal(miningEstimate([100n,100n,20n,true],{rewardPerHash:10n**27n,tariff:10000n,kind:7,district:3},3),80n);
-assert.equal(miningEstimate([100n,100n,200n,true],{rewardPerHash:10n**27n,tariff:10000n,kind:7,district:2},3),0n);pass('Last-epoch mining estimate includes cheap-tariff district, audit and electricity floor');
+assert.equal(miningEstimate([100n,100n,20n,false],{rewardPerHash:10n**27n,tariff:10000n,kind:0,district:3},3,10n**27n),80n);
+assert.equal(miningEstimate([100n,100n,20n,true],{rewardPerHash:10n**27n,tariff:10000n,kind:7,district:3},3,10n**27n),80n);
+assert.equal(miningEstimate([100n,100n,200n,true],{rewardPerHash:10n**27n,tariff:10000n,kind:7,district:2},3,10n**27n),0n);pass('Last-epoch mining estimate includes cheap-tariff district, audit and electricity floor');
 const launch=1000000n,start=Number(launch)+172800,end=Number(launch)+1382400;
 assert.equal(claimWindow(launch,start-1).state,'upcoming');assert.equal(claimWindow(launch,start).state,'open');assert.equal(claimWindow(launch,end-1).state,'open');assert.equal(claimWindow(launch,end).state,'closed');
 const freeEnd=launch+30n*86400n;assert.equal(claimWindow(launch,Number(freeEnd)-1,freeEnd).state,'open');assert.equal(claimWindow(launch,Number(freeEnd),freeEnd).state,'closed');pass('Starter 48-hour opening and 16-day closing; free 30-day deadline boundaries');

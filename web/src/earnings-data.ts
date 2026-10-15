@@ -7,19 +7,21 @@ import type { Farm, Home } from './data';
 import { miningEstimate } from './player';
 import type { EarningsHistory, EconomySnapshot, EpochData } from './earnings';
 export async function loadEconomy(home:Home):Promise<EconomySnapshot>{
- const [epochData,previous,farms,activeFarms,dripStart,dripPeriod]=await Promise.all([
-  read<EpochData>('FarmRewards','epochData',[home.epoch]),read<EpochData>('FarmRewards','epochData',[home.epoch>0n?home.epoch-1n:0n]),read<bigint>('FarmCore','count'),read<bigint>('FarmRewards','activeFarmCount',[home.epoch]),read<bigint>('RewardPool','dripStart'),read<bigint>('RewardPool','dripPeriod'),
+ const [epochData,previous,farms,activeFarms,dripStart,dripPeriod,epochSeconds,precision]=await Promise.all([
+  read<EpochData>('FarmRewards','epochData',[home.epoch]),read<EpochData>('FarmRewards','epochData',[home.epoch>0n?home.epoch-1n:0n]),read<bigint>('FarmCore','count'),read<bigint>('FarmRewards','activeFarmCount',[home.epoch]),read<bigint>('RewardPool','dripStart'),read<bigint>('RewardPool','dripPeriod'),read<bigint>('FarmRewards','EPOCH'),read<bigint>('FarmRewards','PRECISION'),
  ]);
- return {epoch:home.epoch,epochData,previous,farms,activeFarms,dripEnd:dripStart+dripPeriod,locked:home.lockedEndowment,available:home.available,timestamp:home.timestamp,fetchedAt:Date.now()};
+ if(epochSeconds<=0n||precision<=0n)throw Error('Rewards constants unavailable. Refresh and retry.');
+ return {epochSeconds,precision,epoch:home.epoch,epochData,previous,farms,activeFarms,dripEnd:dripStart+dripPeriod,locked:home.lockedEndowment,available:home.available,timestamp:home.timestamp,fetchedAt:Date.now()};
 }
 const claimedEvent=parseAbiItem('event Claimed(address indexed player,uint256 amount,uint256 tax)');
 export async function loadEarningsHistory(farm:Farm):Promise<EarningsHistory>{
+ const precision=await read<bigint>('FarmRewards','PRECISION');
  const key=`earned.${farm.wallet.toLowerCase()}`,old=cached<EarningsHistory>(key),epochs=old?.epochs??[];
  let mined=old?.mined??0n;
  for(let start=(old?.through??0n)+1n;start<=farm.lastSettled;start+=30n){
   const rows=await Promise.all(Array.from({length:Number(farm.lastSettled-start+1n>30n?30n:farm.lastSettled-start+1n)},async(_,i)=>{
    const epoch=start+BigInt(i),[data,share]=await Promise.all([read<EpochData>('FarmRewards','epochData',[epoch]),read<readonly [bigint,bigint,bigint,boolean]>('FarmRewards','shares',[epoch,farm.wallet])]);
-   return {epoch,amount:miningEstimate(share,data,Number(farm.district))};
+   return {epoch,amount:miningEstimate(share,data,Number(farm.district),precision)};
   }));
   rows.forEach(row=>{mined+=row.amount;epochs.push(row);});
  }

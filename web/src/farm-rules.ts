@@ -1,22 +1,25 @@
 import { type Address } from 'viem';
-import { ABI, client, read } from './chain';
+import { ABI, addresses, client, read } from './chain';
+import type { ContractName } from './config';
 import { COMBO_KEYS, type Bonuses, type RuleSet, roomMath, loadout, score } from './farm-math';
 import type { Farm, RoomStats } from './data';
+import { cableStatus } from './today';
+async function ruleRead<T>(block:bigint,name:ContractName,functionName:string,args:readonly unknown[]=[]):Promise<T>{return await client.readContract({address:addresses[name],abi:ABI[name],functionName,args,blockNumber:block}) as T;}
 export async function loadRules(farm:Farm):Promise<RuleSet>{
- const [address,block,epoch]=await Promise.all([read<Address>('FarmCore','params'),client.getBlockNumber(),read<bigint>('FarmRewards','epoch')]);
+ const block=await client.getBlockNumber({cacheTime:0});
+ const [address,epoch,theft]=await Promise.all([ruleRead<Address>(block,'FarmCore','params'),ruleRead<bigint>(block,'FarmRewards','epoch'),cableStatus(farm.wallet,block)]);
+ if(theft===null)throw Error('Cable status could not be verified. Refresh and retry. If Today shows a damaged cable, repair it before optimizing.');
  const values=await Promise.all(Object.entries(COMBO_KEYS).map(async([name,key])=>{
   const [current,bounds]=await Promise.all([client.readContract({address,abi:ABI.Params,functionName:'get',args:[key],blockNumber:block}),client.readContract({address,abi:ABI.Params,functionName:'bounds',args:[key],blockNumber:block})]);
   return [name,current,(bounds as [bigint,bigint])[1]] as const;
  }));
  const enhancement:Record<number,bigint>={0:0n};
- await Promise.all([...new Set(farm.items.map(i=>i.overclock))].filter(Boolean).map(async level=>{const table=await read<readonly [bigint,bigint,bigint,bigint]>('Enhancement','table',[BigInt(level)]);enhancement[level]=table[2];}));
- const rules:RuleSet={current:Object.fromEntries(values.map(([k,v])=>[k,v])) as Bonuses,maximum:Object.fromEntries(values.map(([k,,v])=>[k,v])) as Bonuses,enhancement,epoch,theft:false,block};
- // theftUntil is private. Its only effect on preview is epoch < theftUntil.
- // Infer that predicate from the authoritative room views, then verify both
- // productive and allocation outputs. Never read a private storage layout.
- const live=await Promise.all(farm.rooms.map(r=>read<RoomStats>('FarmCore','roomStats',[farm.wallet,BigInt(r.index)])));
- const matches=(theft:boolean)=>live.every((s,r)=>sameStats(s,roomMath(farm.items.filter(i=>farm.rooms[r].slots.includes(i.id)),{...rules,theft})));
- if(!matches(false)){if(!matches(true))throw Error('Farm changed while loading rules. Refresh and try again.');rules.theft=true;}
+ await Promise.all([...new Set(farm.items.map(i=>i.overclock))].filter(Boolean).map(async level=>{const table=await ruleRead<readonly [bigint,bigint,bigint,bigint]>(block,'Enhancement','table',[BigInt(level)]);enhancement[level]=table[2];}));
+ const rules:RuleSet={current:Object.fromEntries(values.map(([k,v])=>[k,v])) as Bonuses,maximum:Object.fromEntries(values.map(([k,,v])=>[k,v])) as Bonuses,enhancement,epoch,theft,block};
+ // No Router (or a protected Router) makes both theft predicates produce the
+ // same current roomStats. Use repair eligibility, never that ambiguous match.
+ const live=await Promise.all(farm.rooms.map(r=>ruleRead<RoomStats>(block,'FarmCore','roomStats',[farm.wallet,BigInt(r.index)])));
+ if(!live.every((s,r)=>sameStats(s,roomMath(farm.items.filter(i=>farm.rooms[r].slots.includes(i.id)),rules))))throw Error('Farm changed while loading rules. Refresh and try again.');
  await verifyLoadout(farm,loadout(farm),rules);
  return rules;
 }
@@ -24,8 +27,8 @@ export function sameStats(a:RoomStats,b:RoomStats){return Object.keys(b).every(k
 export async function verifyLoadout(farm:Farm,ids:bigint[],rules:RuleSet){
  const local=score(ids,farm.items,rules);
  const [allocation,...rooms]=await Promise.all([
-  read<bigint>('FarmEngine','allocationHash',[ids,farm.paidPacks>0n]),
-  ...farm.rooms.map(r=>read<RoomStats>('FarmEngine','preview',[ids,rules.theft?rules.epoch+1n:0n,BigInt(r.index)]))
+  ruleRead<bigint>(rules.block,'FarmEngine','allocationHash',[ids,farm.paidPacks>0n]),
+  ...farm.rooms.map(r=>ruleRead<RoomStats>(rules.block,'FarmEngine','preview',[ids,rules.theft?rules.epoch+1n:0n,BigInt(r.index)]))
  ]);
  if(allocation!==local.allocation||rooms.some((r,index)=>!sameStats(r,roomMath(farm.items.filter(i=>ids.slice(index*6,index*6+6).includes(i.id)),rules))))throw Error('Contract preview differs from this plan. Refresh and optimize again.');
  return local;

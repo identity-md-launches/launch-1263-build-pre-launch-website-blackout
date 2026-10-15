@@ -38,12 +38,12 @@ export async function loadFarm(wallet: Address) {
  }));
  let claimNet:bigint|null=null,claimError='';
  if(pending>0n) {try{claimNet=await simulate<bigint>('FarmRewards','claim',[pending],wallet);}catch(e){if(!contractErrorName(e))throw e;claimError=errorMessage(e,{action:'claim'});}}
- const [hash,lastShare,lastEpoch,entrySeconds]=await Promise.all([
+ const [hash,lastShare,lastEpoch,entrySeconds,precision]=await Promise.all([
   read<bigint>('FarmRewards','farmWeight',[wallet,currentEpoch]),
   read<readonly [bigint,bigint,bigint,boolean]>('FarmRewards','shares',[lastSettled,wallet]),
-  read<{rewardPerHash:bigint;tariff:bigint;kind:number;district:number}>('FarmRewards','epochData',[lastSettled]),read<bigint>('FarmRewards','entrySeconds',[currentEpoch,wallet]),
+  read<{rewardPerHash:bigint;tariff:bigint;kind:number;district:number}>('FarmRewards','epochData',[lastSettled]),read<bigint>('FarmRewards','entrySeconds',[currentEpoch,wallet]),read<bigint>('FarmRewards','PRECISION'),
  ]);
- const lastEarnings=miningEstimate(lastShare,lastEpoch,Number(district));
+ const lastEarnings=miningEstimate(lastShare,lastEpoch,Number(district),precision);
  return {inventory,expansions,expansionPrice:daily*(expansions+1n)*(expansions+1n),entrySeconds,hash,lastEarnings,ageCap,wallet,hasFarm,level,xp,district,balance,ethBalance,pending,capacity,ownedCount,paidPacks,daily,lastSettled,settledEpoch,items,rooms,claimNet,claimError,yieldPerHash,scrapAllowance,autoRepair};
 }
 export async function loadReceipt(kind:Receipt['kind'],id:bigint):Promise<Receipt> {

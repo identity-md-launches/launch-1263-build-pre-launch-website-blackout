@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-10-15T12:45:35.739Z",
+  "checkedAt": "2026-10-15T13:33:37.524Z",
   "passes": [
     "Engine integer math: mutually exclusive compute combos, rarity, full tags, health, enhancements, theft, zero-health masks and cap",
     "65 seeded exhaustive-oracle farms: exact optimum, gates, unique kinds, ownership, capacity and legal transaction prefixes",

@@ -1,29 +1,21 @@
-# Add contract-verified farm optimization, referrals and Today
+# Fix theft-aware optimization and Today regressions
 
-Farm now leads with Optimize farm and a daily action block. Players can review an exact legal placement, see combo gains and apply the shortest reachable move sequence with confirmation progress. The plan mirrors FarmEngine integer math and is checked by eth_call before application. Referral links, eligibility-checked first-action joining, inviter/referee history and gross earned credits are included. Today groups tax-aware claiming, combined item/cable repair, pack opening, epoch/district information and opt-in notices.
+The optimizer could promise a gain while cable theft made a newly installed Router unproductive. It now resolves cable status with sync/repair simulations, uses that status throughout search and block-pinned Engine verification, and rechecks before Apply. Unknown status blocks the plan. The reported fixture now keeps its optimal 57.6 H/s layout instead of dropping to 50.4 H/s.
 
-Leaderboard previews read installed hardware, numeric decimals use dots, and failing RPC endpoints/log ranges back off without repeated denial requests. Existing visual identity, contract addresses, ABI, dependency lockfiles and build configuration remain intact. `dist/` is regenerated with relative assets.
+Canceling or failing a search restores later confirmation buttons. Today prioritizes the lowest-health hardware and exposes every remaining item through a counted disclosure on Farm and the Mining HUD; Repair all names every item and cost. Earnings now consume cached FarmRewards EPOCH/PRECISION getters throughout estimates, history, daily rates and projections.
 
-Validation: production build/typecheck; seven unit groups including 65 exhaustive-oracle farm cases; 13 Chromium interaction groups; zero axe violations on four routes; live parity for 18 candidate layouts/72 room previews and an optimized real farm. The design probe passes 15/16 with the existing BLACKOUT/ETH capitalization exception. See [validation](validation.md) for results, six-domain review and limits.
+All four findings reproduced before editing; responses are in [`.imd-responses.json`](../.imd-responses.json). Existing design, routes, contracts, wallet flows, manifests and lockfiles are retained. The production export is rebuilt with relative assets.
 
-Screenshots below use synthetic wallet data against the production export; no real funds were signed. WebKit was unavailable. Exact search has exponential worst-case cost and can be canceled. Future token income is an estimate.
+Validation: build/typecheck; seven optimizer/referral/Today unit groups; eight earnings/regression groups; 11 focused Chromium groups; all 13 broader gameplay groups; zero axe violations on four routes; live read-only parity for 18 layouts and 72 room previews. The offline design probe passes 16/16. See [actual results and six-domain review](validation.md).
+
+These screenshots show the final production export with synthetic wallet data, including the fourth item's critical health and expanded item list. No real transaction was signed. WebKit could not launch because required runtime libraries were unavailable.
 
 ## Farm at 375px
 
-![Farm at 375px: Optimize farm and Today](screenshots/gameplay-farm-375.webp)
+![375px Farm: urgent health first and all four worn items available](screenshots/gameplay-farm-375.webp)
 
 ## Farm at 1440px
 
-![Farm at 1440px: Today with claim, repair, packs and district event](screenshots/gameplay-farm-1440.webp)
+![1440px Farm: all worn hardware visible in Today](screenshots/gameplay-farm-1440.webp)
 
-## Optimizer review at 375px and 1440px
-
-![Mobile optimizer review with visible Cancel and Apply](screenshots/gameplay-optimize-375.webp)
-
-![Desktop optimizer review with hash and token estimate and move list](screenshots/gameplay-optimize-1440.webp)
-
-## Room combo guidance
-
-![Active combos and near misses for installed rooms](screenshots/gameplay-combos-1440.webp)
-
-This is the review description supplied with the Git submission; no remote PR was opened by the worker.
+[390px first screen](screenshots/gameplay-farm-390.webp) shows the product and Optimize farm without scrolling. Historical screenshots and required recordings are retained. This is the PR description delivered with the submission; no remote PR was opened.

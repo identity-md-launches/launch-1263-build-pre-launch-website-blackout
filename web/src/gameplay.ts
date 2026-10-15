@@ -1,8 +1,8 @@
 import type { Address } from 'viem';
 import type { Farm, Home } from './data';
-import { loadFarm } from './data';
+import { loadFarm, KINDS } from './data';
 import { findReceipts } from './receipts';
-import { assertWallet, send, approve, setTx, tx, setBeforeFarmAction } from './wallet';
+import { assertWallet, send, approve, setTx, tx, setBeforeFarmAction, transactionBusy } from './wallet';
 import { errorMessage, read } from './chain';
 import { gameplay, todayView, hashText } from './gameplay-views';
 import { loadRules, verifyLoadout, optimizationEconomy, estimateOptimization } from './farm-rules';
@@ -69,15 +69,16 @@ export async function optimizeDialog(){
     await send('FarmCore',m.kind,m.kind==='place'?[m.id,BigInt(m.room),BigInt(m.slot)]:[BigInt(m.room),BigInt(m.slot)],`Optimize farm · ${done+1}/${plan.moves.length}`);
     expected[m.room*6+m.slot]=m.kind==='place'?m.id:0n;done++;sequenceProgress(done,plan.moves.length,'Confirmed');
    }}catch(error){resetSequenceError(error,done,plan.moves.length);}
-  });confirm.disabled=false;
- }finally{worker?.terminate();worker=null;if(button){button.disabled=false;button.textContent='Optimize farm';}}
+  });
+ }catch(error){const dialog=document.querySelector<HTMLDialogElement>('#action-dialog');if(dialog?.querySelector('[data-stop-optimizer]'))dialog.close();throw error;}
+ finally{worker?.terminate();worker=null;const confirm=document.querySelector<HTMLButtonElement>('#confirm-action');if(confirm)confirm.disabled=transactionBusy;if(button){button.disabled=transactionBusy;button.textContent='Optimize farm';}}
 }
 export async function repairAllDialog(){
  const from=assertWallet(),farm=await loadFarm(from);assertWallet(from);
  if(farm.lastSettled<farm.settledEpoch){host.confirm('Sync before repairing','<p>Completed epochs can change health and repair costs. Sync, then choose Repair all again to review the current total.</p>','Sync farm',async()=>{assertWallet(from);await send('FarmCore','sync',[],'Sync before repairing');});return;}
  const today=await loadToday(farm,host.home()?.epoch??await read<bigint>('FarmRewards','epoch')),plan=repairPlan(farm,today);assertWallet(from);
  if(!plan.items.length&&!plan.cable)throw Error('No repairs are currently available.');
- host.confirm('Repair all hardware',`<p>Restore ${plan.items.length} worn items${plan.cable?' and the stolen cable':''} for <strong>${units(plan.total)} BLACKOUT</strong> plus gas, from your wallet.</p><p>One repair per transaction; an exact token approval is requested if needed. If any quote increases, the sequence stops for review.</p>${sequenceMarkup}`,'Approve & repair all',async()=>{
+ host.confirm('Repair all hardware',`<p>Restore ${plan.items.length} worn items${plan.cable?' and the stolen cable':''} for <strong>${units(plan.total)} BLACKOUT</strong> plus gas, from your wallet.</p><ul class="move-list repair-list">${plan.items.map(i=>`<li>${KINDS[i.kind]} #${i.id} · ${i.durability/100}% health · ${units(i.repair)} BLACKOUT</li>`).join('')}${plan.cable?`<li>Cable · ${units(today.cableCost)} BLACKOUT</li>`:''}</ul><p>One repair per transaction; an exact token approval is requested if needed. If any quote increases, the sequence stops for review.</p>${sequenceMarkup}`,'Approve & repair all',async()=>{
   assertWallet(from);await beforeFarmAction(from);const settled=await read<bigint>('FarmRewards','settledEpoch');if(settled>farm.lastSettled)throw Error('A new epoch settled. Sync and review repair costs again.');await approve('FarmCore',plan.total);let done=0,total=plan.items.length+Number(plan.cable);
   try{for(const item of plan.items){assertWallet(from);if(await read<bigint>('FarmRewards','settledEpoch')>farm.lastSettled)throw Error('A new epoch settled. Sync and review remaining repairs.');const quote=await read<bigint>('Economy','repairQuote',[item.id]);if(quote>item.repair)throw Error('Repair price increased. Review the total again.');sequenceProgress(done,total,`Repair #${item.id}`);await send('FarmCore','repair',[item.id,true],`Repair all · ${done+1}/${total}`);done++;}
    if(plan.cable){assertWallet(from);if(await read<bigint>('FarmRewards','settledEpoch')>farm.lastSettled)throw Error('A new epoch settled. Sync and review cable repair.');if(await read<bigint>('Economy','farmDaily',[from])/4n>today.cableCost)throw Error('Cable repair price increased.');sequenceProgress(done,total,'Repair cable');await send('FarmCore','repairCable',[true],'Repair cable');done++;}

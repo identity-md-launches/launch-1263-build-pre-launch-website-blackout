@@ -1,6 +1,6 @@
 # BLACKOUT
 
-A pixel-art mining game on **Robinhood Chain (4663)**, at https://playblackout.xyz. This revision adds contract-verified farm optimization, room combo hints, referrals and a Today block to the existing live site. The rooftop, art, routes, earnings views and pack experience are retained.
+A pixel-art mining game on **Robinhood Chain (4663)**, at https://playblackout.xyz. This revision fixes four reviewed defects in the existing optimizer, Today controls and earnings inputs. The rooftop, art, routes, earnings views and pack experience are retained.
 
 The static hosting deliverable is **[dist/index.html](dist/index.html)** and its complete local assets. Routes use hashes and asset URLs are relative, including at a gateway subpath. No contracts were deployed, tokens replaced or real transactions signed. Existing contract addresses, ABIs, proof files, manifests, lockfiles and build configuration remain intact.
 
@@ -10,7 +10,7 @@ Farm now starts with **Optimize farm** and **Today**. Today also opens from the 
 
 The optimizer runs an exact branch-and-bound search in a cancellable Web Worker. It enforces current room unlocks, six slots, one kind per room, ownership, enhancement locks, rarity gates and inventory capacity at every transaction prefix. It includes every hash/power/protection combo and the highest qualifying rarity set. Equal-hash plans prefer lower power, then fewer transactions. Items staying in their room keep their slots and replacements match outgoing kinds; the sequence planner uses direct minimal moves or a shortest-path search for temporary placements when inventory is full. Search time is exponential in the worst case; the UI never silently returns a timed-out heuristic as the best plan.
 
-`farm-math.ts` follows the deployed FarmEngine integer order. `farm-rules.ts` resolves Params through `FarmCore.params()`, reads current values and upper bounds, and reads enhancement bonuses from `Enhancement.table`. Productive room hash uses current health/bonuses; `allocationHash` uses full health and maximum allowed bonuses. The private theft deadline has no getter: its active/inactive predicate is inferred from authoritative `roomStats`, then checked through Engine previews. Fixed Solidity constants without getters (kinds/tags, base hash, rarity gates and the 5% referral credit) are mirrored from the pinned source, never substituted for available views.
+`farm-math.ts` follows the deployed FarmEngine integer order. `farm-rules.ts` resolves Params through `FarmCore.params()`, reads current values and upper bounds, and reads enhancement bonuses from `Enhancement.table`. Productive room hash uses current health/bonuses; `allocationHash` uses full health and maximum allowed bonuses. The private theft deadline has no getter. Its active/inactive predicate comes from successful `sync` preparation and `repairCable(false)` simulations at the same fresh block, shared with Today. An unknown result blocks optimization; room stats alone cannot distinguish theft without an unprotected Router. Params, enhancement, epoch, room stats and Engine previews use that block, and Apply repeats the checks against fresh state. Fixed Solidity constants without getters (kinds/tags, base hash, rarity gates and the 5% referral credit) are mirrored from the pinned source, never substituted for available views.
 
 Every proposed layout is checked against `FarmEngine.allocationHash` and all four `FarmEngine.preview` calls before review and again before application. The review lists the hash change, percentage, approximate net mining change per epoch and every move. The token estimate uses live pool/emission/tariff, next-epoch competing allocation and stake boost; it excludes future wear, events, governance changes, referral income, claim tax and gas. Maximizing hash does not guarantee the largest token yield. Each move is simulated and confirmed separately; a failed step stops the queue and retains confirmed steps. A settled but unsynced farm must sync before optimization or repair quotes. Cross-session placement changes and changed rules invalidate a plan.
 
@@ -20,7 +20,9 @@ Every connected farm has a copyable `https://playblackout.xyz/?ref=<address>` li
 
 Contract source reviewed: [FarmCore, FarmEngine, FarmItems, FarmRewards and Params at the pinned deployment commit](https://github.com/identity-md-launches/launch-1729-blackout-l4-job-b/tree/77c962e6fce9652ee93dff2037b1a09e7a66bd04/src), plus their Economy/Enhancement/math dependencies. Runtime addresses and ABI provenance remain in the existing `web/src/config.ts` and `web/data/abi-provenance.json`. No new deployment is used.
 
-Current checks: production build and typecheck pass; optimizer/referral/Today unit groups pass; Chromium interaction checks and four-route axe pass; live read-only parity passes for 18 candidate arrays, 72 room previews and an optimized real farm. The pinned design probe is 15/16; only the retained BLACKOUT/ETH casing is flagged. [PR description and 375/1440 screenshots](artifacts/PR.md), [actual validation and limitations](artifacts/validation.md), and [design system](DESIGN.md) accompany the export. WebKit could not start; no real signatures, physical-phone or screen-reader session was performed.
+Current checks: production build/typecheck pass; all four review findings reproduced before changes; 11 focused Chromium regression groups and all 13 broader gameplay groups pass. These include the theft counterexample, search cancellation/error recovery, all worn-item disclosures, nondefault rewards getters and cached refreshes. Seven optimizer/referral/Today unit groups and eight earnings/regression groups pass. Live read-only parity passes for 18 candidate arrays and 72 room previews. The pinned design probe passes 16/16 on the offline export. [PR description and 375/1440 screenshots](artifacts/PR.md), [actual validation and limitations](artifacts/validation.md), [review responses](.imd-responses.json), and [design system](DESIGN.md) accompany the export. WebKit could not start; no real signatures, physical-phone or screen-reader session was performed.
+
+Today shows the three lowest-health items first, with **Show all N worn items** exposing the remaining named health bars in both Farm and the Mining HUD. Repair all lists every item and quote before signing. Stopping or failing an optimizer search restores subsequent confirmation controls while retaining the pending-transaction guard.
 
 After installing the unchanged toolchain and Playwright Chromium, run:
 
@@ -28,6 +30,8 @@ After installing the unchanged toolchain and Playwright Chromium, run:
 node web/tools/run.mjs typecheck
 node web/tools/run.mjs build
 node web/tools/v13-check.mjs unit
+node web/tools/v12-check.mjs unit
+PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browsers node web/tools/gameplay-revision.mjs
 node web/tools/v13-check.mjs live
 PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browsers node web/tools/v13-check.mjs browser
 PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browsers node web/tools/v13-check.mjs capture
@@ -90,16 +94,16 @@ The single wallet control retains EIP-6963 discovery, Coinbase Smart Wallet and 
 
 ## Earnings model
 
-`web/src/earnings.ts` uses bigint arithmetic from the deployed `FarmRewards` model:
+`web/src/earnings.ts` uses bigint arithmetic from the deployed `FarmRewards` model. The economy snapshot reads and caches `EPOCH()` and `PRECISION()`; no literal substitutes authorize earnings calculations. Historical mining also reads the shared cached precision. Old snapshots without these fields are ignored:
 
-- Six-hour mining allocation: `available × emission × miningSeconds / (40,000 × 21,600)`.
-- Allocation rate: `mining × 10^27 / city allocation hash`.
+- Mining allocation: `available × emission × miningSeconds / (40,000 × EPOCH)`.
+- Allocation rate: `mining × PRECISION / city allocation hash`.
 - Farm gross: productive hash times that rate. Electricity uses power hash times the rate and tariff; net cannot go below zero.
 - Historical mining uses settled on-chain shares, including audit and district tariff adjustments. Claimed totals come from actual `Claimed` logs and show net received. History excludes referrals, redistributed tax and scrap credits.
 
-Projection starts with the live pool, current productive/power output, allocation hash, farm count and scheduled endowment release. It advances four epochs per day. The band models **+5% / unchanged / −1% active farms per day**, holding average competing farm hash constant. Pool depletion reduces future emission amounts; **the deployed emission rate has no automatic rate decay**. The model holds that governance-controlled rate fixed and includes the 1% season allocation. Growth applies only to other farms while your hash stays fixed; with no competitors the scenarios coincide. Future purchases, governance changes, wear, events, audit, referrals, claim tax and gas are excluded and disclosed beside the chart. These are scenarios, not promised returns.
+Projection starts with the live pool, current productive/power output, allocation hash, farm count and scheduled endowment release. It advances in the epoch duration returned by the contract and derives daily rates from that duration (currently four six-hour epochs per day). The band models **+5% / unchanged / −1% active farms per day**, holding average competing farm hash constant. Pool depletion reduces future emission amounts; **the deployed emission rate has no automatic rate decay**. The model holds that governance-controlled rate fixed and includes the 1% season allocation. Growth applies only to other farms while your hash stays fixed; with no competitors the scenarios coincide. Future purchases, governance changes, wear, events, audit, referrals, claim tax and gas are excluded and disclosed beside the chart. These are scenarios, not promised returns.
 
-Pack payback uses today's one-pack token quote and the actual weighted drop odds, including support hardware's 60% base hash and the below-level-10 Mythic fallback. It reports the first quarter-day cumulative projected mining reaches the purchase price, or over 365 days. It assumes all three items can be placed; gates, duplicates, gas and maintenance can extend payback. Per-item values are estimated contributions apportioned within their room, not separately payable balances.
+Pack payback uses today's one-pack token quote and the actual weighted drop odds, including support hardware's 60% base hash and the below-level-10 Mythic fallback. It reports the first modeled epoch when cumulative projected mining reaches the purchase price, or over 365 days. It assumes all three items can be placed; gates, duplicates, gas and maintenance can extend payback. Per-item values are estimated contributions apportioned within their room, not separately payable balances.
 
 ## Pack opening and recovery
 
