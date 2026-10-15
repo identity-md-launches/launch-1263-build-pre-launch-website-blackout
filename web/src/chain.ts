@@ -1,4 +1,4 @@
-import { createPublicClient, fallback, http, type Abi, type Address, type Hex, type Transport, encodeFunctionData, decodeFunctionResult } from 'viem';
+import { createPublicClient, createTransport, http, type Abi, type Address, type Hex, type Transport, type EIP1193RequestFn, encodeFunctionData, decodeFunctionResult } from 'viem';
 import abis from './abi.json';
 import { chain, RPC_URLS, POLL_MS, contracts, roles, type ContractName, ROOTS } from './config';
 let visiblePage:Promise<void>|null=null;
@@ -10,18 +10,24 @@ function waitForVisiblePage(){
  });
  return visiblePage;
 }
-// Each attempt, including receipt monitoring and fallback retries, respects visibility.
-// viem doubles retryDelay on each retry of the ordered fallback cycle.
-export const rpcTransport = () => fallback(RPC_URLS.map((url):Transport => {
- // dRPC's free endpoint rejects JSON-RPC batches larger than three (code 31).
- // Contract multicalls remain enabled; this cap also applies to log scans.
- const endpoint=http(url,{batch:{batchSize:url===RPC_URLS[1]?3:40,wait:20},retryCount:0,timeout:6000});
- return options=>{
-  const transport=endpoint(options);
-  const request:typeof transport.request=async (args,requestOptions)=>{await waitForVisiblePage();return transport.request(args,requestOptions);};
-  return {...transport,request};
- };
-}), { rank: false, retryCount: 2, retryDelay: 500 });
+// Race independent reads. A rejected endpoint never wins; no serial timeout or
+// automatic retry cycle can hold up the next UI update. Wallet writes use the
+// player's provider, never this transport.
+export const rpcTransport = ():Transport => options => {
+ const endpoints=RPC_URLS.map(url=>http(url,{batch:{batchSize:url===RPC_URLS[1]?3:40,wait:10},retryCount:0,timeout:4000})(options));
+ return createTransport({key:'blackout-race',name:'Robinhood concurrent RPC',type:'custom',retryCount:0,
+  request: (async (args,requestOptions)=>{
+   await waitForVisiblePage();
+   try{return await Promise.any(endpoints.map(endpoint=>endpoint.request(args,requestOptions)));}
+   catch(error){
+    // Preserve viem's original contract error (including revert data) for the
+    // existing error mapper and transaction simulations.
+    const errors=(error as AggregateError).errors??[error];
+    throw errors.find(e=>/revert/i.test(String(e)))??errors[0];
+   }
+  }) as EIP1193RequestFn
+ });
+};
 // Deployless Multicall3 requires no guessed deployment address or on-chain deployment.
 export const client = createPublicClient({ chain, transport: rpcTransport(),
  batch: { multicall: { deployless: true, batchSize: 4096, wait: 20 } }, pollingInterval: POLL_MS });

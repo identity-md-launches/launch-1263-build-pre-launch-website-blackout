@@ -1,0 +1,80 @@
+{
+  "checkedAt": "2026-10-15T07:40:59.957Z",
+  "passed": [
+    "chromium: 390px first screen shows BLACKOUT, Buy a pack and Claim free pack; global bars absent",
+    "chromium: burger navigation, pack quantity and slippage validation work before wallet connection; purchase remains gated",
+    "chromium: wallet sheet opens, Escape closes it and focus returns",
+    "chromium: all retained routes reflow at 320, 375, 390, 768 and 1440px",
+    "chromium: 200% root-text enlargement reflows on the five primary pages",
+    "chromium: Home, Packs, disconnected Farm and public Rewards pass axe A/AA checks",
+    "chromium: reduced motion stops all continuous animation",
+    "chromium: cached real public data survives an offline reload; wallet UI remains responsive",
+    "chromium: phone wallet links and Coinbase Smart Wallet remain available",
+    "webkit: 390px first screen shows BLACKOUT, Buy a pack and Claim free pack; global bars absent",
+    "webkit: burger navigation, pack quantity and slippage validation work before wallet connection; purchase remains gated",
+    "webkit: wallet sheet opens, Escape closes it and focus returns",
+    "webkit: all retained routes reflow at 320, 375, 390, 768 and 1440px",
+    "webkit: 200% root-text enlargement reflows on the five primary pages",
+    "webkit: Home, Packs, disconnected Farm and public Rewards pass axe A/AA checks",
+    "webkit: reduced motion stops all continuous animation",
+    "webkit: phone wallet links and Coinbase Smart Wallet remain available"
+  ],
+  "limitations": [
+    "webkit: no successful snapshot available for offline reload check",
+    "webkit: 225 browser-native access-control messages from live RPCs or the deliberate outage, no application errors"
+  ],
+  "screenshots": [
+    "artifacts/screenshots/home-375.webp",
+    "artifacts/screenshots/packs-375.webp",
+    "artifacts/screenshots/farm-375.webp",
+    "artifacts/screenshots/rewards-375.webp",
+    "artifacts/screenshots/home-1440.webp",
+    "artifacts/screenshots/packs-1440.webp",
+    "artifacts/screenshots/farm-1440.webp",
+    "artifacts/screenshots/rewards-1440.webp",
+    "artifacts/screenshots/home-public-1440.webp"
+  ],
+  "accessibility": [
+    {
+      "engine": "chromium",
+      "route": "home",
+      "violations": []
+    },
+    {
+      "engine": "chromium",
+      "route": "packs",
+      "violations": []
+    },
+    {
+      "engine": "chromium",
+      "route": "farm",
+      "violations": []
+    },
+    {
+      "engine": "chromium",
+      "route": "rewards",
+      "violations": []
+    },
+    {
+      "engine": "webkit",
+      "route": "home",
+      "violations": []
+    },
+    {
+      "engine": "webkit",
+      "route": "packs",
+      "violations": []
+    },
+    {
+      "engine": "webkit",
+      "route": "farm",
+      "violations": []
+    },
+    {
+      "engine": "webkit",
+      "route": "rewards",
+      "violations": []
+    }
+  ],
+  "errors": []
+}

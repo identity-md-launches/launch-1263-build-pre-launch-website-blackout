@@ -1,0 +1,77 @@
+{
+  "checkedAt": "2026-10-15T07:16:30.092Z",
+  "fixtureWritesOnly": true,
+  "browserVersions": [
+    "141.0.7390.37"
+  ],
+  "passed": [
+    "chromium: v8 regression — View week reads week 2 without a wallet; claims remain gated",
+    "chromium: EIP-6963 wallets are named; generic duplicate hidden",
+    "chromium: switch/add chain 4663 with correct RPC",
+    "chromium: populated Farm axe WCAG checks",
+    "chromium: inventory and installed filters survive a completed refresh",
+    "chromium: onboarding hidden for an occupied farm, greyed rarity/duplicate gates, tap item then rack and cancel",
+    "chromium: place into selected empty room slot",
+    "chromium: unplace hardware",
+    "chromium: quote, exact approval, repair",
+    "chromium: room eligibility and purchase",
+    "chromium: simulated 10% claim tax, net preview and claim",
+    "chromium: destructive scrap confirmation, cancellation and minimum payout",
+    "chromium: verified NFT #1927 and free allowlist visibility",
+    "chromium: stepper 1–10, ETH primary visible at 390, no gift or duplicate sale copy",
+    "chromium: populated Packs reflows at four widths, passes axe and preserves keyboard stepper focus",
+    "chromium: ETH purchase is one buyWithETH transaction, connected recipient, 3% bounds and ETH value",
+    "chromium: v8 regression — signature, transaction label and pending explorer link stay inside active dialog",
+    "chromium: Advanced slippage changes minTokens and maxCost together",
+    "chromium: invalid slippage shows a field error and never reaches a wallet prompt",
+    "chromium: BLACKOUT approval only for insufficient allowance, skipped for equal and greater allowance",
+    "chromium: failed signature is visible inside the dialog and cancel restores controls",
+    "chromium: waiting receipt shows Revealing..., becomes Reveal, clock preserves input focus",
+    "chromium: all three revealed items remain visible with reduced motion and no animation",
+    "chromium: expired window re-arms, reveals hardware and reloads remaining receipts and inventory",
+    "chromium: v8 regression — buy and eligible claim buttons re-enable immediately after reveal without refresh",
+    "chromium: fully opened receipts hide Reveal, including manual receipt lookup",
+    "chromium: concurrent fully opened receipt InvalidValue becomes Already opened, see your Farm",
+    "chromium: unrelated InvalidValue remains actionable when packs are still unopened",
+    "chromium: NFT and free proofs submitted to StarterClaim after reveals",
+    "chromium: captured starter entropy remains revealable after 256 blocks without re-arming",
+    "chromium: rejected wallet request remains recoverable",
+    "chromium: custom contract error names decoded before signing",
+    "chromium: bubbled ERC-6093 token error decoded",
+    "chromium: mined revert retains hash and decodes InvalidValue",
+    "chromium: pending transaction and explorer link become confirmed",
+    "chromium: disabled Civic phases stay Coming soon",
+    "chromium: all 18 contract links and launch numbers",
+    "chromium: starter countdown before 48h and Closed after 16 days",
+    "chromium: registry mismatch warns and disables writes",
+    "chromium: verification recovery restores actions",
+    "chromium: unlisted wallet has no free-claim button",
+    "chromium: RPC outage is visible and retry recovers",
+    "chromium: leaderboard sorts chain hash and reads the best district; global activity bar removed",
+    "chromium: primary RPC down falls back to dRPC",
+    "chromium: primary and secondary down reach PublicNode",
+    "chromium: all RPCs down retain last-good standings and show a small reconnecting badge",
+    "chromium: hidden tabs stop polling; Docs does not poll Farm inventory or Leaderboard",
+    "chromium: no application script errors; native request diagnostics are recorded"
+  ],
+  "limitations": [],
+  "errors": [],
+  "screenshots": [],
+  "accessibility": [
+    {
+      "engine": "chromium",
+      "route": "farm fixture",
+      "violations": []
+    },
+    {
+      "engine": "chromium",
+      "route": "packs fixture",
+      "violations": []
+    },
+    {
+      "engine": "chromium",
+      "route": "ETH signature dialog",
+      "violations": []
+    }
+  ]
+}

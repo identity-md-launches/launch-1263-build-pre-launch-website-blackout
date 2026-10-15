@@ -61,19 +61,21 @@ assert.equal(BigInt(JSON.parse(storage.get(key)!).cursor),head);
 console.log('PASS receipt discovery: verified deployment start, partial cursor persisted, retry resumes overlap and keeps previously discovered pack');
 
 const eventBlock=deployment+10n;
-let removed=false;
-const registered=(block:bigint)=>({address:addresses.FarmCore,topics:encodeEventTopics({abi:ABI.FarmCore,eventName:'Registered',args:{player:wallet}}),data:encodeAbiParameters([{type:'uint256'}],[3n]),blockNumber:block,logIndex:0,transactionHash:keccak256(stringToHex('log checkpoint fixture'))});
+let removed=false,activityEnd=deployment;
+const registered=(block:bigint)=>({address:addresses.PackSale,topics:encodeEventTopics({abi:ABI.PackSale,eventName:'PackCommitted',args:{id:1n,player:wallet}}),data:encodeAbiParameters([{type:'uint256'},{type:'uint256'},{type:'bool'}],[3n,100n,false]),blockNumber:block,logIndex:0,transactionHash:keccak256(stringToHex('log checkpoint fixture'))});
 client.getLogs=(async(q:any)=>{
  ranges.push({...q,activity:true});
+ if(q.toBlock-q.fromBlock+1n>10000n)throw new Error('block range too large');
  if(failAt!==null&&q.fromBlock>=failAt)throw outage;
+ if(q.toBlock>activityEnd)activityEnd=q.toBlock;
  return !removed&&q.fromBlock<=eventBlock&&q.toBlock>=eventBlock?[registered(eventBlock)]:[];
 }) as typeof client.getLogs;
 ranges=[];failAt=deployment+20000n;
 await assert.rejects(loadActivity());
-failAt=null;ranges=[];
+const activityCheckpoint=activityEnd;failAt=null;ranges=[];
 const activity=await loadActivity();
-assert.equal(ranges[0].fromBlock,deployment+19999n-16n);
-assert.equal(activity.length,1);assert.match(activity[0].text,/new miner joined/);
+assert.equal(ranges[0].fromBlock,activityCheckpoint-16n);
+assert.equal(activity.length,1);assert.match(activity[0].text,/bought 3 packs/);
 assert.equal((await loadActivity()).length,1,'Overlap must not duplicate events');
 // Move the returned head back to the event to model a shallow rollback; its
 // replacement range has no event, so the obsolete entry must disappear.

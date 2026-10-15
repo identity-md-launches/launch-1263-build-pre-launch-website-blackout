@@ -13,3 +13,5 @@ Press Start 2P and IBM Plex Mono are bundled locally under their included SIL Op
 Live contract ABIs and the receipt reveal helper are derived from identity-md-launches/launch-1729-blackout-l4-job-b, commit `77c962e6fce9652ee93dff2037b1a09e7a66bd04`. Solidity source files carry SPDX MIT identifiers. ABI build provenance is in `web/data/abi-provenance.json`; the retained helper is `web/src/upstream-reveal.js`.
 
 Official wallet marks were obtained from RainbowKit's wallet definitions and are used only to identify their respective wallets. See `licenses/Rainbow-wallet-marks.txt`. Wallet names and logos remain their owners' trademarks.
+
+The rooftop hero is the assignment-supplied image at https://i.postimg.cc/bq6SbGFD/a5a23cb0-247c-4dcc-8bb1-f9615571b741.jpg. The original is retained as `public/assets/blackout-rooftop.jpg`; a locally optimized WebP and the social preview are derived from it. No additional license or authorship is asserted for this supplied asset. The image is served locally, not hotlinked.

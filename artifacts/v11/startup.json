@@ -1,0 +1,12 @@
+{
+  "checkedAt": "2026-10-15T07:40:59.861Z",
+  "passed": [
+    "chromium: menu works while the game module is still downloading and survives initialization",
+    "chromium: connect works while the game module is still downloading and survives initialization",
+    "chromium: buy works while the game module is still downloading and survives initialization",
+    "webkit: menu works while the game module is still downloading and survives initialization",
+    "webkit: connect works while the game module is still downloading and survives initialization",
+    "webkit: buy works while the game module is still downloading and survives initialization"
+  ],
+  "errors": []
+}

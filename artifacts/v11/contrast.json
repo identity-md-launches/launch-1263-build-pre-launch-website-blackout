@@ -1,0 +1,41 @@
+{
+  "method": "WCAG sRGB relative luminance calculation from final CSS tokens. Solid colors only; text over the art and all interaction states are not comprehensively measured.",
+  "pairs": [
+    {
+      "role": "primary text",
+      "fg": "#070a14",
+      "bg": "#ffe600",
+      "ratio": 15.6
+    },
+    {
+      "role": "body on panel",
+      "fg": "#eef2fa",
+      "bg": "#0e1324",
+      "ratio": 16.46
+    },
+    {
+      "role": "muted on panel",
+      "fg": "#a3b0c9",
+      "bg": "#0e1324",
+      "ratio": 8.45
+    },
+    {
+      "role": "cyan on panel",
+      "fg": "#39e6ff",
+      "bg": "#0e1324",
+      "ratio": 12.25
+    },
+    {
+      "role": "magenta on panel",
+      "fg": "#ff3df2",
+      "bg": "#0e1324",
+      "ratio": 6.33
+    },
+    {
+      "role": "control border on panel",
+      "fg": "#566580",
+      "bg": "#0e1324",
+      "ratio": 3.14
+    }
+  ]
+}

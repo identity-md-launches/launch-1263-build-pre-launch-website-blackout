@@ -1,0 +1,33 @@
+{
+  "checkedAt": "2026-10-15T07:14:07.106Z",
+  "fixtureWritesOnly": true,
+  "browserVersions": [
+    "26.0"
+  ],
+  "passed": [
+    "webkit: shake/flip/particles, Common/Epic/Mythic colors, mute, reduced-motion switch, second-ticking mining, drag placement across a refresh, visible mobile Claim and Rewards axe",
+    "webkit: claim-preview failure retains last net; RPC outage retains starter eligibility and free claim display",
+    "webkit: Leaderboard and More pass axe; activity history is available",
+    "webkit: mobile Select hardware is visible; stale Packs errors do not mark recovered Farm as reconnecting; hidden pending transactions make no RPC calls and confirmation resumes when visible"
+  ],
+  "limitations": [],
+  "errors": [],
+  "screenshots": [],
+  "accessibility": [
+    {
+      "engine": "webkit",
+      "route": "rewards fixture",
+      "violations": []
+    },
+    {
+      "engine": "webkit",
+      "route": "leaderboard fixture",
+      "violations": []
+    },
+    {
+      "engine": "webkit",
+      "route": "more fixture",
+      "violations": []
+    }
+  ]
+}

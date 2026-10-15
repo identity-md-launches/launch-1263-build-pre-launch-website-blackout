@@ -1,0 +1,55 @@
+{
+  "checkedAt": "2026-10-15T07:37:16.990Z",
+  "lighthouseVersion": "12.8.2",
+  "browserVersion": "141.0.7390.37",
+  "score": 88,
+  "metrics": {
+    "first-contentful-paint": {
+      "value": 1058.766,
+      "display": "1.1 s",
+      "score": 1
+    },
+    "largest-contentful-paint": {
+      "value": 1359.3540000000003,
+      "display": "1.4 s",
+      "score": 1
+    },
+    "speed-index": {
+      "value": 2414.5255652884493,
+      "display": "2.4 s",
+      "score": 0.98
+    },
+    "total-blocking-time": {
+      "value": 456,
+      "display": "460 ms",
+      "score": 0.62
+    },
+    "cumulative-layout-shift": {
+      "value": 0.0621962332928311,
+      "display": "0.062",
+      "score": 0.97
+    }
+  },
+  "settings": {
+    "formFactor": "mobile",
+    "throttlingMethod": "simulate",
+    "throttling": {
+      "rttMs": 150,
+      "throughputKbps": 1638.4,
+      "requestLatencyMs": 562.5,
+      "downloadThroughputKbps": 1474.5600000000002,
+      "uploadThroughputKbps": 675,
+      "cpuSlowdownMultiplier": 4
+    },
+    "screenEmulation": {
+      "mobile": true,
+      "width": 412,
+      "height": 823,
+      "deviceScaleFactor": 1.75,
+      "disabled": false
+    }
+  },
+  "runtimeError": null,
+  "runWarnings": [],
+  "server": "Local static export at /preview/, no compression, live RPCs; default mobile simulated throttling. Cold browser storage. No fixture data."
+}

@@ -1,0 +1,105 @@
+{
+  "method": "Three isolated cold-storage Lighthouse mobile runs on the same final export, default simulated throttling, local uncompressed static server, live public RPCs.",
+  "runs": [
+    {
+      "file": "lighthouse-mobile-run1.json",
+      "score": 88,
+      "checkedAt": "2026-10-15T07:37:16.990Z",
+      "metrics": {
+        "first-contentful-paint": {
+          "value": 1058.766,
+          "display": "1.1 s",
+          "score": 1
+        },
+        "largest-contentful-paint": {
+          "value": 1359.3540000000003,
+          "display": "1.4 s",
+          "score": 1
+        },
+        "speed-index": {
+          "value": 2414.5255652884493,
+          "display": "2.4 s",
+          "score": 0.98
+        },
+        "total-blocking-time": {
+          "value": 456,
+          "display": "460 ms",
+          "score": 0.62
+        },
+        "cumulative-layout-shift": {
+          "value": 0.0621962332928311,
+          "display": "0.062",
+          "score": 0.97
+        }
+      }
+    },
+    {
+      "file": "lighthouse-mobile-run2.json",
+      "score": 86,
+      "checkedAt": "2026-10-15T07:39:04.562Z",
+      "metrics": {
+        "first-contentful-paint": {
+          "value": 1059.151,
+          "display": "1.1 s",
+          "score": 1
+        },
+        "largest-contentful-paint": {
+          "value": 1509.8560000000002,
+          "display": "1.5 s",
+          "score": 1
+        },
+        "speed-index": {
+          "value": 2309.0237992410075,
+          "display": "2.3 s",
+          "score": 0.99
+        },
+        "total-blocking-time": {
+          "value": 529.0000000000002,
+          "display": "530 ms",
+          "score": 0.55
+        },
+        "cumulative-layout-shift": {
+          "value": 0.0621962332928311,
+          "display": "0.062",
+          "score": 0.97
+        }
+      }
+    },
+    {
+      "file": "lighthouse-mobile.json",
+      "score": 86,
+      "checkedAt": "2026-10-15T07:39:20.269Z",
+      "metrics": {
+        "first-contentful-paint": {
+          "value": 1060.3629999999998,
+          "display": "1.1 s",
+          "score": 1
+        },
+        "largest-contentful-paint": {
+          "value": 1361.1149999999998,
+          "display": "1.4 s",
+          "score": 1
+        },
+        "speed-index": {
+          "value": 2339.799668354065,
+          "display": "2.3 s",
+          "score": 0.98
+        },
+        "total-blocking-time": {
+          "value": 559.0000000000007,
+          "display": "560 ms",
+          "score": 0.53
+        },
+        "cumulative-layout-shift": {
+          "value": 0.03109811664641555,
+          "display": "0.031",
+          "score": 1
+        }
+      }
+    }
+  ],
+  "minimumScore": 86,
+  "medianScore": 86,
+  "maximumScore": 88,
+  "distIndexSha256": "d22b63acf9d6165b6705f82a103d18e814461ef82a33be9560281a0a81f66c16"
+}

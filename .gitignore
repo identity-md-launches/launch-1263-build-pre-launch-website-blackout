@@ -1,0 +1,19 @@
+# Explicit delivery budget: see artifacts/PATH-BUDGET.md (750 KiB total).
+# Runtime assets stay in public/ and dist/; these are never ignored.
+**/node_modules/
+**/.npm/
+**/.cache/
+**/.vite/
+**/npm-cache/
+**/playwright-report/
+**/test-results/
+!artifacts/
+artifacts/*
+!artifacts/PATH-BUDGET.md
+!artifacts/validation.md
+!artifacts/screenshots/
+artifacts/screenshots/*
+!artifacts/screenshots/*.webp
+!artifacts/v11/
+artifacts/v11/*
+!artifacts/v11/*.json

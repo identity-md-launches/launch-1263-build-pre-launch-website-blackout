@@ -1,0 +1,13 @@
+{
+  "checkedAt": "2026-10-15T06:42:15.755Z",
+  "passed": [
+    "All three endpoints start together; a quick error cannot beat the first valid response; slow primary does not delay reads",
+    "All hanging endpoints reject in one four-second window, with no serial fallback or retries",
+    "Contract revert data survives the RPC race for the unchanged transaction error mapper",
+    "Display snapshots preserve bigint precision; corrupt or disabled storage does not block the app"
+  ],
+  "timings": {
+    "firstGoodMs": 64,
+    "allDownMs": 4013
+  }
+}

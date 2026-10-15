@@ -1,0 +1,581 @@
+{
+  "checkedAt": "2026-10-15T07:08:26.496Z",
+  "signedTransactions": 0,
+  "endpoints": [
+    {
+      "url": "https://rpc.mainnet.chain.robinhood.com",
+      "chainId": 4663,
+      "ms": 173
+    },
+    {
+      "url": "https://robinhood.drpc.org",
+      "chainId": 4663,
+      "ms": 60
+    },
+    {
+      "url": "https://robinhood-rpc.publicnode.com",
+      "chainId": 4663,
+      "ms": 74
+    }
+  ],
+  "registry": "All 14 modules, token, market, desk, fee router and both claim roots match",
+  "home": {
+    "epochStart": "1792027990",
+    "event": [
+      0,
+      10000,
+      4,
+      "0xca64ad0b54806259a8916b2ecc278cc7895226102ea4af0c266a015d0991ec3a",
+      true
+    ],
+    "block": "89033728",
+    "timestamp": 1792048106,
+    "fetchedAt": 1792048107009,
+    "epoch": "3",
+    "epochEnd": "1792049590",
+    "endowed": true,
+    "available": "14467052543011160982798262",
+    "lockedEndowment": "196489638447971781305114639",
+    "spot": "92225717649827319865912098",
+    "tax": "100",
+    "taxLeft": "0",
+    "launchTime": "1791967009",
+    "ready": true,
+    "paused": false,
+    "opensAt": "1791970609",
+    "phases": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "notices": [
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0"
+    ],
+    "grid": [
+      "10000",
+      "10000",
+      "10000",
+      "10000",
+      "10000",
+      "10000",
+      "10000",
+      "10000"
+    ],
+    "native": "89033729"
+  },
+  "price": {
+    "tokens": "178441327737989238063648",
+    "eth": "2101534839800472",
+    "fetchedAt": 1792048107074
+  },
+  "totals": {
+    "farms": "8",
+    "opened": "24",
+    "fetchedAt": 1792048107660
+  },
+  "activity": [
+    {
+      "key": "0x169a4eacc1ff1f0c366b3efb3abda3dd3fa4d1caff63f6831fe6d7fa7fe3b122:3",
+      "block": "88994854",
+      "index": 3,
+      "hash": "0x169a4eacc1ff1f0c366b3efb3abda3dd3fa4d1caff63f6831fe6d7fa7fe3b122",
+      "text": "0x6d51…d007 revealed 1 pack · Router",
+      "kind": "reveal",
+      "rarity": 1
+    },
+    {
+      "key": "0x16c3a122637838c5e363febc0e078397556ca61cf963ef0902004f0d160eb738:5",
+      "block": "88994657",
+      "index": 5,
+      "hash": "0x16c3a122637838c5e363febc0e078397556ca61cf963ef0902004f0d160eb738",
+      "text": "0x6d51…d007 bought 5 packs",
+      "kind": "purchase"
+    },
+    {
+      "key": "0x2113633bfd66b45f099c4cfb40d1d54c63795ed3c316353be07c1707dd6a00e0:5",
+      "block": "88938782",
+      "index": 5,
+      "hash": "0x2113633bfd66b45f099c4cfb40d1d54c63795ed3c316353be07c1707dd6a00e0",
+      "text": "0x1395…10c9 revealed 1 pack · Surge Protector",
+      "kind": "reveal",
+      "rarity": 2
+    },
+    {
+      "key": "0x069f4497d39fbc2b59b13c85c94ef1bb3306432808109b78b06afe9ff112c091:10",
+      "block": "88938320",
+      "index": 10,
+      "hash": "0x069f4497d39fbc2b59b13c85c94ef1bb3306432808109b78b06afe9ff112c091",
+      "text": "0x1395…10c9 bought 1 pack",
+      "kind": "purchase"
+    },
+    {
+      "key": "0xd39e00a5bcfe05a6bb9f577783c543c0281cd326dc8126411e183eb4635ee348:11",
+      "block": "88818072",
+      "index": 11,
+      "hash": "0xd39e00a5bcfe05a6bb9f577783c543c0281cd326dc8126411e183eb4635ee348",
+      "text": "0x887b…A88C revealed 1 pack · Solar Panel",
+      "kind": "reveal",
+      "rarity": 1
+    },
+    {
+      "key": "0xb4f055368e4bc7032b6c65f69095fd1b0085a2eac8ad6c8fae2d169d3ccdf74b:18",
+      "block": "88817758",
+      "index": 18,
+      "hash": "0xb4f055368e4bc7032b6c65f69095fd1b0085a2eac8ad6c8fae2d169d3ccdf74b",
+      "text": "0x887b…A88C revealed 1 pack · Fan",
+      "kind": "reveal",
+      "rarity": 3
+    },
+    {
+      "key": "0xeccdd0146327dc637e5473942668d6e3344e491d60e946255aede3fbd057c36c:17",
+      "block": "88817624",
+      "index": 17,
+      "hash": "0xeccdd0146327dc637e5473942668d6e3344e491d60e946255aede3fbd057c36c",
+      "text": "0x887b…A88C bought 2 packs",
+      "kind": "purchase"
+    },
+    {
+      "key": "0x3c2867bc620e40fc2ee941ce6fc7f2ca683a4ad8d34d8e9ae297e13092e2202a:3",
+      "block": "88812734",
+      "index": 3,
+      "hash": "0x3c2867bc620e40fc2ee941ce6fc7f2ca683a4ad8d34d8e9ae297e13092e2202a",
+      "text": "0x887b…A88C revealed 1 pack · ASIC",
+      "kind": "reveal",
+      "rarity": 0
+    },
+    {
+      "key": "0x7fd37daeb5994c233dd0b41c0c82a3d44ab7074ee87e88afc869d1ac4776b79f:7",
+      "block": "88812402",
+      "index": 7,
+      "hash": "0x7fd37daeb5994c233dd0b41c0c82a3d44ab7074ee87e88afc869d1ac4776b79f",
+      "text": "0x887b…A88C revealed 1 pack · Fan",
+      "kind": "reveal",
+      "rarity": 2
+    },
+    {
+      "key": "0x986cddff4273eaf0a4f21477e23fcd71b801f8f05c441972e725d825a3ad5543:14",
+      "block": "88812047",
+      "index": 14,
+      "hash": "0x986cddff4273eaf0a4f21477e23fcd71b801f8f05c441972e725d825a3ad5543",
+      "text": "0x887b…A88C bought 2 packs",
+      "kind": "purchase"
+    },
+    {
+      "key": "0xe47da1b5f660fc48eec4cccc7edf5663ad34a3ccb4fd00989b1d3caafcb6ab47:3",
+      "block": "88809076",
+      "index": 3,
+      "hash": "0xe47da1b5f660fc48eec4cccc7edf5663ad34a3ccb4fd00989b1d3caafcb6ab47",
+      "text": "0x887b…A88C revealed 1 pack · Power Supply",
+      "kind": "reveal",
+      "rarity": 2
+    },
+    {
+      "key": "0xb805463ab6017dad934ff44593cf2bdd49018d3eab7d836f190d311be97cd290:3",
+      "block": "88808803",
+      "index": 3,
+      "hash": "0xb805463ab6017dad934ff44593cf2bdd49018d3eab7d836f190d311be97cd290",
+      "text": "0x887b…A88C revealed 1 pack · Liquid Cooling",
+      "kind": "reveal",
+      "rarity": 0
+    },
+    {
+      "key": "0xe4a32fe8ee05ed3f639933ba0700b9fd42611c06edad3b6b6ec24726b7208c82:4",
+      "block": "88808484",
+      "index": 4,
+      "hash": "0xe4a32fe8ee05ed3f639933ba0700b9fd42611c06edad3b6b6ec24726b7208c82",
+      "text": "0x887b…A88C revealed 1 pack · ASIC",
+      "kind": "reveal",
+      "rarity": 1
+    },
+    {
+      "key": "0x3064f06678ea804ffe25451dd06d4f0a78b416e74d332757bae6a88d3e7d3f6e:27",
+      "block": "88807980",
+      "index": 27,
+      "hash": "0x3064f06678ea804ffe25451dd06d4f0a78b416e74d332757bae6a88d3e7d3f6e",
+      "text": "0x887b…A88C bought 2 packs",
+      "kind": "purchase"
+    },
+    {
+      "key": "0x6bf38e3c513ccfedfa51fbc2d8d7e3a0ebb2f15138be5cc4bd7b5f2a64b37389:71",
+      "block": "88638427",
+      "index": 71,
+      "hash": "0x6bf38e3c513ccfedfa51fbc2d8d7e3a0ebb2f15138be5cc4bd7b5f2a64b37389",
+      "text": "0x887b…A88C bought 1 pack",
+      "kind": "purchase"
+    },
+    {
+      "key": "0x815a2072307fab4edd7d4722fb5770aeee1db8408bd053bc2ee38bb5c9b6cc93:33",
+      "block": "88545144",
+      "index": 33,
+      "hash": "0x815a2072307fab4edd7d4722fb5770aeee1db8408bd053bc2ee38bb5c9b6cc93",
+      "text": "0x5DEF…91B5 revealed 1 pack · Power Supply",
+      "kind": "reveal",
+      "rarity": 1
+    },
+    {
+      "key": "0x8459b0f785d503fa670716888d0b9e3ff044ea4891de6a6fed09fda8a81f1b70:33",
+      "block": "88540894",
+      "index": 33,
+      "hash": "0x8459b0f785d503fa670716888d0b9e3ff044ea4891de6a6fed09fda8a81f1b70",
+      "text": "0x5DEF…91B5 bought 1 pack",
+      "kind": "purchase"
+    },
+    {
+      "key": "0x36231f1f5d62cdfffa7685c042cff5e0980f309b2b16b0640ff4ed80cdc01616:205",
+      "block": "88432005",
+      "index": 205,
+      "hash": "0x36231f1f5d62cdfffa7685c042cff5e0980f309b2b16b0640ff4ed80cdc01616",
+      "text": "0xDeD6…e6C6 revealed 1 pack · Router",
+      "kind": "reveal",
+      "rarity": 1
+    },
+    {
+      "key": "0x6be31faae98ee58426dc69a2d06f044cbf0e33d245b21f586f16cfc5cb1846d4:4",
+      "block": "88431923",
+      "index": 4,
+      "hash": "0x6be31faae98ee58426dc69a2d06f044cbf0e33d245b21f586f16cfc5cb1846d4",
+      "text": "0xDeD6…e6C6 bought 1 pack",
+      "kind": "purchase"
+    },
+    {
+      "key": "0x4ca4f44fda4171e4b1c1f44a2800d2f8141cf5b265f99f41dc26a8c6f74f23c3:52",
+      "block": "88430137",
+      "index": 52,
+      "hash": "0x4ca4f44fda4171e4b1c1f44a2800d2f8141cf5b265f99f41dc26a8c6f74f23c3",
+      "text": "0xDeD6…e6C6 revealed 1 pack · Router",
+      "kind": "reveal",
+      "rarity": 0
+    }
+  ],
+  "leaderboard": {
+    "epoch": "3",
+    "farms": [
+      {
+        "wallet": "0x887b86B6B6957F7bbeA88B8CEfD392f39236A88C",
+        "hash": "80080",
+        "district": 2
+      },
+      {
+        "wallet": "0x6743B21E3841A1878C42d1805Bf8bd8E33D20978",
+        "hash": "70560",
+        "district": 5
+      },
+      {
+        "wallet": "0x6d51cBE774aeAe4dd40bCA2560E9bc2695A0d007",
+        "hash": "63020",
+        "district": 5
+      },
+      {
+        "wallet": "0x70b2EE03eD78855C612f9cA0BeD658aa740d24C1",
+        "hash": "38000",
+        "district": 3
+      },
+      {
+        "wallet": "0x5DEF181184F761BaF692c2736F7102d757aa91B5",
+        "hash": "32800",
+        "district": 3
+      },
+      {
+        "wallet": "0x701B7FE0E5f515bdC0Bc6Dbc265487c4ab1b4922",
+        "hash": "32800",
+        "district": 4
+      },
+      {
+        "wallet": "0xDeD6156b0d74B7FD8693EeC57948f78324f8e6C6",
+        "hash": "18000",
+        "district": 6
+      },
+      {
+        "wallet": "0x1395f53B0472827c78964316a7f5595f302e10c9",
+        "hash": "3051",
+        "district": 2
+      }
+    ],
+    "districts": [
+      "0",
+      "0",
+      "83131",
+      "70800",
+      "32800",
+      "133580",
+      "18000",
+      "0"
+    ],
+    "total": 8
+  },
+  "farm": {
+    "wallet": "0x6d51cBE774aeAe4dd40bCA2560E9bc2695A0d007",
+    "hasFarm": true,
+    "items": 15,
+    "rooms": 4,
+    "pending": "0",
+    "claimPreview": null
+  },
+  "starter": [
+    "0xb7d282d1c46f6062963bf2d134d058aa4de3af4cb7b092c5a0fd12ed74dc0f2c",
+    "0xdc0842e9fd0017b08be09e787e877c53cfb446ca52aabdb9770e5c33b49d1325",
+    false,
+    "1794559009"
+  ],
+  "receipt": {
+    "kind": "paid",
+    "id": "16",
+    "player": "0x6d51cBE774aeAe4dd40bCA2560E9bc2695A0d007",
+    "target": "88994659",
+    "remaining": "5",
+    "captured": true,
+    "resolved": false
+  },
+  "secondaryPages": [
+    {
+      "kind": 0,
+      "severity": 0,
+      "number": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "letter": "",
+      "submitted": false
+    },
+    "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "0",
+    "0",
+    "1795595809",
+    [
+      false,
+      0,
+      "0x0000000000000000000000000000000000000000",
+      "1986517611756279418931",
+      "0x0000000000000000000000000000000000000000000000000000000000000000"
+    ],
+    false,
+    false,
+    false,
+    false,
+    "0",
+    "0",
+    [
+      "0",
+      "0",
+      "0",
+      0
+    ],
+    [
+      "468172383962213707488560",
+      "500"
+    ],
+    [
+      "0x0000000000000000000000000000000000000000",
+      "0",
+      false
+    ],
+    false,
+    "178438323598346172988545",
+    "0",
+    "0",
+    [
+      "0",
+      "0"
+    ],
+    {
+      "bidder": "0x0000000000000000000000000000000000000000",
+      "bid": "0",
+      "text": "",
+      "handle": "",
+      "settled": false
+    },
+    "0",
+    "0",
+    [
+      "0",
+      "0"
+    ],
+    {
+      "bidder": "0x0000000000000000000000000000000000000000",
+      "bid": "0",
+      "text": "",
+      "handle": "",
+      "settled": false
+    },
+    "0",
+    "0",
+    [
+      "135188130431763859520234",
+      "135188130431763859520234"
+    ],
+    {
+      "bidder": "0x0000000000000000000000000000000000000000",
+      "bid": "0",
+      "text": "",
+      "handle": "",
+      "settled": false
+    },
+    "0",
+    "0",
+    [
+      "2786786792389161228000",
+      "2786786792389161228000"
+    ],
+    {
+      "bidder": "0x0000000000000000000000000000000000000000",
+      "bid": "0",
+      "text": "",
+      "handle": "",
+      "settled": false
+    },
+    "0",
+    "0",
+    [
+      "0",
+      "0"
+    ],
+    {
+      "bidder": "0x0000000000000000000000000000000000000000",
+      "bid": "0",
+      "text": "",
+      "handle": "",
+      "settled": false
+    },
+    "0",
+    "0",
+    [
+      "97858636345806604635179",
+      "97858636345806604635179"
+    ],
+    {
+      "bidder": "0x0000000000000000000000000000000000000000",
+      "bid": "0",
+      "text": "",
+      "handle": "",
+      "settled": false
+    },
+    "0",
+    "0",
+    [
+      "0",
+      "0"
+    ],
+    {
+      "bidder": "0x0000000000000000000000000000000000000000",
+      "bid": "0",
+      "text": "",
+      "handle": "",
+      "settled": false
+    },
+    "0",
+    "0",
+    [
+      "0",
+      "0"
+    ],
+    {
+      "bidder": "0x0000000000000000000000000000000000000000",
+      "bid": "0",
+      "text": "",
+      "handle": "",
+      "settled": false
+    }
+  ],
+  "disabledLobby": "Expected FeatureDisabled from live contract",
+  "readMethods": [
+    "Billboards.billboard",
+    "Billboards.refund",
+    "Billboards.week",
+    "Civic.enabled",
+    "Civic.noticeAt",
+    "Economy.districtStake",
+    "Economy.districtTotal",
+    "Economy.farmDaily",
+    "Economy.lockQuote",
+    "Economy.locks",
+    "Economy.repairQuote",
+    "Economy.roomQuote",
+    "Enhancement.pending",
+    "FarmCore.autoRepairThreshold",
+    "FarmCore.count",
+    "FarmCore.district",
+    "FarmCore.hasFarm",
+    "FarmCore.itemAt",
+    "FarmCore.level",
+    "FarmCore.maxLevelByAge",
+    "FarmCore.paidPacks",
+    "FarmCore.playerAt",
+    "FarmCore.roomEligible",
+    "FarmCore.roomStats",
+    "FarmCore.roomUnlocked",
+    "FarmCore.xp",
+    "FarmItems.capacity",
+    "FarmItems.data",
+    "FarmItems.itemsByOwner",
+    "FarmItems.outputTier",
+    "FarmItems.ownedCount",
+    "FarmRewards.districtActiveHash",
+    "FarmRewards.entrySeconds",
+    "FarmRewards.epoch",
+    "FarmRewards.epochData",
+    "FarmRewards.epochEnd",
+    "FarmRewards.epochStart",
+    "FarmRewards.farmWeight",
+    "FarmRewards.lastSettled",
+    "FarmRewards.lastYieldPerHash",
+    "FarmRewards.pending",
+    "FarmRewards.scrapAllowance",
+    "FarmRewards.settledEpoch",
+    "FarmRewards.shares",
+    "GameRegistry.launchTime",
+    "GameRegistry.market",
+    "GameRegistry.module",
+    "GameRegistry.token",
+    "GridOperator.eventAt",
+    "GridOperator.gridStability",
+    "GridOperator.planAt",
+    "PackSale.commits",
+    "PackSale.nextId",
+    "PackSale.opensAt",
+    "PackSale.paused",
+    "PackSale.price",
+    "PackSale.quote",
+    "PackSale.ready",
+    "RewardPool.available",
+    "RewardPool.endowed",
+    "RewardPool.lockedEndowment",
+    "Season.bestClaimed",
+    "Season.claimDeadline",
+    "Season.districtClaimed",
+    "Season.districtScore",
+    "Season.lotteryClaimed",
+    "Season.lotteryWon",
+    "Season.pot",
+    "Season.potRemaining",
+    "Season.result",
+    "StarterClaim.claims",
+    "StarterClaim.entropyCaptured",
+    "StarterClaim.freeClaimEnds",
+    "StarterClaim.freeClaimedBy",
+    "StarterClaim.freeRoot",
+    "StarterClaim.root",
+    "SwarmDesk.lastLetterHash",
+    "Token.allowance",
+    "Token.balanceOf",
+    "V4Market.currentBuyTaxBps",
+    "V4Market.desk",
+    "V4Market.fees",
+    "V4Market.launchTaxTimeLeft",
+    "V4Market.quote",
+    "V4Market.spot"
+  ],
+  "elapsedMs": 3253,
+  "status": "passed",
+  "limitations": [
+    "Read-only live validation; no private keys or signed transactions. Transaction writes are validated by ABI-preserving browser fixtures. Public provider availability can change."
+  ]
+}

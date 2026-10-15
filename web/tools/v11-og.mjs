@@ -1,0 +1,4 @@
+import {requireTool} from './deps.mjs';
+import {serve} from './serve.mjs';
+const {chromium}=requireTool('playwright');const {server,url}=await serve();const browser=await chromium.launch({headless:true});
+try{const page=await browser.newPage({viewport:{width:1200,height:630},reducedMotion:'reduce'});await page.goto(url);await page.waitForFunction(()=>document.body.classList.contains('app-ready'));await page.evaluate(()=>document.fonts.ready);await page.addStyleTag({content:'.site-header,.city-caption{display:none!important}.landing-hero{height:630px!important;min-height:630px!important}.hero-copy{padding:0!important}.hero-copy h1{font-size:64px!important}.hero-actions{display:none!important}.hero-copy .hero-description{margin-bottom:0!important}body::after{opacity:.04}'});await page.screenshot({path:'public/og.png'});}finally{await browser.close();server.close();}
