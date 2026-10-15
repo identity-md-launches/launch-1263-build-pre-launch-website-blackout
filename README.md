@@ -4,6 +4,20 @@ A pixel-art mining game on **Robinhood Chain (4663)**, at https://playblackout.x
 
 The static hosting deliverable is **[dist/index.html](dist/index.html)** and its complete local assets. Routes use hashes and asset URLs are relative, including at a gateway subpath. No contracts were deployed, tokens replaced or real transactions signed. Existing contract addresses, ABIs, proof files, manifests, lockfiles and build configuration remain intact.
 
+## Review revision
+
+All five reported findings were reproduced and fixed without changing the wallet, contracts, routes, manifests or lockfiles. Reveal history reads the reveal block, rejects deleted zero-holder records and discards the old display cache. Projection growth uses only competing farms. Epoch history has 44px targets with local scrolling, dragging previews invalid slots immediately, and public/Farm epoch clocks show seconds.
+
+The current build, typecheck, seven unit groups, eleven broader Chromium interaction groups and eleven focused revision checks pass. The pinned design probe remains 15/16, with only the retained BLACKOUT/ETH casing exception. WebKit could not launch for this revision; its earlier result below is historical. An initial live sweep exposed historical-state errors poisoning ordinary RPC backoff; separate historical-client backoff fixed that regression. The final strict sweep reaches live connected state but stops at an existing Packs button-position threshold at 375×812. The final 24-route/width live capture completes in connected state with no console/HTTP errors or page overflow. Current results and limitations are recorded at the start of [artifacts/validation.md](artifacts/validation.md), and every reviewer finding is answered in [.imd-responses.json](.imd-responses.json).
+
+Run the focused regression suite after rebuilding (Playwright Chromium must be installed):
+
+```sh
+PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browsers node web/tools/revision-check.mjs
+```
+
+`--before` asserts the reported defects and is intended only for the original accepted export/source, before applying this revision. Fixtures are explicitly synthetic, use no keys and never ship in the production bundle.
+
 ## Install, preview and rebuild
 
 Use Node.js 22.12+ and npm. The live app uses `web/package.json` and its existing lockfile; the root manifest belongs to the earlier demo.
@@ -64,7 +78,7 @@ The single wallet control retains EIP-6963 discovery, Coinbase Smart Wallet and 
 - Farm gross: productive hash times that rate. Electricity uses power hash times the rate and tariff; net cannot go below zero.
 - Historical mining uses settled on-chain shares, including audit and district tariff adjustments. Claimed totals come from actual `Claimed` logs and show net received. History excludes referrals, redistributed tax and scrap credits.
 
-Projection starts with the live pool, current productive/power output, allocation hash, farm count and scheduled endowment release. It advances four epochs per day. The band models **+5% / unchanged / −1% active farms per day**, holding average competing farm hash constant. Pool depletion reduces future emission amounts; **the deployed emission rate has no automatic rate decay**. The model holds that governance-controlled rate fixed and includes the 1% season allocation. Future purchases, governance changes, wear, events, audit, referrals, claim tax and gas are excluded and disclosed beside the chart. These are scenarios, not promised returns.
+Projection starts with the live pool, current productive/power output, allocation hash, farm count and scheduled endowment release. It advances four epochs per day. The band models **+5% / unchanged / −1% active farms per day**, holding average competing farm hash constant. Pool depletion reduces future emission amounts; **the deployed emission rate has no automatic rate decay**. The model holds that governance-controlled rate fixed and includes the 1% season allocation. Growth applies only to other farms while your hash stays fixed; with no competitors the scenarios coincide. Future purchases, governance changes, wear, events, audit, referrals, claim tax and gas are excluded and disclosed beside the chart. These are scenarios, not promised returns.
 
 Pack payback uses today's one-pack token quote and the actual weighted drop odds, including support hardware's 60% base hash and the below-level-10 Mythic fallback. It reports the first quarter-day cumulative projected mining reaches the purchase price, or over 365 days. It assumes all three items can be placed; gates, duplicates, gas and maintenance can extend payback. Per-item values are estimated contributions apportioned within their room, not separately payable balances.
 
@@ -78,17 +92,17 @@ Legacy receipts remain recoverable, and the original contracts/proof assets rema
 
 ## RPC behavior
 
-Ordinary reads race the official Robinhood RPC and dRPC, each with a **4-second** timeout and no automatic transport retry. The failing PublicNode endpoint is removed. Endpoint errors trigger exponential cooldowns from 15 to 120 seconds. Writes always use the wallet.
+Ordinary reads race the official Robinhood RPC and dRPC, each with a **4-second** timeout and no automatic transport retry. Reveal-block reads use a separate client with the same transport settings: pruned historical state backs off independently and cannot disable current reads or simulations. The failing PublicNode endpoint is removed. Endpoint errors trigger exponential cooldowns from 15 to 120 seconds. Writes always use the wallet.
 
 Historical logs use the official archive endpoint: dRPC rejects those ranges even below its advertised cap. Ranges are at most 10,000 blocks, adaptively shrink on range errors, retain checkpoints and overlap 16 blocks for reorgs. All indexers share a 600ms pacing queue to avoid archive quota bursts. Cold historical totals can take longer than the primary live numbers; the terminal publishes decoded ranges incrementally. These limits are also tested. No backend, indexer credential or vendored registry is required.
 
-Optional local storage holds display snapshots only. Fresh simulations and quotes authorize writes. A visible-page scheduler refreshes every 15 seconds; clocks tick locally once a second. Failed reads retain the last confirmed display with a reconnecting label. The final live route sweep recorded zero console errors and zero HTTP errors; external providers can still become unavailable or rate-limit a shared IP.
+Optional local storage holds display snapshots only. Fresh simulations and quotes authorize writes. A visible-page scheduler refreshes every 15 seconds; clocks tick locally once a second. Failed reads retain the last confirmed display with a reconnecting label. The earlier accepted build’s live route sweep recorded zero console errors and zero HTTP errors; external providers can still become unavailable or rate-limit a shared IP.
 
 ## Rehearsal and validation
 
 Dev-only rehearsal: start `node web/tools/v12-dev.mjs`, then open `http://127.0.0.1:5173/?pack-lab=1#/packs`. Pick rarity and single/bulk. It uses clearly labeled synthetic hardware and economy, without a wallet, key or transaction. Vite's `import.meta.env.DEV` guard removes the module from production; the same query does nothing in the export.
 
-The final mobile Lighthouse run scored **87** (LCP 1.4s), with a background-history load-time warning retained in its report. Chromium and WebKit each passed 11 interaction groups and zero axe violations on populated Farm, Rewards and Packs.
+The earlier accepted build’s mobile Lighthouse run scored **87** (LCP 1.4s), with a background-history load-time warning retained in its report. In that earlier round, Chromium and WebKit each passed 11 interaction groups and zero axe violations on populated Farm, Rewards and Packs.
 
 [artifacts/validation.md](artifacts/validation.md) records actual checks, six-domain Better Interface coverage, screenshots of every route at 375/1440, connected fixture screenshots and all ten rarity recordings. Live public reads are separate from controlled wallet fixtures. No real-money signing, physical phone/haptic session or screen-reader certification was performed.
 
@@ -110,4 +124,4 @@ node web/tools/v12-bundle.mjs
 
 `PLAYWRIGHT_BROWSERS_PATH` selects external browser binaries. `BLACKOUT_FFMPEG` selects the Playwright FFmpeg executable for compact WebM evidence; `BLACKOUT_VISUAL_TOOLS` selects an external package manifest with Sharp. WebKit supports `BLACKOUT_PLAYWRIGHT_PATH` and `BLACKOUT_WEBKIT_PATH` when a matching runtime is installed elsewhere. The pinned taste probe is assignment input, so only its compact results ship.
 
-Generated dependencies/caches stay outside Git at every nesting level. [Artifact budgets](artifacts/PATH-BUDGET.md) retain all requested screenshots and recordings. The complete current-file Git bundle and conservative available-base-plus-candidate size are measured in `artifacts/v12/bundle-trial.json`, without modifying this checkout's `.git`. The provided shallow/partial history omits some historical objects; publisher metadata and unavailable history are outside that measurement. No publishing command or PR creation was run.
+Generated dependencies/caches stay outside Git at every nesting level. [Artifact budgets](artifacts/PATH-BUDGET.md) retain all requested screenshots and recordings. A standalone Git bundle containing both the complete accepted tree and complete revised tree is measured (shared objects and deltas are counted once) in `artifacts/v12/bundle-trial.json`, without modifying this checkout's `.git`. The provided shallow/partial history omits some historical objects; publisher metadata and unavailable history are outside that measurement. No publishing command or PR creation was run.

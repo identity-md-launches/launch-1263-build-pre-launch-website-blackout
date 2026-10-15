@@ -1,5 +1,61 @@
 # BLACKOUT final-polish validation
 
+## Current review revision
+
+**Scope:** the five reopened findings only. All five were reproduced against the unchanged accepted source/export before editing. The existing wallet, contract addresses/ABIs, transaction flows, routes, dependencies and build configuration are retained. `.imd-responses.json` answers every finding. The earlier delivery report below is historical where a current result differs. During live rechecking, both providers rejected pruned historical state; using the shared transport initially put ordinary reads into backoff. The final source gives historical reads their own transport instance, preserving current quotes and simulations. The regression fixture now reproduces this RPC-level failure, rather than only a failed inner multicall.
+
+### Reproduction and fixes
+
+| Finding / source | Before | Final behavior and evidence |
+| --- | --- | --- |
+| Destroyed reveal item, `web/src/community.ts:19`, `public-views.ts:18` | ABI-encoded fixture returned a deleted zero struct; terminal showed ASIC/Rare, Fan/Common, GPU/Common and no Epic+ emphasis | Reads `data(id)` at the reveal block. Cache keys include transaction/block/item; both persisted activity namespaces are versioned. Successful zero structs and unreadable details become an explicit unavailable chip. Latest-state fallback requires a nonzero holder. `chain.ts:49` isolates historical-read backoff from the current read/simulation client, using the same RPC race and four-second timeouts. Incomplete reveals do not claim a best rarity. Test now shows the original Router/Mythic and Epic+ row; also checks archive failure, zero historical struct, obsolete cache data and reload |
+| Epoch targets, `web/src/polish.css:9`, `rewards-view.ts:31` | At 375px, three populated buttons were 11.34375–11.359375px wide | 44px minimum width and height; three available bars use the panel width, all 20 scroll locally. Full-history test measures 44px targets, selects first/last payouts with the keyboard and checks document reflow at 320/375/390/1440 |
+| Projection, `web/src/earnings.ts:34` | Given example returned 378,613.534468 / 577,548.456418 / 588,323.380325 tokens | Excludes the player's hash and active contribution from the competing baseline. Same example returns 566,082.597173 / 577,548.456418 / 578,892.883496. No-competitor scenarios remain equal. Current-scenario integer arithmetic, tariff and pool depletion are preserved |
+| Drag feedback, `web/src/main.ts:505` | Duplicate-kind target stayed enabled with “Choose hardware” until drop | Existing slot buttons update disabled state and visible reason immediately, preserving the dragged DOM node. Other-room slots remain available; drag-end restores the prior selection. A valid drop still opens the existing review for the selected item/slot |
+| Public clocks, `web/src/views.ts:20`, `main.ts:498`, `player-views.ts:18` | Two successive samples both showed “1h 59m” | Shared `epochCountdown()` uses existing `miningTime()` for HH:MM:SS. Fixture samples are 01:59:59 → 01:59:58; Farm includes seconds; expired public epochs retain “Due now” and HUD settling is unchanged |
+
+Machine-readable observations: [before](v12/revision-before.json), [final targeted checks](v12/revision-chromium.json). These use deterministic synthetic provider data, not claimed live player outcomes. No real wallet signature or transaction was performed.
+
+### Commands actually run in this revision
+
+| Command | Result |
+| --- | --- |
+| `node web/tools/run.mjs install` | Installed unchanged locked dependencies outside the repository |
+| `node web/tools/revision-check.mjs --before` with external Playwright Chromium | Reproduced all five original defects before source/export edits |
+| `node web/tools/run.mjs typecheck` | Passed |
+| `node web/tools/run.mjs build` | Passed after the final application-source change; ABI identity, 2,011 proofs and live roots checked; relative static export regenerated |
+| `node web/tools/v12-check.mjs unit` | Seven groups passed: economics, projection, placement/capacity, custom errors, log limits, RPC timeout/backoff and production DEV exclusion |
+| `node web/tools/revision-check.mjs` with external Playwright Chromium | Eleven targeted regression groups passed; no captured application/console errors. Includes a populated 20-epoch chart, deleted hardware and archive-failure branches |
+| `node web/tools/v12-check.mjs browser` with external Playwright Chromium | Eleven broader groups passed: claim, placement, expansion, single/bulk reveal, concurrent receipts, scrap, error recovery, all 12 routes/HUD/reflow and axe. Zero axe violations on populated Farm, Rewards and Packs |
+| Pinned `taste.mjs --out test/scratch/taste`, with `IMD_PLAYWRIGHT` pointing to the external toolchain | 15/16, [current probe checks](v12/revision-taste.json). Retained BLACKOUT/ETH currency casing is the sole exception; no overflow, target, contrast, motion or first-screen failure |
+| `BLACKOUT_TEST_ENGINE=webkit node web/tools/revision-check.mjs` | Did not run: browser launch failed because required runtime libraries were unavailable. Earlier WebKit evidence is not a current pass |
+| `node web/tools/v12-check.mjs live` | The initial sweep exposed shared historical/current backoff; that was fixed. The final strict sweep reaches connected state, then stops at the pre-existing Packs first-screen threshold at 375×812. No console errors or HTTP 4xx/5xx were captured. See [strict live attempt](v12/live-browser.json); this is not a full live-suite pass |
+| Diagnostic live capture in `test/scratch/revision-live.ts` | Captured all 24 route/width combinations, exercised the visitor calculator and wallet prompt, and observed no document overflow, console errors or HTTP 4xx/5xx. After isolating historical backoff, all routes reach connected state. The only viewport limitation is the same original Packs button bottom of 814.77px at 375×812; it fits at 375×844. Its results/limitations are [recorded separately](v12/revision-live-routes.json); it does not turn the strict failure into a pass |
+| Original-export comparison in `test/scratch/compare-live.mjs` | Unchanged accepted export also puts the Packs buy button at y=758.77 with height=56 at 375×812 (bottom=814.77). Thus the strict 812px threshold also fails on the unchanged export; the final revision matches the original 814.77px bottom after the RPC fix. No unrelated Packs layout change was made. [Observation](v12/revision-original-live.json) |
+| `node web/tools/v12-delivery.mjs` | Relative export assets, metadata, proof identity, protected paths, complete screenshot/recording set and artifact path budgets checked |
+| `node web/tools/v12-bundle.mjs` | Creates/verifies a temporary two-commit bundle containing complete accepted and revised trees, with shared objects counted once. Actual final bytes and the unavailable-history limitation are in [bundle-trial.json](v12/bundle-trial.json). Source Git metadata is not changed |
+
+Playwright commands used `PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browsers`. The app build retains its existing nonfatal font-URL and third-party annotation notices; asset-reference checks and browser loads verify the runtime files. The initially exceeded screenshot budget was repaired by re-encoding captures, preserving every required image and all ten rarity recordings. No ignore rule, dependency or lockfile was changed.
+
+### Better Interface coverage for the revised surfaces
+
+| Domain | Coverage / outcome |
+| --- | --- |
+| Accessibility — checked | Native named epoch buttons, actual 44px full-history targets, keyboard payout selection, local scrolling, disabled slot reasons and unchanged tap/keyboard placement. Broad Chromium axe passes. Physical touch, screen readers and switch devices not tested |
+| Layout — checked | Full 20-epoch chart stays within the page at 320/375/390/1440; only the chart scrolls. Drag preview preserves the source node. Actual Home at 390 visually inspected in the supplied browser: product and Buy a pack visible. No redesign of existing page composition |
+| Writing — checked | Missing chain details say “Hardware details unavailable”; no fabricated hardware or best rarity. Slot reasons precede a drop. Scroll guidance sits with the epoch chart. Existing estimate and transaction language retained |
+| Typography — checked | Existing six-role type scale and fonts retained. Monospaced HH:MM:SS clocks include seconds. Probe reports three families/two weights with no type-scale failure. No new font or display style |
+| Colors — checked | Existing cyan targets, muted invalid-slot state and named rarity colors retained. Inspected drag preview shows the duplicate room greyed with readable text. Existing automated contrast checks pass; image/gradient contrast is not asserted |
+| UI — checked | Valid/invalid drag states and cancellation, review dialog continuity, complete/unknown reveal metadata, cache migration, clock expiry, empty/three/full epoch history structure. Reduced-motion browser context used; pack effects and real-wallet behavior unchanged |
+
+The [drag preview capture](screenshots/revision-drag-preview-fixture-1440.webp) is synthetic fixture evidence. Connected Farm/Rewards/Packs screenshots were refreshed from the final export. All 24 public route screenshots were refreshed after the RPC isolation fix; all ten DEV-only rarity recordings remain included and were not regenerated. The original Lighthouse score below was not rerun for this scoped revision.
+
+**Complete for the five reported fixes.** Remaining validation limits: the strict live sweep above, unavailable WebKit runtime, no real-money signing, no physical phone/screen-reader session, and no new Lighthouse measurement. Browser-rendered evidence and deterministic tests do not establish external RPC availability or certify real-world performance.
+
+---
+
+## Earlier accepted delivery report
+
 This report covers the delivered source and static export for playblackout.xyz. It separates live chain reads, controlled wallet fixtures and synthetic visual rehearsals. No real funds were signed, no contract was deployed and no publishing command was run. Earlier `artifacts/v11/` and `reports/` are historical unless a command below explicitly produced a current result.
 
 ## Review at a glance
@@ -135,5 +191,5 @@ Each clip uses DEV-only rehearsal with a visible synthetic-result label. Single 
 - Live verification is read-only. Signatures, simulations, receipt races and destructive actions use controlled providers; no real wallet signing or irreversible chain state was exercised.
 - Real phone GPUs, mobile wallet browsers, haptics, audio playback quality and assistive technology were not measured. Effects use bounded CSS/rAF work and reduced motion, but a universal 60fps claim on midrange phones is not established by a desktop browser recording.
 - An external RPC/price service can fail or throttle. The repaired final normal-visit sweep was error-free; that is an observation, not an availability guarantee. One archive endpoint supports the required historical logs without a key; this method cannot honestly race a second incompatible endpoint.
-- Historical reads and leader enumeration grow with the chain. Caching, bounded chunks, paced requests and progressive feed updates reduce bursts; no backend indexer was introduced. Scrapped item metadata may be unavailable, so unavailable historical details are omitted rather than invented.
+- Historical reads and leader enumeration grow with the chain. Caching, bounded chunks, paced requests and progressive feed updates reduce bursts; no backend indexer was introduced. This earlier report claimed unavailable historical details were omitted. The reopened review disproved that claim for deleted zero structs; the current revision above reads reveal-block metadata and explicitly labels unavailable details.
 - The complete current-file bundle is measured. The supplied checkout lacks historical objects, so unseen history and the publisher's final metadata cannot be certified. No Git submodule or generated dependency/cache is delivered.

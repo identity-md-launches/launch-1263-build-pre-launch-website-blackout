@@ -1,0 +1,167 @@
+{
+  "mode": "regression",
+  "engine": "chromium",
+  "checks": [
+    "Projection: large player with two small competitors; zero-competitor case",
+    "Reveal history reads original Mythic Router after destruction",
+    "Public epoch countdown changes every second above one hour",
+    "Elapsed public epoch preserves the Due now state",
+    "Epoch history touch widths, keyboard payout detail and mobile reflow",
+    "All 20 epochs have 44px targets; first/last keyboard selection scrolls locally with no page overflow",
+    "Drag previews duplicate-kind restriction without replacing the source; cancellation restores slots",
+    "Valid drop retains the chosen item and slot in the existing transaction review",
+    "Historical reveal metadata survives a page reload",
+    "Reveal fallback unavailable: explicit unknown hardware, no fabricated rarity; current reads stay healthy",
+    "Reveal fallback zero: explicit unknown hardware, no fabricated rarity; current reads stay healthy"
+  ],
+  "observations": {
+    "projection": [
+      566082.5971731704,
+      577548.4564179512,
+      578892.8834960184
+    ],
+    "reveal": {
+      "chips": [
+        "ASICRare",
+        "FanCommon",
+        "RouterMythic"
+      ],
+      "reads": [
+        {
+          "item": "101",
+          "block": "0x54333e7"
+        },
+        {
+          "item": "102",
+          "block": "0x54333e7"
+        },
+        {
+          "item": "103",
+          "block": "0x54333e7"
+        },
+        {
+          "item": "101",
+          "block": "0x54333e7"
+        },
+        {
+          "item": "102",
+          "block": "0x54333e7"
+        },
+        {
+          "item": "103",
+          "block": "0x54333e7"
+        }
+      ],
+      "row": "epic-activity"
+    },
+    "publicCountdown": [
+      "01:59:59",
+      "01:59:58"
+    ],
+    "historyWidths": [
+      95.65625,
+      95.671875,
+      95.65625
+    ],
+    "fullHistoryTargets": [
+      {
+        "width": 44,
+        "height": 142
+      },
+      {
+        "width": 44,
+        "height": 142
+      },
+      {
+        "width": 44,
+        "height": 142
+      },
+      {
+        "width": 44,
+        "height": 142
+      },
+      {
+        "width": 44,
+        "height": 142
+      },
+      {
+        "width": 44,
+        "height": 142
+      },
+      {
+        "width": 44,
+        "height": 142
+      },
+      {
+        "width": 44,
+        "height": 142
+      },
+      {
+        "width": 44,
+        "height": 142
+      },
+      {
+        "width": 44,
+        "height": 142
+      },
+      {
+        "width": 44,
+        "height": 142
+      },
+      {
+        "width": 44,
+        "height": 142
+      },
+      {
+        "width": 44,
+        "height": 142
+      },
+      {
+        "width": 44,
+        "height": 142
+      },
+      {
+        "width": 44,
+        "height": 142
+      },
+      {
+        "width": 44,
+        "height": 142
+      },
+      {
+        "width": 44,
+        "height": 142
+      },
+      {
+        "width": 44,
+        "height": 142
+      },
+      {
+        "width": 44,
+        "height": 142
+      },
+      {
+        "width": 44,
+        "height": 142
+      }
+    ],
+    "drag": {
+      "disabled": true,
+      "reason": "+\nSlot 2\nOne of each type per room",
+      "validDisabled": false
+    },
+    "unavailable": [
+      "ASICRare",
+      "FanCommon",
+      "Hardware details unavailable"
+    ],
+    "unavailableCurrentQuote": "≈ 0.00106186 ETH",
+    "zero": [
+      "ASICRare",
+      "FanCommon",
+      "Hardware details unavailable"
+    ],
+    "zeroCurrentQuote": "≈ 0.00106186 ETH"
+  },
+  "errors": []
+}

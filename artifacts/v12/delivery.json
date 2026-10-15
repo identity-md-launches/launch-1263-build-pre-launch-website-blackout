@@ -1,17 +1,18 @@
 {
-  "checkedAt": "2026-10-15T09:57:04.495Z",
+  "checkedAt": "2026-10-15T10:58:31.207Z",
   "limitBytes": 8388608,
-  "currentFileBytes": 11892636,
-  "fileCount": 295,
+  "currentFileBytes": 12034519,
+  "fileCount": 304,
   "groups": {
     ".gitignore": 655,
+    ".imd-responses.json": 4460,
     "CHANGELOG.md": 7985,
-    "DESIGN.md": 10924,
+    "DESIGN.md": 11492,
     "NOTICE.md": 2106,
-    "README.md": 11697,
-    "artifacts": 3880991,
+    "README.md": 13828,
+    "artifacts": 3993819,
     "assets": 1363,
-    "dist": 3811658,
+    "dist": 3812560,
     "docs.md": 8336,
     "index.html": 18535,
     "licenses": 22641,
@@ -25,23 +26,23 @@
     "tsconfig.json": 341,
     "vite.config.mjs": 135,
     "vitest.config.mjs": 255,
-    "web": 1097205
+    "web": 1118199
   },
-  "productionBytes": 3811658,
+  "productionBytes": 3812560,
   "relativeLocalReferencesChecked": 13,
   "protectedPathsUnchanged": true,
-  "artifactBytes": 3880991,
+  "artifactBytes": 3993819,
   "artifactBudget": 4194304,
   "budgets": [
     {
       "name": "review documents",
       "limit": 35000,
-      "bytes": 19457
+      "bytes": 29495
     },
     {
       "name": "screenshots",
       "limit": 2700000,
-      "bytes": 2597428
+      "bytes": 2689896
     },
     {
       "name": "recordings",
@@ -51,7 +52,7 @@
     {
       "name": "JSON evidence",
       "limit": 209304,
-      "bytes": 67511
+      "bytes": 77833
     }
   ],
   "submodules": 0,
@@ -60,19 +61,19 @@
     "dist/app-icon.png": "1b2e50dbb5dfe1a30d3c2ef49eb40e59720e18e0063b23db036c86d3fdfa3ebb",
     "dist/assets/blackout-rooftop.jpg": "c4479847b81951b9cb8db7b8f12ae9f31cfe20ad7f615fda09727c4f6c7e6b1f",
     "dist/assets/blackout-rooftop.webp": "02fa3cceaf54b2fa3bb3b2de76abe649df5eebd6fb73c9af5db66f9fef21258a",
-    "dist/assets/ccip-CLuw1PPV.js": "7b4061de7dbe22ad7e3a210989522ab6a46f21027a248ffbf04b235adb906ecf",
+    "dist/assets/ccip-RtWmJd0v.js": "4c523d425e5e12b43331b480de5071711cfc3717c987f4887f9f7565809df61b",
     "dist/assets/hooks.module-DE9oX6xH.js": "18290b66f5736ddfcd375526f88fd55c2ecf072d6feee11d3554a78df4a3594f",
-    "dist/assets/index--oNKFIBE.js": "5121e658f88e42ed78c0584778a1b391f4e4d1a82854dee93479e43ca09a0822",
-    "dist/assets/index-DSMWapGr.js": "9d1884303e2516e4aa88af8fcff59a3d126d752fe09e12cca9025df983d0724f",
-    "dist/assets/index-DU87-Yxi.js": "8d592601889eb99bc357841c7224314c729ba9e0431d27d3c5e76b20963adb5c",
-    "dist/assets/main-BAE96wns.js": "8193a95f94c039134a6d75a51c8c369d7b62cc5dfab91f5e4d2e365cf0585800",
-    "dist/assets/main-FoTqX-FB.css": "483ca83e9e02a29c6f6d15e80d73ddd73a381006b124db25939631245f84e864",
+    "dist/assets/index-CEowHlRQ.js": "1953f7a18f00a2fcba70c70f3dd16397dabfb640e79c796ca2ed3f14ad5212af",
+    "dist/assets/index-ZIExOWDp.js": "d136a3607ffa391373d4710fdbad0e36114084bb0355b2d00068639a9f55e202",
+    "dist/assets/index-y6Sfoa0c.js": "51b543e37c8495c580e69f1ff2e58eb5d47338bf564035b290082937b63b9acb",
+    "dist/assets/main-FLALrajp.js": "6a40eb0694384d52ebf71b6f8bce9bd4c04af81930fa6b2bf5167d30e7f9edf3",
+    "dist/assets/main-V8xiLfOG.css": "b230051b9b2a9df4f34c8733119549838ba421b4396addedec2acf9fee67a7ed",
     "dist/assets/mono-latin.woff2": "08949f728dc52d528e69b1667d15c89a5686a4ee9a296ff90983985f99c380f7",
     "dist/assets/mono-semibold-latin.woff2": "0d1f0b8d0722224e32e9f28261bdc86c79115be73444ae5eceb73976a1bcdf83",
     "dist/assets/pixel-latin.woff2": "5bd44fee71c38c481d5b546bf29a65b6a6e69dd4ab89acd8de2d49baeebb8317",
     "dist/favicon.svg": "3e60b94bd10ab70525729657f552eb6f983685eff3f66ad788437d3b0e8dcf82",
     "dist/free-tree.json": "071ac63a8147ee97998983c6b7326239aead890b600bdabd82d1fdcb34b6167e",
-    "dist/index.html": "4632807be069c4dd2813c0b3f97abfc2280c28983a15c7f404f0f9a0573f3e1b",
+    "dist/index.html": "b585e1e8549edbd859e7cbf3a35019946f1145be2202ffcbc3615a3e413f4728",
     "dist/manifest.webmanifest": "c812ab0ddc5745209fc079503bc14ce4f3600ec2d3149c5ae45f841845983af0",
     "dist/og.png": "94dd5e88fe0616a01c6258436782c4e0e4c4a306b0f01a78342cdae2f023781e",
     "dist/starter-tree.json": "8d6ee4c8a8c5bf8003fb163aac845f64759801543d9bd017ee5be1e4b3ab8951",

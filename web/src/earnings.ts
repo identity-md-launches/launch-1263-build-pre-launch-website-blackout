@@ -31,13 +31,16 @@ export function calculatorEpoch(s:EconomySnapshot,hash:bigint){return netMining(
 export type ProjectionPoint={day:number;low:bigint;current:bigint;high:bigint};
 export function project(s:EconomySnapshot,productive:bigint,power:bigint,ownRaw:bigint,days:number):ProjectionPoint[]{
  const points:ProjectionPoint[]=[{day:0,low:0n,current:0n,high:0n}],states=[.05,0,-.01].map(growth=>({growth,pool:s.available,earned:0n,locked:s.locked}));
- const farms=Math.max(1,Number(s.activeFarms)),avgHash=s.epochData.raw/BigInt(farms),others=s.epochData.raw>ownRaw?s.epochData.raw-ownRaw:0n;
+ const otherFarms=Math.max(0,Number(s.activeFarms)-(ownRaw>0n?1:0)),others=s.epochData.raw>ownRaw?s.epochData.raw-ownRaw:0n;
+ const averageOtherHash=otherFarms>0?Number(others)/otherFarms:0;
  const dripLeft=Math.max(0,Number(s.dripEnd)-s.timestamp),drip=dripLeft>0?s.locked*BigInt(EPOCH_SECONDS)/BigInt(dripLeft):0n;
  for(let e=1;e<=days*4;e++){
   states.forEach(state=>{
    const release=state.locked<drip?state.locked:drip;state.pool+=release;state.locked-=release;
-   const changingFarms=Math.max(0,(farms-1)*Math.pow(1+state.growth,e/4));
-   const extra=BigInt(Math.round((changingFarms-(farms-1))*Number(avgHash))),otherHash=others+extra;
+   const changingFarms=otherFarms*Math.pow(1+state.growth,e/4);
+   // Without competitors there is no observed farm size to grow. Keep the
+   // current scenario exact and exclude the player's fixed hash from growth.
+   const otherHash=otherFarms>0&&state.growth!==0?BigInt(Math.round(changingFarms*averageOtherHash)):others;
    const total=ownRaw+(otherHash>0n?otherHash:0n),mining=miningBudget(s,state.pool,BigInt(EPOCH_SECONDS));
    state.earned+=netMining(mining,total,productive,power,s.epochData.tariff);
    // Baseline pool depletion after recycling unused budget: net city mining + 1% season allocation.

@@ -1,0 +1,67 @@
+{
+  "mode": "reproduction",
+  "engine": "chromium",
+  "checks": [
+    "Projection: large player with two small competitors; zero-competitor case",
+    "Reveal history reads original Mythic Router after destruction",
+    "Public epoch countdown changes every second above one hour",
+    "Epoch history touch widths, keyboard payout detail and mobile reflow",
+    "Drag previews duplicate-kind restriction without replacing the source; cancellation restores slots"
+  ],
+  "observations": {
+    "projection": [
+      378613.5344676749,
+      577548.4564179512,
+      588323.380325081
+    ],
+    "reveal": {
+      "chips": [
+        "ASICRare",
+        "FanCommon",
+        "GPUCommon"
+      ],
+      "reads": [
+        {
+          "item": "101",
+          "block": "latest"
+        },
+        {
+          "item": "102",
+          "block": "latest"
+        },
+        {
+          "item": "103",
+          "block": "latest"
+        },
+        {
+          "item": "101",
+          "block": "latest"
+        },
+        {
+          "item": "102",
+          "block": "latest"
+        },
+        {
+          "item": "103",
+          "block": "latest"
+        }
+      ],
+      "row": ""
+    },
+    "publicCountdown": [
+      "1h 59m",
+      "1h 59m"
+    ],
+    "historyWidths": [
+      11.359375,
+      11.34375,
+      11.359375
+    ],
+    "drag": {
+      "disabled": false,
+      "reason": "+\nSlot 2\nChoose hardware",
+      "validDisabled": false
+    }
+  },
+  "errors": []
+}

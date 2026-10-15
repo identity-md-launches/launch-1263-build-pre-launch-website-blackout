@@ -16,9 +16,9 @@ import { findReceipts } from './receipts';
 import { reveal } from './reveal';
 import { quoteEthPack, slippageBps } from './packs';
 import { docsPage } from './docs';
-import { esc, tokens, units, duration, featureCards, farmPage, packsPage, cityPage, seasonPage, boardsPage, contractsPage, type PackState, type CityState, type SeasonState, type Board } from './views';
+import { esc, tokens, units, epochCountdown, featureCards, farmPage, packsPage, cityPage, seasonPage, boardsPage, contractsPage, type PackState, type CityState, type SeasonState, type Board } from './views';
 import { POLL_MS } from './config';
-import { loadActivity, loadLeaderboard, type Activity, type Leaderboard } from './community';
+import { loadActivity, loadLeaderboard, ACTIVITY_CACHE_KEY, type Activity, type Leaderboard } from './community';
 import { onboarding, morePage, leaderboardPage, type Progress } from './player-views';
 import { placementReason, epochProgress, miningTime, LEVEL_GATES } from './player';
 import { refreshUsd, setSpot } from './money';
@@ -34,7 +34,7 @@ const $=<T extends HTMLElement=HTMLElement>(selector:string)=>document.querySele
 const route=()=>location.hash.replace(/^#\/?/,'').split('/')[0]||'home';
 let home:Home|null=cached<Home>('home'),farm:Farm|null=null,city:CityState|null=null,season:SeasonState|null=null,boards:Board[]|null=null,boardWeek=0n;
 let revealAnimationUntil=0;
-let selectedItem:bigint|null=null,progress:Progress|null=null,activities:Activity[]|null=cached<Activity[]>('activity'),activityError=false,leaderboard:Leaderboard|null=cached<Leaderboard>('leaderboard');
+let selectedItem:bigint|null=null,progress:Progress|null=null,activities:Activity[]|null=cached<Activity[]>(ACTIVITY_CACHE_KEY),activityError=false,leaderboard:Leaderboard|null=cached<Leaderboard>('leaderboard');
 let publicPrice=cached<PublicPrice>('price'),publicTotals=cached<PublicTotals>('totals');
 let publicError=false,homeFresh=false;
 let poolTrail:number[]=cached<number[]>('pool-trail')??[];
@@ -469,7 +469,7 @@ async function refreshCommunity(){
  if(communityBusy)return;communityBusy=true;
  try{
   await Promise.allSettled([
-   (async()=>{try{activities=await loadActivity();remember('activity',activities);activityError=false;}catch{activityError=true;}renderPublic();})(),
+   (async()=>{try{activities=await loadActivity();remember(ACTIVITY_CACHE_KEY,activities);activityError=false;}catch{activityError=true;}renderPublic();})(),
    (async()=>{try{publicTotals=await loadPublicTotals();remember('totals',publicTotals);}catch{publicError=true;}renderPublic();})(),
    (async()=>{if(!home)return;try{leaderboard=await loadLeaderboard(home.epoch);remember('leaderboard',leaderboard);}catch{publicError=true;}renderPublic();})(),
   ]);
@@ -495,16 +495,27 @@ setInterval(()=>{
  if(document.hidden||!home)return;
  const now=chainTime(home);
  document.querySelectorAll<HTMLElement>('[data-epoch-clock]').forEach(el=>el.textContent=now>=Number(el.dataset.epochClock)?'Settling…':miningTime(Number(el.dataset.epochClock)-now));
- document.querySelectorAll<HTMLElement>('[data-countdown]').forEach(el=>el.textContent=duration(Number(el.dataset.countdown)-now));
+ document.querySelectorAll<HTMLElement>('[data-countdown]').forEach(el=>el.textContent=epochCountdown(Number(el.dataset.countdown)-now));
  document.querySelectorAll<HTMLProgressElement>('[data-epoch-progress]').forEach(el=>el.value=epochProgress(home!.epochStart,home!.epochEnd,now));
  const counter=document.querySelector('[data-mining-clock]');if(counter&&farm?.hash&&farm.hash>0n)counter.textContent=now>=Number(home.epochEnd)?'Waiting for next epoch':miningTime(now-Number(farm.entrySeconds>0n?home.epochEnd-farm.entrySeconds:home.epochStart));
 },1000);
 setInterval(()=>{if(!document.hidden&&!transactionBusy)void refreshAll();},POLL_MS);
 // A drag is just another way to choose hardware; keyboard and touch use the same gate.
-document.addEventListener('dragstart',e=>{const el=(e.target as Element).closest<HTMLElement>('[data-drag-item]');if(!el||!farm)return;const id=BigInt(el.dataset.dragItem!),item=currentItem(id);if(placementReason(item,farm)){e.preventDefault();return;}draggingHardware=true;selectedItem=id;e.dataTransfer?.setData('text/plain',String(id));if(e.dataTransfer)e.dataTransfer.effectAllowed='move';});
-document.addEventListener('dragover',e=>{if((e.target as Element).closest('[data-drop-slot]'))e.preventDefault();});
+let selectionBeforeDrag:bigint|null=null;
+function updateSlotPreview(){
+ if(!farm)return;const f=farm,item=f.items.find(i=>i.id===selectedItem);
+ document.querySelectorAll<HTMLButtonElement>('[data-drop-slot]').forEach(el=>{
+  const [room,slot]=el.dataset.dropSlot!.split(',').map(Number),r=f.rooms.find(r=>r.index===room);
+  const reason=item&&r?placementReason(item,f,r,slot):'';
+  const unavailable=item?!!reason:f.items.every(i=>i.equipped);
+  el.dataset.unavailable=String(unavailable);el.disabled=!canWrite()||unavailable;
+  const label=el.querySelector('small');if(label)label.textContent=item?reason||'Place here':'Choose hardware';
+ });
+}
+document.addEventListener('dragstart',e=>{const el=(e.target as Element).closest<HTMLElement>('[data-drag-item]');if(!el||!farm)return;const id=BigInt(el.dataset.dragItem!),item=currentItem(id);if(placementReason(item,farm)){e.preventDefault();return;}draggingHardware=true;selectionBeforeDrag=selectedItem;selectedItem=id;updateSlotPreview();e.dataTransfer?.setData('text/plain',String(id));if(e.dataTransfer)e.dataTransfer.effectAllowed='move';});
+document.addEventListener('dragover',e=>{const slot=(e.target as Element).closest<HTMLButtonElement>('[data-drop-slot]');if(slot){e.preventDefault();if(e.dataTransfer)e.dataTransfer.dropEffect=slot.disabled?'none':'move';}});
 document.addEventListener('drop',e=>{const el=(e.target as Element).closest<HTMLElement>('[data-drop-slot]');if(!el)return;e.preventDefault();try{const id=e.dataTransfer?.getData('text/plain');if(id&&/^\d+$/.test(id))installDialog(BigInt(id),el.dataset.dropSlot!.split(',').map(Number) as [number,number]);}catch(error){actionError(error);}});
 
-document.addEventListener('dragend',()=>{draggingHardware=false;if(deferredRender){deferredRender=false;render(true);}});
+document.addEventListener('dragend',()=>{if(!draggingHardware)return;draggingHardware=false;selectedItem=selectionBeforeDrag;selectionBeforeDrag=null;if(deferredRender){deferredRender=false;render(true);}else updateSlotPreview();});
 
 if(import.meta.env.DEV&&new URLSearchParams(location.search).has('pack-lab'))void import('./pack-lab').then(m=>m.mountPackLab());

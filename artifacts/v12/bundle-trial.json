@@ -1,14 +1,12 @@
 {
   "missingHistoricalObjects": 317,
-  "availableBasePackBytes": 2287616,
-  "conservativeAvailableBasePlusCandidateBytes": 7926799,
-  "checkedAt": "2026-10-15T09:57:05.645Z",
+  "checkedAt": "2026-10-15T10:58:32.151Z",
   "limitBytes": 8388608,
-  "bundleBytes": 5639183,
-  "remainingBytes": 2749425,
-  "candidateFiles": 295,
-  "baseCommit": "d98d43e5b8304c9ddc69b4ff6170a54d78e9184b",
-  "snapshotCommits": 1,
-  "method": "Create a temporary bare Git repository, stage every current deliverable file, commit there, then create and verify a complete standalone Git bundle. The source .git is never modified.",
-  "limitation": "The supplied checkout lacks 317 historical objects. This verifies the complete current-file snapshot and the conservative available-base-plus-candidate size, not unavailable history or the publisher’s final metadata."
+  "bundleBytes": 8267603,
+  "remainingBytes": 121005,
+  "candidateFiles": 304,
+  "baseCommit": "792725061a2a9d9a11f50335a1ffd59affe3637e",
+  "snapshotCommits": 2,
+  "method": "Import the complete accepted source tree into a temporary bare Git repository, commit a base snapshot, stage every current deliverable file as its child, then create and verify a standalone bundle containing both complete trees. Shared objects and deltas are counted once. The source .git is never modified.",
+  "limitation": "The supplied checkout lacks 317 historical objects. This measures both complete accepted and revised trees, not unavailable history or the publisher’s final metadata."
 }

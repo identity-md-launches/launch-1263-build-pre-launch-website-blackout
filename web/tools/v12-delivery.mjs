@@ -6,7 +6,7 @@ import {createHash} from 'node:crypto';
 import {repo} from './deps.mjs';
 const git=(...args)=>execFileSync('git',args,{cwd:repo,encoding:'utf8'});
 const excluded=p=>p.startsWith('.imd/')||p.startsWith('test/scratch/')||p.startsWith('.playwright-mcp/');
-const files=[...new Set([...git('ls-files','-z').split('\0'),...git('ls-files','--others','--exclude-standard','-z').split('\0')])].filter(p=>p&&!excluded(p)&&existsSync(join(repo,p))&&statSync(join(repo,p)).isFile()).sort();
+const files=[...new Set([...git('ls-files','-z').split('\0'),...git('ls-files','--others','--exclude-standard','-z').split('\0'),'.imd-responses.json'])].filter(p=>p&&!excluded(p)&&existsSync(join(repo,p))&&statSync(join(repo,p)).isFile()).sort();
 assert(files.includes('dist/index.html'));
 for(const path of files){
  assert(!/(^|\/)(node_modules|\.npm|\.cache|\.vite|\.playwright-mcp)(\/|$)/.test(path),`Cache/dependencies in submission: ${path}`);

@@ -5,7 +5,7 @@ import { contracts, EXPLORER, features, COLLECTION } from './config';
 import { type Farm, type Home, type Item, type Receipt, KINDS, RARITIES, DISTRICTS, EVENTS, scrapQuote, chainTime } from './data';
 import type { Eligibility } from './proofs';
 import type { EthPackQuote } from './packs';
-import { placementReason, LEVEL_GATES } from './player';
+import { placementReason, miningTime, LEVEL_GATES } from './player';
 import { usd } from './money';
 import { miningPanel } from './player-views';
 import { account, canWrite } from './wallet';
@@ -17,6 +17,7 @@ export const units=(n:bigint)=>formatUnits(n,18);
 export const tokens=(n:bigint,digits=3)=>{const v=Number(units(n));return v>0&&v<10**-digits?`<${10**-digits}`:v.toLocaleString('en-US',{maximumFractionDigits:digits});};
 export const date=(n:bigint|number)=>Number(n)>8640000000000?'Not scheduled':new Date(Number(n)*1000).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'});
 export const duration=(n:number)=>n<=0?'Due now':n<60?`${Math.ceil(n)}s`:n<3600?`${Math.floor(n/60)}m ${Math.floor(n%60)}s`:n<86400?`${Math.floor(n/3600)}h ${Math.floor(n%3600/60)}m`:`${Math.floor(n/86400)}d ${Math.floor(n%86400/3600)}h`;
+export const epochCountdown=(seconds:number)=>seconds<=0?'Due now':miningTime(seconds);
 export const heading=(title:string,description:string,aside='')=>`<div class="page-heading"><div><h1>${title}</h1><p>${description}</p></div>${aside}</div>`;
 export const stat=(label:string,value:string,note='')=>{const m=value.match(/^([\d,]+(?:\.\d+)?)(\s.*|[%×])?$/);const shown=m?`<span data-number="${Number(m[1].replace(/,/g,''))}" data-digits="${m[1].split('.')[1]?.length??0}">${m[1]}</span>${m[2]??''}`:value;return `<div class="live-stat"><dt>${label}</dt><dd>${shown}${note?`<small>${note}</small>`:''}</dd></div>`;};
 export const disabled=(condition=false)=>`data-write data-unavailable="${condition}" ${!canWrite()||condition?'disabled':''}`;
@@ -26,7 +27,7 @@ export const readError=(error:string)=>`<div class="read-error" role="alert"><p>
 export function homeStats(home:Home|null,error:string) {
  if(!home)return loading(error?'Reconnecting to the city…':'Reading the city…');
  const now=chainTime(home);
- return `<div class="section-heading"><h2>The city, live.</h2><a href="#/leaderboard">See city leaders →</a></div><dl class="live-stats">${stat('Epoch',String(home.epoch),home.epoch===0n?'Waiting for the grid to start':`Next in <span data-countdown="${home.epochEnd}">${duration(Number(home.epochEnd)-now)}</span>`)}${stat('Rewards available',tokens(home.available,0),`BLACKOUT · ${usd(home.available)}`)}${stat('Hardware packs',home.ready?'Open':'Opening soon',home.ready?'3 items in every pack':`Opens ${date(home.opensAt)}`)}</dl><div class="section-heading"><h3>District power</h3><a href="#/city">Explore the city →</a></div><div class="stability-strip">${home.grid.map((v,i)=>`<div><span>${DISTRICTS[i]}</span><strong>${(Number(v)/10000).toFixed(2)}×</strong></div>`).join('')}</div><p class="small muted">A stronger grid improves your odds of avoiding trouble.</p>`;
+ return `<div class="section-heading"><h2>The city, live.</h2><a href="#/leaderboard">See city leaders →</a></div><dl class="live-stats">${stat('Epoch',String(home.epoch),home.epoch===0n?'Waiting for the grid to start':`Next in <span data-countdown="${home.epochEnd}">${epochCountdown(Number(home.epochEnd)-now)}</span>`)}${stat('Rewards available',tokens(home.available,0),`BLACKOUT · ${usd(home.available)}`)}${stat('Hardware packs',home.ready?'Open':'Opening soon',home.ready?'3 items in every pack':`Opens ${date(home.opensAt)}`)}</dl><div class="section-heading"><h3>District power</h3><a href="#/city">Explore the city →</a></div><div class="stability-strip">${home.grid.map((v,i)=>`<div><span>${DISTRICTS[i]}</span><strong>${(Number(v)/10000).toFixed(2)}×</strong></div>`).join('')}</div><p class="small muted">A stronger grid improves your odds of avoiding trouble.</p>`;
 }
 export function featureCards(home:Home|null) {return `<p>${features.filter(f=>!home?.phases[f.id]).map(f=>f.name).join(' · ')||'All city features are live'}</p><a href="#/city">Check city status →</a>`;}
 function itemCard(i:Item,farm:Farm,selected:bigint|null,economy:EconomySnapshot|null) {

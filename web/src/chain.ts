@@ -44,8 +44,13 @@ export const rpcTransport = ():Transport => options => {
  });
 };
 // Deployless Multicall3 requires no guessed deployment address or on-chain deployment.
-export const client = createPublicClient({ chain, transport: rpcTransport(),
+const readClient = () => createPublicClient({ chain, transport: rpcTransport(),
  batch: { multicall: { deployless: true, batchSize: 4096, wait: 20 } }, pollingInterval: POLL_MS });
+export const client = readClient();
+// Providers can serve current state while pruning older state. Historical
+// failures back off independently so reveal history cannot block current reads
+// or transaction simulations. Endpoints, racing and timeouts are identical.
+export const historicalClient = readClient();
 const staticReads = new Set(['GameRegistry.module','GameRegistry.token','GameRegistry.market','GameRegistry.launchTime','V4Market.desk','V4Market.fees','StarterClaim.root','StarterClaim.freeRoot','StarterClaim.freeClaimEnds','PackSale.opensAt','FarmRewards.EPOCH','FarmRewards.PRECISION']);
 const staticCache = new Map<string, Promise<unknown>>();
 export function clearStaticReads() { staticCache.clear(); }
