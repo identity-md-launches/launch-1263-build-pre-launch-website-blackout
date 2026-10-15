@@ -1,3 +1,4 @@
+import { inviteCard } from './invite-panel';
 import { sprite, itemSprite } from '../../src/sprites';
 import { soundEnabled } from '../../src/effects';
 import { KINDS, RARITIES, type Item } from './data';
@@ -19,6 +20,7 @@ function modal(){
  dialog.addEventListener('close',()=>{cascade.forEach(clearTimeout);cascade=[];document.body.classList.remove('pack-cinema');(returnFocus?.isConnected?returnFocus:document.querySelector<HTMLElement>('#main'))?.focus({preventScroll:true});});
  dialog.addEventListener('click',event=>{
   const el=(event.target as Element).closest<HTMLElement>('button');if(!el)return;
+  if(el.hasAttribute('data-invite'))dialog?.close();
   if(el.hasAttribute('data-close-opening'))dialog?.close();
   if(el.hasAttribute('data-rip'))rip();
   if(el.dataset.flipCard)flip(el.dataset.flipCard);
@@ -64,7 +66,7 @@ function rip(){
  d.innerHTML=`<div class="opening-top"><div><h2 id="opening-title">Fresh from the city.</h2><p>${mock?'Dev only · synthetic results':`${results.length/3} pack${results.length===3?'':'s'} confirmed on chain`}</p></div><button class="close-button" data-close-opening aria-label="Close pack opening">×</button></div><div class="opening-actions"><p id="flip-progress" role="status">0 / ${results.length} hardware revealed</p><button class="button" data-flip-all>Flip all</button></div><div class="pull-grid ${results.length===3?'single-pull':''}">${results.map((item,i)=>{
   const rarity=RARITIES[item.rarity],gate=LEVEL_GATES[item.rarity],hash=baseHash(item),earning=economy?(farm?itemEpoch(economy,farm,item):calculatorEpoch(economy,baseHash(item))):null;
   return `<article class="pull-card ${rarity.toLowerCase()}" data-pull="${item.id}" style="--card-index:${i};--fan:${i-1}"><button class="flip-card" data-flip-card="${item.id}" aria-label="Flip hardware ${i+1}" aria-expanded="false"><span class="flip-inner"><span class="card-back"><span class="back-brand">BLACKOUT</span>${sprite('bolt')}<span class="card-back-grid"></span><span class="back-copy">Power sleeps inside.</span><span>Tap to flip</span></span><span class="card-face" aria-hidden="true">${itemSprite(KINDS[item.kind],rarity)}<strong>${KINDS[item.kind]}</strong><span class="pull-rarity">${rarity}</span><span><b data-pull-hash="${Number(hash)/1000}">0</b> H/s</span><span class="pull-earnings">${earning===null?'+ earnings after live quote':`+${tokens(earning,2)} / epoch`}</span><small>${gate===1?'Any farm level':`Requires level ${gate}`}</small></span></span></button><button class="button place-pull" data-place-pull="${item.id}" disabled>Place in room</button></article>`;
- }).join('')}</div><section class="pull-summary" hidden><div><h3>Total hardware hash</h3><strong>${(Number(results.reduce((n,i)=>n+baseHash(i),0n))/1000).toLocaleString('en-US')} H/s</strong><p>Best pull: <span class="best-pull ${RARITIES[best].toLowerCase()}">${RARITIES[best]} ${KINDS[results[results.length-1].kind]}</span></p></div><div class="actions"><button class="button primary" data-place-pulls>Place all in valid slots</button><button class="button" data-scrap-pulls ${results.some(i=>i.rarity===0)?'':'disabled'}>Scrap commons</button><button class="button" data-open-more>Open more</button></div><p class="small muted">Hash is hardware potential. Placement gates, duplicates and room bonuses affect your farm’s actual output.</p></section><div class="rarity-fx" aria-hidden="true"></div>`;
+ }).join('')}</div><section class="pull-summary" hidden><div><h3>Total hardware hash</h3><strong>${(Number(results.reduce((n,i)=>n+baseHash(i),0n))/1000).toLocaleString('en-US')} H/s</strong><p>Best pull: <span class="best-pull ${RARITIES[best].toLowerCase()}">${RARITIES[best]} ${KINDS[results[results.length-1].kind]}</span></p></div><div class="actions"><button class="button primary" data-place-pulls>Place all in valid slots</button><button class="button" data-scrap-pulls ${results.some(i=>i.rarity===0)?'':'disabled'}>Scrap commons</button><button class="button" data-open-more>Open more</button></div><p class="small muted">Hash is hardware potential. Placement gates, duplicates and room bonuses affect your farm’s actual output.</p></section>${inviteCard()}<div class="rarity-fx" aria-hidden="true"></div>`;
  effect(best,true);
 }
 function flip(id:string){

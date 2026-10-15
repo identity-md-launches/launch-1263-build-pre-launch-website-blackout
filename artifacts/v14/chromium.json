@@ -1,0 +1,58 @@
+{
+  "results": [
+    "Home reads current event and 3 historical Heralds; team farm is named in leaderboard and feed",
+    "MutationObserver across at least two real polls: sections and existing rows retained, new row inserted, unchanged price not animated, focus retained, polls ≥15s",
+    "Connected wallet opens responsive account panel; balances, farm, XP, links, address copy and Escape focus return work",
+    "Account Claim opens existing gross/tax/net review before any signature",
+    "Invite copy, exact X/Telegram text, on-chain referees/5% earnings and mobile burger entry work",
+    "Open N that fit opens only one pack, retains two unopened packs, single Reveal stays available, legal placement hint and reveal Invite shortcut work",
+    "Farm and Rewards both expose Invite friends: +5%",
+    "Disconnect closes account panel and clears connected identity",
+    "Peek chooses the strongest non-team farm",
+    "Leaderboard shows Team farm and only the one installed item; uninstalled pulls stay out of previews",
+    "Hero action is above the fold at 390; lightning is 105s and hero-sky-only; Pause city and reduced motion disable lightning/windows",
+    "Normal fixture visit has zero console/page errors; account and Invite pass WCAG A/AA axe checks"
+  ],
+  "errors": [],
+  "consoleErrors": [],
+  "evidence": {
+    "observedMs": 32008,
+    "mutation": {
+      "sectionIdentity": true,
+      "retainedRows": true,
+      "focusRetained": true,
+      "structuralRemovals": [],
+      "unchangedPriceTextMutations": 0,
+      "changedPoolTextMutations": 39,
+      "rows": 2,
+      "pool": "18,123,400"
+    },
+    "homePollGaps": [
+      14997,
+      15001
+    ],
+    "firstAction": {
+      "x": 16,
+      "y": 594.65625,
+      "width": 141.78125,
+      "height": 48
+    },
+    "lightning": {
+      "duration": "105s",
+      "bottom": "550px",
+      "position": "absolute",
+      "peak": 0.06
+    }
+  },
+  "axe": [
+    {
+      "surface": "invite",
+      "violations": []
+    },
+    {
+      "surface": "account",
+      "violations": []
+    }
+  ],
+  "fixture": "Synthetic deterministic RPC and wallet. No real signatures or funds."
+}

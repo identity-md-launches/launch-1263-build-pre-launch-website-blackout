@@ -1,4 +1,4 @@
-# Explicit delivery budget: see artifacts/PATH-BUDGET.md (4,700,000 bytes total).
+# Explicit delivery budget: see artifacts/PATH-BUDGET.md (5,500,000 bytes total).
 # Runtime assets stay in public/ and dist/; these are never ignored.
 **/node_modules/
 **/.npm/
@@ -30,3 +30,9 @@ artifacts/recordings/*
 artifacts/v13/*
 !artifacts/v13/*.json
 !artifacts/PR.md
+
+# UX evidence: explicit byte allocations in artifacts/PATH-BUDGET.md.
+!artifacts/v14/
+artifacts/v14/*
+!artifacts/v14/*.json
+**/.playwright-mcp/

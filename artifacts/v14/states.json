@@ -1,0 +1,8 @@
+{
+  "passed": [
+    "Visitor Invite → Connect returns to personal invite panel after EIP-6963 connection",
+    "RPC failure retains rendered values, feed and mounted sections; no loading reset",
+    "Home reflows with 200% CSS root text size at 390px",
+    "Phone without an extension shows four wallet-browser links preserving ?ref plus Coinbase Smart Wallet"
+  ]
+}

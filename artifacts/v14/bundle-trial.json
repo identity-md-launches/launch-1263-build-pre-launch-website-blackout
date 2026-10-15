@@ -1,0 +1,12 @@
+{
+  "missingHistoricalObjects": 473,
+  "checkedAt": "2026-10-15T15:15:01.405Z",
+  "limitBytes": 8388608,
+  "bundleBytes": 6697178,
+  "remainingBytes": 1691430,
+  "candidateFiles": 378,
+  "baseCommit": "63fa29b15a41e9fa6acda4efa3a4329c679b68ec",
+  "snapshotCommits": 2,
+  "method": "Import the complete accepted source tree into a temporary bare Git repository, commit a base snapshot, stage every current deliverable file as its child, then create and verify a standalone bundle containing both complete trees. Shared objects and deltas are counted once. The source .git is never modified.",
+  "limitation": "The supplied checkout lacks 473 historical objects. This measures both complete accepted and revised trees, not unavailable history or the publisher’s final metadata."
+}

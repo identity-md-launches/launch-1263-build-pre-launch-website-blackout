@@ -1,10 +1,20 @@
 # BLACKOUT
 
-A pixel-art mining game on **Robinhood Chain (4663)**, at https://playblackout.xyz. This revision fixes four reviewed defects in the existing optimizer, Today controls and earnings inputs. The rooftop, art, routes, earnings views and pack experience are retained.
+A pixel-art mining game on **Robinhood Chain (4663)**, at https://playblackout.xyz. This revision stabilizes live updates, adds an account menu and visible referrals, and replaces the Home showcase with confirmed GridOperator events. The existing pixel city, game routes and transaction flows are retained.
 
 The static hosting deliverable is **[dist/index.html](dist/index.html)** and its complete local assets. Routes use hashes and asset URLs are relative, including at a gateway subpath. No contracts were deployed, tokens replaced or real transactions signed. Existing contract addresses, ABIs, proof files, manifests, lockfiles and build configuration remain intact.
 
-## Gameplay update
+## Live UX update
+
+Live panels retain their mounted DOM, keyed feed records and focus. Changed values animate once; the first reading and unchanged values do not. Public renders and automatic refreshes are limited to a 15-second cadence, while local clocks still tick each second. Failed reads keep confirmed data. Lightning is confined to the hero sky, peaks at 0.06 opacity and repeats every 105 seconds; Pause city and reduced motion disable it and window flicker.
+
+The connected wallet opens an account dropdown on desktop and a bottom sheet on phones: address/copy, district, level/XP, balances, Claim, hashrate, epoch estimate, unopened packs, inventory, Invite and page links. Invite is also in the main/burger navigation, Farm, Rewards and the confirmed pack reveal. Links preserve referral attribution through connection; the existing optional `setReferrer` review remains before an eligible first farm action.
+
+The designated wallet is labeled **Team farm** in feeds and standings; the visitor preview selects the best non-team farm. Home reads the current event plus the last three earlier GridOperator Herald events and labels authored quotes **Grid Dispatch · flavor**. Feed rarity is a “Best: Epic” style badge. ETH display uses four decimal places; token amounts use grouping and at most two. Capacity-aware opening offers **Open N that fit**, retains single-pack opening and points to legal empty room slots.
+
+Current check results and limitations are in [validation](artifacts/validation.md). The [PR description](artifacts/PR.md) includes the requested Home, Leaderboard, wallet and Invite screenshots at 375px and 1440px. [DESIGN.md](DESIGN.md) documents the implemented system. Browser fixture identities and balances are test-only; the export reads the deployed contracts.
+
+## Retained gameplay
 
 Farm now starts with **Optimize farm** and **Today**. Today also opens from the Mining HUD on every connected route. Claim shows the simulated tax and net first; Repair all reviews item and cable costs; Open all uses the existing receipt queue; supply drops have their own collection action. Pack-history scans run separately so they cannot hold up reward and repair controls. Notifications require an explicit click and browser permission, run only while this page is open, and deduplicate epoch/reward/health events. Several newly worn items share one health alert. There is no overclock action; the on-chain `overclock` data field is retained only as the enhancement level used in scoring.
 
@@ -20,26 +30,22 @@ Every connected farm has a copyable `https://playblackout.xyz/?ref=<address>` li
 
 Contract source reviewed: [FarmCore, FarmEngine, FarmItems, FarmRewards and Params at the pinned deployment commit](https://github.com/identity-md-launches/launch-1729-blackout-l4-job-b/tree/77c962e6fce9652ee93dff2037b1a09e7a66bd04/src), plus their Economy/Enhancement/math dependencies. Runtime addresses and ABI provenance remain in the existing `web/src/config.ts` and `web/data/abi-provenance.json`. No new deployment is used.
 
-Current checks: production build/typecheck pass; all four review findings reproduced before changes; 11 focused Chromium regression groups and all 13 broader gameplay groups pass. These include the theft counterexample, search cancellation/error recovery, all worn-item disclosures, nondefault rewards getters and cached refreshes. Seven optimizer/referral/Today unit groups and eight earnings/regression groups pass. Live read-only parity passes for 18 candidate arrays and 72 room previews. The pinned design probe passes 16/16 on the offline export. [PR description and 375/1440 screenshots](artifacts/PR.md), [actual validation and limitations](artifacts/validation.md), [review responses](.imd-responses.json), and [design system](DESIGN.md) accompany the export. WebKit could not start; no real signatures, physical-phone or screen-reader session was performed.
+Current validation: production build/typecheck passed; five unit groups, twelve Chromium interaction groups and four connection/outage/reflow groups passed. The pinned design probe passes 16/16. The MutationObserver verifies mounted sections, retained rows/focus, new feed insertion and changed-only number animation across at least two real poll cycles. Account/Invite have zero axe A/AA violations. Read-only live checks loaded the real current/prior Heralds, Team farm and non-team peek without console/page/HTTP errors through the contributor transport. WebKit could not launch because system libraries were unavailable; the direct-public-provider CORS limitation is described below. No real wallet signatures were exercised.
 
-Today shows the three lowest-health items first, with **Show all N worn items** exposing the remaining named health bars in both Farm and the Mining HUD. Repair all lists every item and quote before signing. Stopping or failing an optimizer search restores subsequent confirmation controls while retaining the pending-transaction guard.
-
-After installing the unchanged toolchain and Playwright Chromium, run:
+After installing the unchanged toolchain, external Sharp and Playwright Chromium, run the current checks:
 
 ```sh
 node web/tools/run.mjs typecheck
 node web/tools/run.mjs build
-node web/tools/v13-check.mjs unit
-node web/tools/v12-check.mjs unit
-PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browsers node web/tools/gameplay-revision.mjs
-node web/tools/v13-check.mjs live
-PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browsers node web/tools/v13-check.mjs browser
-PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browsers node web/tools/v13-check.mjs capture
-node web/tools/v13-delivery.mjs
-node web/tools/v13-bundle.mjs
+node web/tools/v14-check.mjs unit
+PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browsers node web/tools/v14-check.mjs browser
+PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browsers node web/tools/v14-check.mjs states
+PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browsers node web/tools/v14-check.mjs live
+node web/tools/v14-delivery.mjs
+node web/tools/v14-bundle.mjs
 ```
 
-`capture` follows `browser` to leave the curated screenshots in the submission. Browser/capture tools use Sharp installed externally at `/tmp/blackout-validation` as shown below; fixtures live only under `web/tools` and do not enter `dist`. All review records for this update are in `artifacts/v13/`; older reports below describe earlier revisions.
+Run `live` after `browser` so the final Home/Leaderboard screenshots show read-only live data. Wallet/Invite screenshots deliberately use deterministic fixtures. `BLACKOUT_TEST_RPC` optionally routes the live test through a contributor-provided RPC without changing the export. Tests write disposable results into `test/scratch/v14/`; compact accepted reports are in `artifacts/v14/`. No real wallet transaction is signed. Earlier `v11`–`v13` artifacts describe earlier revisions.
 
 ## Install, preview and rebuild
 
@@ -77,9 +83,9 @@ node web/tools/run.mjs build
 | --- | --- |
 | `#/` / `#/home` | Living rooftop, Buy a pack, See earnings, live pool/epoch/price, terminal with every revealed item, top farms, hardware cards, slim roadmap |
 | `#/packs` | Bright ETH purchase opens Connect when disconnected; 1–10 packs; secondary BLACKOUT payment; individual and bulk receipt resolution; 3D reveal and placement/scrap shortcuts |
-| `#/farm` | Visitors peek at the actual #1 farm. Players optimize/review room placement, use Today and Invite, inspect combos, drag or tap hardware, repair, scrap, expand and sync |
+| `#/farm` | Visitors peek at the highest-hash non-team farm. Players optimize/review room placement, use Today and Invite, inspect combos, drag or tap hardware, repair, scrap, expand and sync |
 | `#/rewards` | Claimable and tax preview, mining/claim history, last 20 settled epochs, 1/7/30-day estimates and pack payback; visitors get a live calculator |
-| `#/leaderboard` | Hash rankings, shortened addresses with explorer links, district badges, item previews and top-three medals |
+| `#/leaderboard` | Hash rankings, Team farm identification, linked addresses, district badges, installed-item previews and top-three medals |
 | `#/city` | Grid events, district standings, existing stake/unlock/lobby controls when enabled |
 | `#/season` | Week selection, results, existing eligible claims |
 | `#/billboards` | Live boards and existing bid/refund controls when enabled |
@@ -87,6 +93,7 @@ node web/tools/run.mjs build
 | `#/docs` | Field guide and existing section anchors |
 | `#/contracts` | All 18 configured addresses, copy/explorer links and registry verification |
 | `#/wallet` | Compatibility alias for Rewards |
+| `#/invite` | Direct entry to the shared Invite panel |
 
 Connected players get the Mining HUD on every route: hash, city share, estimated epoch/day tokens, ETH/USD equivalents, claimable and a one-second epoch clock. Values animate when confirmed readings change. They do not invent accruing balances between chain updates. Spot conversions are estimates, not executable sale quotes.
 
@@ -109,17 +116,17 @@ Pack payback uses today's one-pack token quote and the actual weighted drop odds
 
 Buying creates an on-chain receipt. The confirmed purchase receipt is read directly, so delayed log indexing does not lose a newly purchased pack. Opening waits on **native ArbSys blocks**, handles the existing entropy window and rearming, then shows only confirmed hardware. Tap or hold to rip; flip individual cards or Flip all. Bulk reveal sorts rarest last. Sound defaults off, haptics are optional and reduced motion preserves every control and result.
 
-`Open all (N)` reconciles ownership and resolution from chain, checks total inventory space, and resolves up to eight packs per paid receipt per call. Separate receipts queue wallet confirmations with one progress bar. Contract methods do not permit arbitrary receipt batching. Place all queues valid slots; unplace, reveal and supply-drop collection check capacity. Claiming mining credits does not require inventory space. Expansion quotes the actual quadratic cost and uses the existing `expand(true)` call. Scrapping requires an explicit irreversible-action review.
+Bulk opening reconciles ownership and resolution from chain and opens at most `floor(free inventory slots / 3)` packs, with up to eight per paid receipt per call. When only part of the queue fits, **Open N that fit** replaces Open all; the remaining receipts stay unopened. Single-pack Reveal stays available when three slots fit. **Place items to free space** appears only when an owned item has an empty legal room slot. Separate receipts queue wallet confirmations with one progress bar. Contract methods do not permit arbitrary receipt batching. Place all queues valid slots; unplace, reveal and supply-drop collection check capacity. Claiming mining credits does not require inventory space. Expansion quotes the actual quadratic cost and uses the existing `expand(true)` call. Scrapping requires an explicit irreversible-action review.
 
 Legacy receipts remain recoverable, and the original contracts/proof assets remain available; the site offers no new promotional claims. All 41 custom ABI errors map to human messages, with retry/farm recovery controls. A concurrent resolution is reconciled instead of sending a duplicate transaction.
 
 ## RPC behavior
 
-Ordinary reads race the official Robinhood RPC and dRPC, each with a **4-second** timeout and no automatic transport retry. Reveal-block reads use a separate client with the same transport settings: pruned historical state backs off independently and cannot disable current reads or simulations. The failing PublicNode endpoint is removed. HTTP 400/401/403 authorization failures quarantine the endpoint across read clients for this page session; contract reverts and explicit log-range failures do not. Other endpoint errors trigger exponential cooldowns from 15 to 120 seconds. Writes always use the wallet.
+Ordinary reads use only the [official Robinhood RPC](https://rpc.mainnet.chain.robinhood.com), with a **4-second** timeout and no automatic transport retry. JSON-RPC batches hold at most four calls and deployless multicalls at most 2,048 calldata bytes to stay below request-body limits. Reveal-block reads use a separate client with the same transport settings: pruned historical state backs off independently and cannot disable current reads or simulations. Failing PublicNode and dRPC endpoints are removed. HTTP 400/401/403 authorization failures quarantine the endpoint across read clients for this page session; contract reverts and explicit log-range failures do not. Other endpoint errors trigger exponential cooldowns from 15 to 120 seconds. Writes always use the wallet.
 
-Historical logs use the official archive endpoint: dRPC rejects those ranges even below its advertised cap. Ranges are at most 10,000 blocks, adaptively shrink on range errors, retain checkpoints and overlap 16 blocks for reorgs. All indexers share a 600ms pacing queue to avoid archive quota bursts. Cold historical totals can take longer than the primary live numbers; the terminal publishes decoded ranges incrementally. These limits are also tested. No backend, indexer credential or vendored registry is required.
+Historical logs use the same official archive endpoint. Ranges are at most 10,000 blocks, adaptively shrink on range errors, retain checkpoints and overlap 16 blocks for reorgs. All indexers share a 600ms pacing queue to avoid archive quota bursts. Cold historical totals can take longer than the primary live numbers; the terminal publishes decoded ranges through the shared 15-second render window. Herald history scans at most 24 older ranges per refresh, retains progress, and can take a few minutes on a cold cache. These limits are also tested. No backend, indexer credential or vendored registry is required.
 
-Optional local storage holds display snapshots only. Fresh simulations and quotes authorize writes. A visible-page scheduler refreshes every 15 seconds; clocks tick locally once a second. Failed reads retain the last confirmed display with a reconnecting label. The earlier accepted build’s live route sweep recorded zero console errors and zero HTTP errors; external providers can still become unavailable or rate-limit a shared IP.
+Optional local storage holds display snapshots only. Fresh simulations and quotes authorize writes. A visible-page scheduler refreshes every 15 seconds; clocks tick locally once a second. Failed reads retain the last confirmed display with a reconnecting label. The current read-only sweep using the contributor transport recorded zero console/page/HTTP errors. A separate direct-public-endpoint session observed intermittent duplicate CORS headers; a static client cannot repair upstream response headers. The exact observation and test scope are recorded in validation.
 
 ## Rehearsal and validation
 
@@ -129,11 +136,12 @@ The earlier accepted build’s mobile Lighthouse run scored **87** (LCP 1.4s), w
 
 [artifacts/validation.md](artifacts/validation.md) records actual checks, six-domain Better Interface coverage, screenshots of every route at 375/1440, connected fixture screenshots and all ten rarity recordings. Live public reads are separate from controlled wallet fixtures. No real-money signing, physical phone/haptic session or screen-reader certification was performed.
 
-Checks use the locked toolchain and external Playwright browsers. Visual tooling is optional and installed outside the repository:
+Checks use the locked toolchain and external Playwright browsers. Install visual tooling outside the repository (the current UX screenshot harness uses Sharp):
 
 ```sh
 npm install --prefix /tmp/blackout-validation --no-audit --no-fund sharp@0.35.5 lighthouse@13.5.0
 # Use the Playwright CLI in the selected external toolchain to install browsers.
+# The v12 commands below are retained historical suites; current UX commands are above.
 node /tmp/blackout-web-toolchain/node_modules/playwright/cli.js install chromium webkit ffmpeg
 node web/tools/v12-check.mjs unit
 node web/tools/v12-check.mjs browser
@@ -147,7 +155,7 @@ node web/tools/v12-bundle.mjs
 
 `PLAYWRIGHT_BROWSERS_PATH` selects external browser binaries. `BLACKOUT_FFMPEG` selects the Playwright FFmpeg executable for compact WebM evidence; `BLACKOUT_VISUAL_TOOLS` selects an external package manifest with Sharp. WebKit supports `BLACKOUT_PLAYWRIGHT_PATH` and `BLACKOUT_WEBKIT_PATH` when a matching runtime is installed elsewhere. The pinned taste probe is assignment input, so only its compact results ship.
 
-Generated dependencies/caches stay outside Git at every nesting level. [Artifact budgets](artifacts/PATH-BUDGET.md) retain all requested screenshots and recordings. A standalone Git bundle containing both the complete accepted tree and complete revised tree is measured (shared objects and deltas are counted once) in `artifacts/v13/bundle-trial.json`, without modifying this checkout's `.git`. The provided shallow/partial history omits some historical objects; publisher metadata and unavailable history are outside that measurement. No publishing command or PR creation was run.
+Generated dependencies/caches stay outside Git at every nesting level. [Artifact budgets](artifacts/PATH-BUDGET.md) retain all requested screenshots and recordings. A standalone Git bundle containing both the complete accepted tree and complete revised tree is measured (shared objects and deltas are counted once) in `artifacts/v14/bundle-trial.json`, without modifying this checkout's `.git`. The provided shallow/partial history omits some historical objects; publisher metadata and unavailable history are outside that measurement. No publishing command or PR creation was run.
 
 ## Earlier five-finding review
 

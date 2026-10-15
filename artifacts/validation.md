@@ -1,3 +1,69 @@
+# BLACKOUT live UX update — 2026-10-15
+
+This report covers the current UX revision. Earlier reports below and `v11`–`v13` JSON files are historical evidence, not fresh results for this build. The existing game, deployed contracts, proofs, source assets, dependencies, lockfiles and build configuration are retained. No deployment, publication, real wallet signature or on-chain mutation was performed.
+
+## Implemented scope
+
+| Requirement | Implementation and evidence |
+| --- | --- |
+| Stable live Home | `web/src/dom.ts:1` patches existing nodes and keyed records. `main.ts:130` preserves same-route sections; `main.ts:159` shares a 15-second public paint window. The observer test spans at least two production poll cycles, checks eight section/list identities, retained rows, focus, a new row, changed pool and untouched price text. |
+| Only changed numbers animate | `web/src/juice.ts:3` stores previous values per mounted element, renders first values immediately, and animates only a changed value for 650ms. Reduced motion/Pause city make updates immediate. |
+| No loading reset | Polling retains prior state. The browser outage test verifies rendered numbers, feed and section identities survive failed JSON-RPC reads. Initial empty fields can populate as their first reads arrive. Local clocks tick once per second without replacing their text nodes. |
+| Gentle lightning | Hero-sky pseudo-element only; 105-second cycle, maximum opacity 0.06. The legacy skyline timer is 90–120 seconds. `ux.css` disables lightning and window flicker under both Pause city and reduced motion. Browser checks inspect duration, peak and disabled styles. |
+| Account menu | Native dialog styled as 420px desktop dropdown/mobile bottom sheet. Address/copy, district, level/XP progress and remaining XP, ETH/token/claimable balances, Claim, hash/epoch estimate, unopened packs/Open, inventory, Invite, links and Disconnect. Existing claim review still precedes signing. |
+| Visible referrals | Main/burger Invite; shared panel with copy, exact X/Telegram copy, on-chain referee hash and earned credits, and terms. Farm, Rewards and confirmed reveal cards open it. Visitor Invite → Connect returns to the personal panel; `?ref=` is attributed in connection and the existing optional `setReferrer` flow remains. |
+| Honest showcase | Team address is identified case-insensitively in public standings, feed, account/referral identities and season result. The peek selects the highest-hash non-team farm. Current GridOperator event plus three previous Heralds carry kind/severity/epoch/district; authored quotes explicitly say “Grid Dispatch · flavor.” |
+| Price/pack/leaderboard fixes | ETH-first instructions; grouped token displays with ≤2 decimals, ETH with 4 (positive dust `<0.0001`), exact transaction values retained. Best rarity is a badge. Partial bulk opening uses `floor(free slots / 3)`, rechecks capacity, preserves single Reveal and keeps remaining receipts unopened. Legal empty room slots trigger the placement hint. Leader previews contain installed items only. |
+| RPC | Official endpoint only; removed failing dRPC and PublicNode. Logs start at ≤10,000 blocks, shrink on range errors, retain contiguous checkpoints and pace at 600ms. Transient failures back off 15/30/60/120 seconds; authorization failures quarantine the endpoint. JSON-RPC batches are capped at 4 calls and deployless multicalls at 2,048 calldata bytes after a live 413 exposed oversized requests. |
+| Static export | Complete `dist/index.html`, local fonts/art/proofs and relative asset references; unchanged manifests and lockfiles remain with source. Title, favicon, description, og:title and og:image are present. Product and Buy a pack are visible at 390×844. |
+
+## Commands and observed results
+
+Dependencies and browser/Sharp tooling are external to the repository. Build uses the unchanged locked toolchain. On this assignment machine the build's public chain reads were routed to the supplied contributor RPC by a disposable `test/scratch/rpc-preload.cjs`; no helper endpoint or credentials enter the export. The citable runtime source remains [Robinhood Chain RPC](https://rpc.mainnet.chain.robinhood.com).
+
+| Command | Actual result |
+| --- | --- |
+| `node web/tools/v11-check.mjs prerender` | Regenerated the Home/header shell from the final source; Invite and responsive header spacing are present before hydration. |
+| `node web/tools/run.mjs typecheck` | Passed. |
+| `NODE_OPTIONS='--require=./test/scratch/rpc-preload.cjs' node web/tools/run.mjs build` | Passed production TypeScript/Vite build, ABI digest, all 2,011 local proofs and live root comparisons. Existing font URL / third-party annotation notices are nonfatal; local assets were checked after export. |
+| `node web/tools/v14-check.mjs unit` | Five groups: supported RPC/poll/team identity; bounded adaptive log scan; interrupted-scan checkpoints; exact referral link/text/5%; real transport batching and exponential backoff with controlled clock/fetch. [Results](v14/unit.json) |
+| `PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browsers node web/tools/v14-check.mjs browser` | Twelve Chromium groups covering the observer, account, claims, referrals, mobile burger, partial opening, retained referral review, reveal invite, route cards, disconnect, non-team peek, installed previews and motion. Zero fixture console/page errors; zero axe A/AA violations on account/Invite. [Results](v14/chromium.json) |
+| `PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browsers node web/tools/v14-check.mjs states` | Four groups: Invite → Connect return; outage retains display; 200% CSS root-text reflow at 390; phone connection without an extension offers wallet browsers and Coinbase Smart Wallet with referral preserved. [Results](v14/states.json) |
+| `BLACKOUT_TEST_RPC=<contributor RPC> … node web/tools/v14-check.mjs live` | Read-only production export: real Home, pack feed, current/prior Heralds, Team farm, non-team peek, installed hardware, local fonts and 320/390/800/900/1024/1440 widths. Final run: 478 RPC method calls; maximum JSON batch 4 calls / 96,181 request bytes; log span ≤10,000; zero console/page/HTTP errors. Exact readings are in [results](v14/live.json). Only the test routes public RPC requests through the supplied transport. |
+| `PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browsers IMD_PLAYWRIGHT=/tmp/blackout-web-toolchain/node_modules/playwright/index.mjs node .imd/reads/skills/design-critic/scripts/taste.mjs --out test/scratch/taste` | Pinned probe: **16/16**. Render, layout, target spacing, measured contrast, casing, tracking, headings, type sizes/families, glyphs, copy, repetition, chrome, motion and share metadata pass. [Results](v14/taste.json) |
+| `BLACKOUT_TEST_ENGINE=webkit … node web/tools/v14-check.mjs browser` | Not run to completion: WebKit launches fail because required system GTK/GStreamer/ICU libraries are unavailable. Chromium works. [Limitation](v14/webkit.json) |
+| `node web/tools/v14-delivery.mjs` / `node web/tools/v14-bundle.mjs` | Checks export references, required assets/screenshots/recordings, protected paths, caches, submodules and artifact budgets; creates/verifies a temporary accepted-plus-revised-tree bundle outside this checkout. [Delivery](v14/delivery.json), [bundle measurement](v14/bundle-trial.json). |
+
+The primary observer test checks node identity and actual mutations, rather than merely comparing HTML strings. It inserts a new chain event in a current block, observes the real 15-second polling schedule, verifies the old rows stay connected, and retains keyboard focus in the terminal. It also distinguishes changed-value interpolation from unchanged price text. Transaction tests use explicit synthetic providers; their addresses and balances are not runtime fallback data.
+
+## Better Interface: six-domain review
+
+Applied the pinned Better Interface core principles during implementation, then reviewed source and rendered production output. The existing pixel city is the visual direction; the work adds no new font family or palette. The assigned browser tool and external Playwright supplied rendered observations. Screenshots are in the [PR description](PR.md), with live and fixture provenance identified there.
+
+| Domain | Finding / source | Applied correction and coverage |
+| --- | --- | --- |
+| Accessibility | Replacing live DOM reset focus; account/Invite needed named, keyboard-operable surfaces (`web/src/dom.ts:1`, `wallet.ts`, `main.ts:69`). | Mounted nodes and keyed rows retained. Native named dialogs, Escape, focus return (including hidden mobile navigation/account origins), labeled copy and XP progress, polite copy feedback. Keyboard focus/clipboard and zero axe violations verified in Chromium. Pause/reduced motion tested. Screen-reader narration and physical assistive devices are not verified. |
+| Layout | Six desktop links crowded intermediate widths; old wallet sizing clipped lower sheet actions (`web/src/ux.css:10`, `critical.css`). | 12px nav gaps at 761–1000px; compact account rows and mobile bottom sheets. Required 375/1440 captures, 320/390/760/800/900/1024 checks and 200% CSS text-size reflow. Product/action visible on the first 390 screen. Native browser zoom and RTL mirror are not verified. |
+| Writing | Hidden referrals, ambiguous terminal rarity, static letters presented like live history, and confusing capacity state (`invite-panel.ts:6`, `dispatch.ts:38`, `public-views.ts`, `views.ts:55`). | Exact share copy, first-settlement/older-farm terms, “Best: Epic,” “Open N that fit,” legal placement hint and clear flavor labels. Actual chain events and empty/reconnecting states reviewed. No invented live letter/history. |
+| Typography | Long amounts and full invite URL needed controlled formatting/wrapping (`views.ts:20`, `account-panel.ts`, `ux.css`). | Existing Pixel/system/Mono families, 12/14/16/20/32/72px roles, tabular numbers and wrapping URLs. ETH four decimals; tokens grouped with at most two. Probe passes type/tracking/casing; actual mobile line wraps inspected. Exact transaction-review precision is retained deliberately. |
+| Colors | Need to preserve district/rarity meaning without relying only on color (`ux.css`, `polish.css`). | Existing dark tokens, cyan data and yellow primary controls. District/rarity/event names stay text. Probe reports all measured solid-background text meets 4.5:1 (3:1 large); image/gradient-backed text is outside the probe's measured coverage. No light theme is introduced; forced-colors rendering was not retested. |
+| UI | Refresh flicker, excessive lightning, capacity-disabled bulk action and scattered account controls (`main.ts:159`, `juice.ts:3`, `polish.css:17`, `account-panel.ts:8`). | Shared 15-second patch window, changed-number animation, 0.06/105s sky flash, partial opening and cohesive account/Invite panels. Active interactions, empty/connecting/reconnecting states, copy, menus, claims and reveal checked. Hover/focus/active styling reviewed in source; a 10%-speed Animations-panel replay was not performed. |
+
+Applicable defects found in rendered review were repaired: account sheet height, nav overflow around 800px, adjacent Home farm/district labels, a legacy skyline flash override, and capitalized-currency wording flagged by the probe. The live 413 was repaired with smaller JSON/deployless batches. An early feed test placed an event behind the reorg window; it now adds the event at the current fixture block. Final tests use the corrected event chronology and the actual production scheduler.
+
+## Evidence and remaining limits
+
+- Required 375px/1440px Home and Leaderboard captures use read-only live data. Account and Invite captures use deterministic connected-wallet fixtures; this is stated beside the images. Extra live telemetry/dispatch captures and all previously required rarity recordings remain included.
+- Cold Herald history took several bounded batches to recover the last three prior events. The UI reports this while retaining already confirmed records. Progress is cached; no static events substitute for missing history.
+- A separate long browser-tool visit using the direct public RPC observed intermittent responses with duplicate `Access-Control-Allow-Origin` values (`*, *`), producing browser network/CORS errors. The application retained data and backed off. The supplied contributor-transport live test normalizes transport headers in the test harness and checks for zero console/page/HTTP errors; it does not prove the external public provider's CORS availability. No public proxy or credentials are shipped. This prevents an unconditional zero-errors claim for every public-provider visit.
+- No real signatures/funds, physical wallet-browser handoff, native zoom, RTL, screen-reader session, native notification delivery or physical haptics were exercised. WebKit could not launch; no Safari claim is made. No new Lighthouse measurement was run; older scores below are historical.
+- The pinned probe leaves image/gradient contrast unmeasured and reports six Home controls below its comfortable 44px size while passing its 24px/spacing rule. These are retained secondary controls; new primary sheet actions use 44px targets. Automated checks supplement the rendered review and do not certify accessibility or uptime.
+- The provided Git checkout lacks some historical objects. The size trial includes complete accepted and revised file trees with shared objects counted once, not unavailable history or the publisher's final metadata. It never writes this checkout's `.git`. All generated dependencies/caches stay outside the submission; see [explicit path budgets](PATH-BUDGET.md).
+
+---
+
+# Historical validation reports
+
 # BLACKOUT gameplay update validation
 
 ## Four-finding revision — 2026-10-15

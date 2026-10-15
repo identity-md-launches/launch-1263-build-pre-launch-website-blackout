@@ -1,7 +1,7 @@
 import { defineChain } from 'viem';
 export const SITE_LABEL = 'blackout-mine-the-city-pray-the';
 export const RPC = 'https://rpc.mainnet.chain.robinhood.com';
-export const RPC_URLS = [RPC, 'https://robinhood.drpc.org'] as const;
+export const RPC_URLS = [RPC] as const;
 export const POLL_MS = 15000;
 // L3 factory deployment receipt, verified on chain; evidence in web/data/deployment.json.
 export const GAME_DEPLOYMENT_BLOCK = 88_288_289n;

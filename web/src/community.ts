@@ -1,3 +1,4 @@
+import { farmName } from './identity';
 import { decodeEventLog, type Address, type Hex } from 'viem';
 import { ABI, addresses, client, historicalClient, read } from './chain';
 import { type Item } from './data';
@@ -6,11 +7,11 @@ import { newLogScan, scanLogRanges } from './logs';
 import { cached, remember } from './cache';
 export type Activity={key:string;block:bigint;index:number;hash:Hex;text:string;kind?:'purchase'|'reveal';rarity?:number;items?:(Pick<Item,'kind'|'rarity'>|null)[]};
 // Older snapshots may contain fabricated Common items from deleted records.
-export const ACTIVITY_CACHE_KEY='activity-v2';
-const EVENT_CACHE_KEY='pack-event-index-v2';
+export const ACTIVITY_CACHE_KEY='activity-v3';
+const EVENT_CACHE_KEY='pack-event-index-v3';
 export const LEADERBOARD_CACHE_KEY='leaderboard.installed.v13';
 export type Leaderboard={epoch:bigint;farms:{wallet:Address;hash:bigint;district:number;best?:{kind:number;rarity:number}[]}[];districts:bigint[];total:number};
-const short=(s:string)=>`${s.slice(0,6)}…${s.slice(-4)}`;
+
 type EventIndex={head:bigint;floor:bigint;events:Activity[]};
 const saved=cached<EventIndex>(EVENT_CACHE_KEY);
 const decoded=new Map<string,Activity>((saved?.events??[]).map(e=>[e.key,e]));
@@ -59,7 +60,7 @@ async function scanActivity():Promise<Activity[]>{
   catch{return null;}
   const a=event.args;let text='',rarity:number|undefined;let revealedItems:Activity['items'];
   const kind=event.eventName==='PackCommitted'?'purchase':'reveal';
-  if(kind==='purchase')text=`${short(String(a.player))} bought ${a.count} pack${a.count===1n?'':'s'}`;
+  if(kind==='purchase')text=`${farmName(String(a.player))} bought ${a.count} pack${a.count===1n?'':'s'}`;
   else if(event.eventName==='PackOpened'){
    const paid=event.eventName==='PackOpened',id=BigInt(String(paid?a.id:a.tokenId));
    const [receipt,tx]=await Promise.all([read<readonly unknown[]>(paid?'PackSale':'StarterClaim',paid?'commits':'claims',[id]),client.getTransactionReceipt({hash})]);
@@ -75,7 +76,7 @@ async function scanActivity():Promise<Activity[]>{
    revealedItems=await Promise.all(mintedIds.map(itemId=>revealedItem(hash,block,itemId)));
    // A missing detail cannot establish the best rarity of the entire reveal.
    if(revealedItems.length&&revealedItems.every(item=>item!==null))rarity=Math.max(...revealedItems.map(item=>item!.rarity));
-   text=`${short(String(receipt[0]))} revealed ${a.count} pack${a.count===1n?'':'s'}`;
+   text=`${farmName(String(receipt[0]))} revealed ${a.count} pack${a.count===1n?'':'s'}`;
   }
   return text?{key,block,index,hash,text,kind,rarity,items:revealedItems}:null;
  }));

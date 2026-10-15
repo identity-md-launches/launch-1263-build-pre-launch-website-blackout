@@ -1,8 +1,17 @@
+import { loadDispatch, dispatches, dispatchView } from './dispatch';
+import { accountPanel } from './account-panel';
+import { invitePanel } from './invite-panel';
+import { loadInvites, type InviteData } from './referrals';
+import { gameplay } from './gameplay-views';
+import { setAccountRenderer, renderWallets, prepareFarmAction } from './wallet';
+import { patchHTML, setText } from './dom';
+import { isTeam } from './identity';
 import '../../src/style.css';
 import './live.css';
 import './premium.css';
 import './polish.css';
 import './gameplay.css';
+import './ux.css';
 import { setupGameplay, refreshGameplay, resetGameplay, hudToday } from './gameplay';
 import { cached, remember } from './cache';
 import { loadPublicPrice, loadPublicTotals, type PublicPrice, type PublicTotals } from './public';
@@ -18,7 +27,7 @@ import { findReceipts } from './receipts';
 import { reveal } from './reveal';
 import { quoteEthPack, slippageBps } from './packs';
 import { docsPage } from './docs';
-import { esc, tokens, units, epochCountdown, featureCards, farmPage, packsPage, cityPage, seasonPage, boardsPage, contractsPage, type PackState, type CityState, type SeasonState, type Board } from './views';
+import { esc, tokens, eth, units, epochCountdown, featureCards, farmPage, packsPage, cityPage, seasonPage, boardsPage, contractsPage, type PackState, type CityState, type SeasonState, type Board } from './views';
 import { POLL_MS } from './config';
 import { loadActivity, loadLeaderboard, ACTIVITY_CACHE_KEY, LEADERBOARD_CACHE_KEY, type Activity, type Leaderboard } from './community';
 import { onboarding, morePage, leaderboardPage, type Progress } from './player-views';
@@ -57,9 +66,37 @@ $('#app').insertAdjacentHTML('afterbegin','<a class="skip-link" href="#main">Ski
 $('#app').insertAdjacentHTML('beforeend',`<footer class="site-footer wrap"><a class="footer-brand" href="#/">BLACKOUT</a><p>A city worth keeping alive.<br><span class="muted">Live on Robinhood Chain.</span></p><div><a href="#/more">Explore the city</a><a href="#/docs">Field guide</a><a href="#/docs/risks">Risks</a><a href="#/contracts">Contracts</a><a href="${legacyConfig.xUrl}" target="_blank" rel="noopener noreferrer">Follow on X ↗</a><button class="text-button" data-motion-toggle>Pause animation</button><button class="text-button" data-sound>Sound ${soundEnabled()?'on':'off'}</button></div><p class="footer-connection"><i id="connection-dot" class="status-dot" aria-hidden="true"></i><span id="connection-status" role="status">Reading the city</span><button class="text-button" data-refresh>Refresh</button></p><p class="footer-fine">Real assets. Wallet signatures required. No guaranteed rewards.</p></footer>
 <dialog id="wallet-dialog" class="wallet-sheet" aria-labelledby="wallet-title"><div class="sheet-head"><h2 id="wallet-title">Connect a wallet</h2><button data-close-wallet class="close-button" aria-label="Close wallet picker">×</button></div><div id="wallet-rows"></div><p id="wallet-note" class="small" role="status"></p></dialog>
 <dialog id="action-dialog" aria-labelledby="action-title"><div class="dialog-inner"><h2 id="action-title"></h2><div id="action-body"></div><section id="action-tx-status" class="dialog-tx-status" aria-label="Transaction progress" aria-live="polite" hidden></section><p id="action-error" class="field-error" role="alert"></p><div class="actions"><button class="button" id="cancel-action">Cancel</button><button class="button primary" id="confirm-action">Confirm</button></div></div></dialog>
+<dialog id="invite-dialog" class="invite-sheet" aria-labelledby="invite-dialog-title"><div class="sheet-head"><h2 id="invite-dialog-title">Invite friends</h2><button class="close-button" data-close-invite aria-label="Close invite panel">×</button></div><div id="invite-body"></div></dialog>
 <div id="copy-message" class="sr-only" role="status"></div>`);
+let reopenInviteAfterConnect=false;
+let dispatchError=false,inviteData:InviteData|null=null,inviteError='',inviteLoading=false,inviteFocus:HTMLElement|null=null,inviteRequest=0;
+function renderDispatch(){const el=document.getElementById('grid-dispatch');if(el)patchHTML(el,dispatchView(home,dispatches,dispatchError));}
+function renderInvite(){patchHTML($('#invite-body'),invitePanel(walletAddress(),inviteData,inviteError,inviteLoading));}
+async function refreshInvites(){
+ const wallet=walletAddress();if(!wallet||inviteLoading)return;const request=++inviteRequest;inviteLoading=true;renderInvite();
+ try{const value=await loadInvites(wallet,home?.epoch??await read<bigint>('FarmRewards','epoch'));if(request===inviteRequest&&wallet===walletAddress()){inviteData=value;inviteError='';}}
+ catch{if(request===inviteRequest)inviteError='History unavailable';}
+ finally{if(request===inviteRequest){inviteLoading=false;renderInvite();}}
+}
+function openInvite(){
+ const trigger=document.activeElement as HTMLElement;
+ inviteFocus=trigger.closest('dialog')?$('#connect'):trigger.closest('#game-nav')&&$('#menu-toggle').getClientRects().length?$('#menu-toggle'):trigger;
+ closeMenu();
+ document.querySelectorAll<HTMLDialogElement>('dialog[open]').forEach(d=>d.close());
+ renderInvite();$<HTMLDialogElement>('#invite-dialog').showModal();void refreshInvites();
+}
+$('#invite-dialog').addEventListener('close',()=>{(inviteFocus?.isConnected&&inviteFocus.getClientRects().length?inviteFocus:$('#connect')).focus({preventScroll:true});});
+$('#invite-dialog').addEventListener('click',e=>{if(e.target===$('#invite-dialog')){const r=$('#invite-dialog').getBoundingClientRect(),m=e as MouseEvent;if(m.clientX<r.left||m.clientX>r.right||m.clientY<r.top||m.clientY>r.bottom)$<HTMLDialogElement>('#invite-dialog').close();}});
+document.addEventListener('click',e=>{const el=(e.target as Element).closest<HTMLElement>('[data-invite],[data-close-invite],[data-invite-refresh],[data-invite-connect],[data-close-account]');if(!el)return;
+ if(el.hasAttribute('data-invite')){e.preventDefault();openInvite();}
+ if(el.hasAttribute('data-close-invite'))$<HTMLDialogElement>('#invite-dialog').close();
+ if(el.hasAttribute('data-invite-refresh'))void refreshInvites();
+ if(el.hasAttribute('data-invite-connect')){reopenInviteAfterConnect=true;$<HTMLDialogElement>('#invite-dialog').close();openWallet();}
+ if(el.hasAttribute('data-close-account'))$<HTMLDialogElement>('#wallet-dialog').close();
+});
+setAccountRenderer(()=>accountPanel(farm,home,economy,pack.receipts??gameplay.today?.receipts??null,walletAddress()!));
 function reflectMotion() {
- document.body.classList.toggle('motion-off',!motion);
+ document.body.classList.toggle('motion-off',!motion);document.querySelectorAll('.lightning-active,.blackout-wave').forEach(el=>{if(!motion)el.classList.remove('lightning-active','blackout-wave');});
  document.querySelectorAll<HTMLElement>('[data-motion-toggle]').forEach(el=>{el.textContent=motion?'Pause city':'Resume city';el.setAttribute('aria-pressed',String(motion));});
 }
 function preserveForms() {
@@ -78,6 +115,7 @@ function render(keepForms=false) {
  document.querySelectorAll<HTMLAnchorElement>('[data-route]').forEach(a=>{a.classList.toggle('active',a.dataset.route===current);if(a.dataset.route===current)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
  let html='';
  if(current==='home')html=landing();
+ else if(current==='invite')html='<div class="wrap live-page"><h1>Invite friends</h1><p>Mine the city together. Your friends keep 100%.</p><button class="button primary" data-invite>Open invite panel</button></div>';
  else if(current==='farm')html=farmPage(farm,home,pageError,selectedItem&&farm?.items.some(i=>i.id===selectedItem)?selectedItem:null,economy,peek);
  else if(current==='rewards'||current==='wallet')html=rewardsView(farm,home,economy,history,pageError,projectionDays,calculatorHash);
  else if(current==='more')html=morePage(activities,activityError);
@@ -89,24 +127,24 @@ function render(keepForms=false) {
  else if(current==='contracts')html=contractsPage(wiringVerified,mismatches);
  else if(current==='docs')html=docsPage();
  else html='<div class="wrap live-page"><h1>Page not found</h1><p>That route is not part of the game.</p><a class="button" href="#/">Go home</a></div>';
- if(!(current==='home'&&document.querySelector('#main>.landing-hero')))$('#main').innerHTML=html;
+ if(!(current==='home'&&document.querySelector('#main>.landing-hero'))){if(current===renderedRoute)patchHTML($('#main'),html);else $('#main').innerHTML=html;}
  if(pack.result&&Date.now()>revealAnimationUntil)document.querySelector('.reveal-result')?.classList.add('reveal-seen');
- if(current==='home'&&document.getElementById('feature-cards'))$('#feature-cards').innerHTML=featureCards(home);
+ if(current==='home'&&document.getElementById('feature-cards'))patchHTML($('#feature-cards'),featureCards(home));
  renderPublic();
  formValues.forEach(({id,value,focused})=>{const el=document.getElementById(id) as HTMLInputElement|HTMLSelectElement|null;if(el){el.value=value;if(focused)el.focus({preventScroll:true});}});
  applyInventoryFilter();
  const slippageField=document.querySelector<HTMLInputElement>('#pack-slippage');if(slippageField){try{slippageBps(slippageField.value);}catch(error){slippageField.setAttribute('aria-invalid','true');$('#slippage-error').hidden=false;$('#slippage-error').textContent=errorMessage(error);}}
  openDetails.forEach(id=>{const d=document.getElementById(id) as HTMLDetailsElement|null;if(d)d.open=true;});
  if(focusId)document.getElementById(focusId)?.focus({preventScroll:true});
- const steps=document.getElementById('onboarding');if(steps)steps.innerHTML=account().isConnected&&farm&&!farm.items.some(i=>i.equipped)?onboarding(progress):'';
+ const steps=document.getElementById('onboarding');if(steps)patchHTML(steps,account().isConnected&&farm&&!farm.items.some(i=>i.equipped)?onboarding(progress):'');
  reflectMotion();reflectGrid();renderedRoute=current;updateControls();renderStatus();renderEarnings();animateNumbers();
 }
 function renderEarnings(){
- const hud=$('#mining-hud');hud.hidden=!account().isConnected;const openDetails=Array.from(hud.querySelectorAll<HTMLDetailsElement>('details[open]')).map(d=>d.id);hud.innerHTML=miningHud(farm,home,economy)+hudToday();openDetails.forEach(id=>document.getElementById(id)?.setAttribute('open',''));
+ const hud=$('#mining-hud');hud.hidden=!account().isConnected;const openDetails=Array.from(hud.querySelectorAll<HTMLDetailsElement>('details[open]')).map(d=>d.id);patchHTML(hud,miningHud(farm,home,economy)+hudToday());openDetails.forEach(id=>document.getElementById(id)?.setAttribute('open',''));
  document.body.classList.toggle('has-mining-hud',!hud.hidden);
  document.documentElement.style.setProperty('--hud-height',`${hud.hidden?0:hud.getBoundingClientRect().height}px`);
- const payback=document.getElementById('pack-payback');if(payback&&economy&&publicPrice)payback.innerHTML=paybackView(economy,publicPrice.tokens,farm?.level);
- animateNumbers();
+ const payback=document.getElementById('pack-payback');if(payback&&economy&&publicPrice)patchHTML(payback,paybackView(economy,publicPrice.tokens,farm?.level));
+ animateNumbers();if($<HTMLDialogElement>('#wallet-dialog').open&&account().isConnected)renderWallets();
 }
 async function refreshPlayer(){
  if(playerLoading)return playerLoading;
@@ -118,9 +156,21 @@ async function refreshPlayer(){
   void refreshGameplay(value,home);renderEarnings();
  }catch(e){pageError=errorMessage(e);}finally{playerLoading=null;}})();return playerLoading;
 }
+const publicPaints=new WeakMap<Element,{at:number;complete:boolean;timer:ReturnType<typeof setTimeout>|null}>();
 function renderPublic(){
  const target=document.getElementById(route()==='home'?'home-live':'public-dashboard');
- if(target){const terminal=target.querySelector<HTMLElement>('.terminal-scroll'),scroll=terminal?.scrollTop??0,focused=terminal===document.activeElement;target.innerHTML=publicDashboard(home,publicPrice,publicTotals,activities,leaderboard,{homeFresh,error:!!globalError||publicError||activityError,poolTrail});const next=target.querySelector<HTMLElement>('.terminal-scroll');if(next){next.scrollTop=scroll;if(focused)next.focus({preventScroll:true});}animateNumbers();}
+ if(!target){renderDispatch();return;}
+ const state=publicPaints.get(target)??{at:0,complete:false,timer:null};publicPaints.set(target,state);
+ const paint=()=>{
+  state.timer=null;if(!target.isConnected)return;
+  patchHTML(target,publicDashboard(home,publicPrice,publicTotals,activities,leaderboard,{homeFresh,error:!!globalError||publicError||activityError,poolTrail}));
+  state.at=Date.now();state.complete=!!(home&&publicPrice&&activities&&leaderboard);animateNumbers();renderDispatch();
+ };
+ // First readings can fill their empty slots as they arrive. Once populated,
+ // all asynchronous readers share one paint window, never faster than 15s.
+ const wait=state.at+POLL_MS-Date.now();
+ if(state.complete&&wait>0){if(!state.timer)state.timer=setTimeout(paint,wait);return;}
+ if(state.timer)clearTimeout(state.timer);paint();
 }
 function renderStatus() {
  const packReadFailed=route()==='packs'&&(!!pack.priceError||!!pack.ethQuoteError||!!pack.receiptError);
@@ -138,7 +188,7 @@ function reflectGrid(){
 }
 function updateControls() {
  const allowed=canWrite();
- document.querySelectorAll<HTMLButtonElement>('#main [data-write]').forEach(b=>b.disabled=!allowed||b.dataset.unavailable==='true');
+ document.querySelectorAll<HTMLButtonElement>('#main [data-write],#wallet-rows [data-write]').forEach(b=>b.disabled=!allowed||b.dataset.unavailable==='true');
 }
 function txContent() {
  if(!tx)return '';
@@ -158,7 +208,7 @@ async function refreshHome() {
  const previous=phaseKey(home),previousError=globalError;
  try {home=await loadHome();remember('home',home);poolTrail=[...poolTrail,Number(home.available)/1e18].slice(-20);remember('pool-trail',poolTrail);homeFresh=true;setSpot(home.spot);globalError='';reflectGrid();try{economy=await loadEconomy(home);remember('economy.v2',economy);}catch{globalError='Earnings signal reconnecting';}renderEarnings();}
  catch(e){globalError=errorMessage(e);}
- finally {refreshing=false;renderStatus();renderPublic();if(route()==='home'){$('#feature-cards').innerHTML=featureCards(home);}else if(route()==='contracts'||previous!==phaseKey(home)||previousError!==globalError)render(true);else updateControls();}
+ finally {refreshing=false;renderStatus();renderPublic();if(route()==='home'){patchHTML($('#feature-cards'),featureCards(home));}else if(route()==='contracts'||previous!==phaseKey(home)||previousError!==globalError)render(true);else updateControls();}
 }
 async function loadPage(current=route()) {
  const mine=++generation,wallet=walletAddress();pageError='';
@@ -170,7 +220,7 @@ async function loadPage(current=route()) {
   if(current==='farm'||current==='wallet'||current==='rewards') {
    if(wallet){if(!farm){farm=cached<Farm>(`farm.${wallet.toLowerCase()}`);history=cached<EarningsHistory>(`earned.${wallet.toLowerCase()}`);if(farm)render(true);}await refreshPlayer();}
    else if(current==='farm'){
-    const h=home||await loadHome();const board=await loadLeaderboard(h.epoch);if(board.farms[0]){const top=await loadFarm(board.farms[0].wallet);if(valid())peek=top;}else if(valid())pageError='No active farms on the grid yet.';
+    const h=home||await loadHome();const board=await loadLeaderboard(h.epoch);const leader=board.farms.find(f=>!isTeam(f.wallet));if(leader){const top=await loadFarm(leader.wallet);if(valid())peek=top;}else if(valid())pageError='No active non-team farms on the grid yet.';
    }
   } else if(current==='packs') {
    const jobs=[refreshQuote(false)];
@@ -267,7 +317,7 @@ async function beginPack(kind:'tokens'|'eth') {
    });
   } else {
    const estimate=await quoteEthPack(quote,slippage);assertWallet(from);
-   confirmAction('Buy pack with ETH',`<p>Spend <strong>${units(estimate.value)} ETH</strong> plus gas for ${count} pack${count===1n?'':'s'}.</p><p class="small">One transaction buys BLACKOUT and opens your pack${count===1n?'':'s'}. Extra BLACKOUT stays in your wallet.</p><p class="small">Slippage: ${slippage/100}%.<br>Minimum swap output: ${units(estimate.minTokens)} BLACKOUT.<br>Maximum pack cost: ${units(estimate.maxCost)} BLACKOUT.</p>`,'Buy pack with ETH',async()=>{
+   confirmAction('Buy pack with ETH',`<p>Spend <strong>${eth(estimate.value)} ETH</strong> plus gas for ${count} pack${count===1n?'':'s'}.</p><p class="small">One transaction buys BLACKOUT and opens your pack${count===1n?'':'s'}. Extra BLACKOUT stays in your wallet.</p><p class="small">Slippage: ${slippage/100}%.<br>Minimum swap output: ${tokens(estimate.minTokens)} BLACKOUT.<br>Maximum pack cost: ${tokens(estimate.maxCost)} BLACKOUT.</p><details><summary>Exact transaction amounts</summary><p>ETH: ${units(estimate.value)}<br>Minimum tokens: ${units(estimate.minTokens)}<br>Maximum tokens: ${units(estimate.maxCost)}</p></details>`,'Buy pack with ETH',async()=>{
     assertWallet(from);const hash=await send('PackSale','buyWithETH',[from,count,estimate.minTokens,estimate.maxCost],'Buy pack with ETH',estimate.value);await purchaseMoment(from,hash);
    });
   }
@@ -296,8 +346,8 @@ async function openOwned(only?:{kind:Receipt['kind'];id:bigint}[],bulk=true){
  await refreshReceipts(from);const candidates=only??pack.receipts??[],receipts:Receipt[]=[];
  for(const candidate of candidates){const receipt=await loadReceipt(candidate.kind,candidate.id);assertWallet(from);if(receipt.player.toLowerCase()!==from.toLowerCase())throw Error('This receipt belongs to another wallet.');if(!receipt.resolved)receipts.push(receipt);}
  if(!receipts.length){pack.result={items:[],alreadyOpened:true};render(true);return;}
- const before=await loadFarm(from);assertWallet(from);farm=before;
- const total=bulk?Number(receipts.reduce((n,r)=>n+r.remaining,0n)):1,reason=capacityReason(before,total*3);
+ await prepareFarmAction(from);const before=await loadFarm(from);assertWallet(from);farm=before;
+ const total=bulk?Math.min(Number(receipts.reduce((n,r)=>n+r.remaining,0n)),Math.max(0,Math.floor(Number(before.capacity-before.inventory)/3))):1,reason=capacityReason(before,Math.max(1,total)*3);
  if(reason){render(true);throw Error(reason);}
  pack.result=null;let done=0;revealController=new AbortController();const signal=revealController.signal;
  waitingOpening(total,done,home&&receipts[0].target>=home.native?receipts[0].target-home.native+1n:0n);
@@ -380,7 +430,7 @@ document.addEventListener('click',async e=>{
   else if(el.dataset.scrap){const id=BigInt(el.dataset.scrap),i=currentItem(id),minimum=scrapQuote(i,farm!),from=assertWallet();confirmAction('Permanently scrap hardware',`<p>Destroy ${KINDS[i.kind]} #${id}. This cannot be undone.</p><p>Minimum payout: <strong>${units(minimum)} BLACKOUT credits</strong>. Claim tax applies when withdrawing credits.${minimum===0n?' The current scrap allowance pays nothing; this discards the item without payment.':''}</p>`,'Permanently scrap',async()=>{assertWallet(from);await send('FarmCore','scrap',[id,minimum],'Scrap hardware');});}
   else if(el.dataset.buyRoom){const index=BigInt(el.dataset.buyRoom),from=assertWallet(),quote=await read<bigint>('Economy','roomQuote',[from,index]);confirmAction('Buy a mining room',`<p>Buy room ${index+1n} for <strong>${units(quote)} BLACKOUT</strong>, plus gas. Includes six empty slots.</p>`,'Approve & buy room',async()=>{assertWallet(from);await approve('FarmCore',quote);assertWallet(from);await send('FarmCore','buyRoom',[index,true],'Buy mining room');});}
   else if(el.hasAttribute('data-sync'))await transact(async()=>{await send('FarmCore','sync',[],'Sync farm');});
-  else if(el.hasAttribute('data-claim')&&farm){const f=farm,from=assertWallet();if(f.claimNet===null)throw Error('Refresh the claim-tax preview first.');confirmAction('Claim mining rewards',`<p>Gross: ${units(f.pending)} BLACKOUT.<br>Estimated tax: ${units(f.pending-f.claimNet)}.<br>You receive approximately <strong>${units(f.claimNet)} BLACKOUT</strong>, before gas.</p><p class="small">The final tax is calculated on chain when your transaction is included.</p>`,'Claim rewards',async()=>{assertWallet(from);await send('FarmRewards','claim',[f.pending],'Claim rewards');});}
+  else if(el.hasAttribute('data-claim')&&farm){const f=farm,from=assertWallet();$<HTMLDialogElement>('#wallet-dialog').close();if(f.claimNet===null)throw Error('Refresh the claim-tax preview first.');confirmAction('Claim mining rewards',`<p>Gross: ${units(f.pending)} BLACKOUT.<br>Estimated tax: ${units(f.pending-f.claimNet)}.<br>You receive approximately <strong>${units(f.claimNet)} BLACKOUT</strong>, before gas.</p><p class="small">The final tax is calculated on chain when your transaction is included.</p>`,'Claim rewards',async()=>{assertWallet(from);await send('FarmRewards','claim',[f.pending],'Claim rewards');});}
   else if(el.hasAttribute('data-auto-off'))await transact(async()=>{await send('FarmCore','setAutoRepair',[false,8000],'Disable auto-repair');});
   else if(el.hasAttribute('data-refresh-quote'))await refreshQuote();
   else if(el.hasAttribute('data-pack-step')) {
@@ -437,6 +487,7 @@ window.addEventListener('hashchange',()=>{
  closeMenu();
  if(location.hash==='#main'){$('#main').focus();return;}
  const current=route();pageError='';render();
+ if(current==='invite')openInvite();
  if(current==='docs'){const id=location.hash.split('/')[2];requestAnimationFrame(()=>id?document.getElementById(`doc-${id}`)?.scrollIntoView():window.scrollTo(0,0));}
  else window.scrollTo(0,0);
  $('#main').focus({preventScroll:true});void loadPage(current);if(['home','rewards','wallet','leaderboard','more'].includes(current))void refreshCommunity();
@@ -444,8 +495,9 @@ window.addEventListener('hashchange',()=>{
 document.addEventListener('walletchange',()=>{
  const key=`${walletAddress()||''}:${account().chainId||''}`;if(key===lastWallet)return;lastWallet=key;generation++;
  if(!transactionBusy)$<HTMLDialogElement>('#action-dialog').close();
- resetGameplay();farm=null;history=null;city=null;season=null;progress=null;selectedItem=null;pack.eligible=null;pack.receipts=null;pack.eligibilityError='';pack.receiptError='';pack.result=null;pack.activeReceipt=null;revealController?.abort();
+ inviteRequest++;inviteLoading=false;inviteData=null;inviteError='';renderInvite();resetGameplay();farm=null;history=null;city=null;season=null;progress=null;selectedItem=null;pack.eligible=null;pack.receipts=null;pack.eligibilityError='';pack.receiptError='';pack.result=null;pack.activeReceipt=null;revealController?.abort();
  if(renderedRoute){render(true);void refreshPlayer().then(()=>loadPage());}
+ if(walletAddress()&&reopenInviteAfterConnect){reopenInviteAfterConnect=false;requestAnimationFrame(openInvite);}
 });
 document.addEventListener('walletbusy',()=>{updateControls();$<HTMLButtonElement>('#confirm-action').disabled=transactionBusy;$<HTMLButtonElement>('#cancel-action').disabled=transactionBusy;});
 document.addEventListener('txchange',updateTx);
@@ -456,7 +508,7 @@ document.addEventListener('revealprogress',((e:CustomEvent<string>)=>{
  if(pack.activeReceipt){pack.activeReceipt.message=e.detail;const row=document.querySelector(`[data-receipt="${pack.activeReceipt.key}"] .receipt-state`);if(row)row.textContent=e.detail;}
 }) as EventListener);
 document.addEventListener('openownedpacks',((event:CustomEvent<{kind:Receipt['kind'];id:bigint}[]>)=>{void transact(()=>openOwned(event.detail?.length?event.detail:undefined));}) as EventListener);
-document.addEventListener('transactionend',()=>{updateControls();void refreshAll();});
+document.addEventListener('transactionend',()=>{updateControls();void refreshAll(true);});
 matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change',e=>{if(e.matches){motion=false;reflectMotion();}});
 setupGameplay({farm:()=>farm,home:()=>home,economy:()=>economy,confirm:confirmAction,render:()=>render(true),refresh:refreshAll,open:async()=>{await transact(()=>openOwned());}});
 render();document.body.classList.add('app-ready');setupWallet();initAtmosphere(()=>motion,()=>home?.event);
@@ -467,19 +519,26 @@ let layoutFrame=0;
 const scheduleLayout=()=>{if(layoutFrame)return;layoutFrame=requestAnimationFrame(()=>{layoutFrame=0;syncTextLayout();syncChrome();});};
 new ResizeObserver(scheduleLayout).observe($('.site-header'));
 window.addEventListener('resize',scheduleLayout);syncTextLayout();syncChrome();
-let pollBusy=false,communityBusy=false;
+let pollBusy=false,communityBusy=false,lastPoll=0,lastCommunity=0,communityTimer:ReturnType<typeof setTimeout>|null=null;
 async function refreshCommunity(){
- if(communityBusy)return;communityBusy=true;
+ if(communityBusy||document.hidden)return;
+ const wait=lastCommunity+POLL_MS-Date.now();
+ // Readers finish at different times. Queue the remaining interval rather than
+ // skipping a whole poll when a completed batch arrives a few milliseconds early.
+ if(wait>0){if(!communityTimer)communityTimer=setTimeout(()=>{communityTimer=null;void refreshCommunity();},wait);return;}
+ if(communityTimer){clearTimeout(communityTimer);communityTimer=null;}
+ communityBusy=true;lastCommunity=Date.now();
  try{
   await Promise.allSettled([
+   (async()=>{try{await loadDispatch();dispatchError=false;}catch{dispatchError=true;}renderPublic();})(),
    (async()=>{try{activities=await loadActivity();remember(ACTIVITY_CACHE_KEY,activities);activityError=false;}catch{activityError=true;}renderPublic();})(),
    (async()=>{try{publicTotals=await loadPublicTotals();remember('totals',publicTotals);}catch{publicError=true;}renderPublic();})(),
    (async()=>{if(!home)return;try{leaderboard=await loadLeaderboard(home.epoch);remember(LEADERBOARD_CACHE_KEY,leaderboard);}catch{publicError=true;}renderPublic();})(),
   ]);
  }finally{communityBusy=false;renderStatus();}
 }
-async function refreshAll(){
- if(document.hidden||pollBusy)return;pollBusy=true;
+async function refreshAll(force=false){
+ if(document.hidden||pollBusy||!force&&Date.now()-lastPoll<POLL_MS)return;pollBusy=true;lastPoll=Date.now();
  publicError=false;
  try{
   await Promise.allSettled([
@@ -497,8 +556,8 @@ void refreshAll().then(()=>{if(route()==='docs'){const id=location.hash.split('/
 setInterval(()=>{
  if(document.hidden||!home)return;
  const now=chainTime(home);
- document.querySelectorAll<HTMLElement>('[data-epoch-clock]').forEach(el=>el.textContent=now>=Number(el.dataset.epochClock)?'Settling…':miningTime(Number(el.dataset.epochClock)-now));
- document.querySelectorAll<HTMLElement>('[data-countdown]').forEach(el=>el.textContent=epochCountdown(Number(el.dataset.countdown)-now));
+ document.querySelectorAll<HTMLElement>('[data-epoch-clock]').forEach(el=>setText(el,now>=Number(el.dataset.epochClock)?'Settling…':miningTime(Number(el.dataset.epochClock)-now)));
+ document.querySelectorAll<HTMLElement>('[data-countdown]').forEach(el=>setText(el,epochCountdown(Number(el.dataset.countdown)-now)));
  document.querySelectorAll<HTMLProgressElement>('[data-epoch-progress]').forEach(el=>el.value=epochProgress(home!.epochStart,home!.epochEnd,now));
  const counter=document.querySelector('[data-mining-clock]');if(counter&&farm?.hash&&farm.hash>0n)counter.textContent=now>=Number(home.epochEnd)?'Waiting for next epoch':miningTime(now-Number(farm.entrySeconds>0n?home.epochEnd-farm.entrySeconds:home.epochStart));
 },1000);

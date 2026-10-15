@@ -19,7 +19,7 @@ export async function eligibleReferral(player:Address,inviter:Address){
 }
 export const referralCredit=(gross:bigint)=>gross*500n/10000n; // FarmRewards._reward; immutable, no Params key.
 export const personalLink=(wallet:Address)=>`https://playblackout.xyz/?ref=${wallet}`;
-export const inviteText='Build your mining farm with me on BLACKOUT. My invite earns me an extra 5%; you keep all your mining.';
+export const inviteText='Mine the city with me. You keep 100% of your rewards, I get +5% on top.';
 export type InviteData={referrer:Address;referees:{wallet:Address;hash:bigint;earned:bigint}[];earned:bigint};
 const referred=parseAbiItem('event ReferrerSet(address indexed player,address indexed referrer)');
 const active=parseAbiItem('event Active(address indexed player,uint256 indexed epoch,uint256 gross,uint256 net)');

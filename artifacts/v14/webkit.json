@@ -1,0 +1,6 @@
+{
+  "engine": "WebKit",
+  "status": "not verified",
+  "reason": "Browser launch failed: required GTK4, Graphene, GStreamer, WOFF2, AVIF, HarfBuzz/ICU system runtime libraries are unavailable. Chromium validation completed separately.",
+  "realWalletSigning": false
+}

@@ -1,0 +1,9 @@
+{
+  "passed": [
+    "Only the supported official RPC remains; 15-second poll interval; case-insensitive Team farm identity",
+    "Log queries start at ≤10,000 blocks, shrink to provider limit, and commit every block once without gaps",
+    "Interrupted scans retain only confirmed contiguous progress; auth/outage errors do not split endlessly",
+    "Referral links/text are exact and credit is 5% on top",
+    "Transient RPC failure backs off 15s then 30s, avoids network calls during cooldown, recovers and caps JSON-RPC batches at 4 calls"
+  ]
+}

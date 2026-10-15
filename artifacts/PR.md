@@ -1,21 +1,29 @@
-# Fix theft-aware optimization and Today regressions
+# Stabilize live BLACKOUT updates and expose account/referrals
 
-The optimizer could promise a gain while cable theft made a newly installed Router unproductive. It now resolves cable status with sync/repair simulations, uses that status throughout search and block-pinned Engine verification, and rechecks before Apply. Unknown status blocks the plan. The reported fixture now keeps its optimal 57.6 H/s layout instead of dropping to 50.4 H/s.
+Home polling replaced entire live panels, resetting their DOM and replaying effects. The live surfaces now patch existing nodes and keyed records in a shared 15-second window, retain data during reconnects and animate only changed numbers. Hero lightning is limited to the sky at 0.06 opacity every 105 seconds, with Pause city and reduced-motion support.
 
-Canceling or failing a search restores later confirmation buttons. Today prioritizes the lowest-health hardware and exposes every remaining item through a counted disclosure on Farm and the Mining HUD; Repair all names every item and cost. Earnings now consume cached FarmRewards EPOCH/PRECISION getters throughout estimates, history, daily rates and projections.
+The connected wallet opens a pixel-style account dropdown or mobile bottom sheet. Invite is available in navigation, the account panel, Farm, Rewards and confirmed pack reveals, with copy/share actions, referral attribution and on-chain history. The existing optional referrer and transaction reviews remain.
 
-All four findings reproduced before editing; responses are in [`.imd-responses.json`](../.imd-responses.json). Existing design, routes, contracts, wallet flows, manifests and lockfiles are retained. The production export is rebuilt with relative assets.
+Home shows the current GridOperator event and three earlier Heralds with clearly labeled flavor quotes. Team farm is identified throughout standings/feed and excluded from the visitor peek. Pack capacity offers “Open N that fit,” prices are consistently formatted, rarity is a labeled badge and leaderboard previews use installed hardware. RPC requests use the supported endpoint, bounded log ranges, small request batches and backoff.
 
-Validation: build/typecheck; seven optimizer/referral/Today unit groups; eight earnings/regression groups; 11 focused Chromium groups; all 13 broader gameplay groups; zero axe violations on four routes; live read-only parity for 18 layouts and 72 room previews. The offline design probe passes 16/16. See [actual results and six-domain review](validation.md).
+Validation: production build/typecheck; five unit groups; twelve Chromium interaction groups including a MutationObserver across at least two polling cycles; four connection/outage/reflow groups; zero axe violations on account and Invite; pinned design probe 16/16; read-only live chain checks. [Actual results, six-domain review and limitations](validation.md). WebKit lacked system libraries. An independent public-provider session exposed intermittent CORS response headers; the contributor-transport live test does not establish universal public-provider uptime. No deployment or real transaction was performed.
 
-These screenshots show the final production export with synthetic wallet data, including the fourth item's critical health and expanded item list. No real transaction was signed. WebKit could not launch because required runtime libraries were unavailable.
+## Required screenshots
 
-## Farm at 375px
+**Home and Leaderboard:** live read-only contract data. **Wallet and Invite:** explicit synthetic wallet/RPC fixtures for reproducible connected states; balances, XP and referral earnings in those images are test data. All images are captured from the production export.
 
-![375px Farm: urgent health first and all four worn items available](screenshots/gameplay-farm-375.webp)
+| Surface | 375px | 1440px |
+| --- | --- | --- |
+| Home · live | ![Home at 375px](screenshots/ux-home-375.webp) | ![Home at 1440px](screenshots/ux-home-1440.webp) |
+| Wallet · fixture | ![Wallet account at 375px](screenshots/ux-wallet-375.webp) | ![Wallet account at 1440px](screenshots/ux-wallet-1440.webp) |
+| Invite · fixture | ![Invite at 375px](screenshots/ux-invite-375.webp) | ![Invite at 1440px](screenshots/ux-invite-1440.webp) |
+| Leaderboard · live | ![Leaderboard at 375px](screenshots/ux-leaderboard-375.webp) | ![Leaderboard at 1440px](screenshots/ux-leaderboard-1440.webp) |
 
-## Farm at 1440px
+## Live detail captures
 
-![1440px Farm: all worn hardware visible in Today](screenshots/gameplay-farm-1440.webp)
+| Surface | 375px | 1440px |
+| --- | --- | --- |
+| Home telemetry | [Mobile](screenshots/ux-home-live-375.webp) | [Desktop](screenshots/ux-home-live-1440.webp) |
+| Grid Dispatch | [Mobile](screenshots/ux-dispatch-375.webp) | [Desktop](screenshots/ux-dispatch-1440.webp) |
 
-[390px first screen](screenshots/gameplay-farm-390.webp) shows the product and Optimize farm without scrolling. Historical screenshots and required recordings are retained. This is the PR description delivered with the submission; no remote PR was opened.
+The static delivery is `dist/` alongside source and unchanged dependency manifests/lockfiles. Build/preview instructions are in [README](../README.md), implemented tokens/components in [DESIGN](../DESIGN.md), and submission size in [the bundle report](v14/bundle-trial.json). This file is a prepared PR description; no remote PR or publication was created by this task.

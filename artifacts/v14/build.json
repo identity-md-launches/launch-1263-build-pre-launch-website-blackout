@@ -1,0 +1,18 @@
+{
+  "checkedAt": "2026-10-15T15:10:13.219936+00:00",
+  "typecheck": {
+    "command": "node web/tools/run.mjs typecheck",
+    "exitCode": 0
+  },
+  "build": {
+    "command": "node web/tools/run.mjs build",
+    "exitCode": 0,
+    "liveRootComparison": true,
+    "localProofs": 2011,
+    "nftProofs": 2000,
+    "freeProofs": 11,
+    "note": "The assignment build used a disposable preload to route public RPC reads through the supplied contributor endpoint; the production export retains only the public endpoint."
+  },
+  "protectedConfiguration": "Existing build configuration, package manifests and lockfiles are unchanged.",
+  "warnings": "Existing local-font URL and third-party pure-annotation notices are nonfatal; export references are checked separately."
+}

@@ -1,0 +1,31 @@
+{
+  "source": "https://rpc.mainnet.chain.robinhood.com",
+  "checkedAt": "2026-10-15T15:13:01.793Z",
+  "result": "pass",
+  "requests": 478,
+  "maxRequestBytes": 96181,
+  "maxBatchCalls": 4,
+  "maxLogSpan": 10000,
+  "errors": [],
+  "consoleErrors": [],
+  "failed": [],
+  "dispatch": "Current event · Epoch 5\n\nCalm\n\nCopper Yard · Severity 100%\n\n“A quiet grid is still a grid worth watching.”\nGrid Dispatch · flavor\nHerald record ↗\n\nCity event · Epoch 4\n\nGreen wave\n\nStack Heights · Severity 100%\n\n“A surplus has been authorized. Try not to get used to it.”\nGrid Dispatch · flavor\nHerald record ↗\n\nCity event · Epoch 3\n\nCalm\n\nOld Circuit · Severity 100%\n\n“A quiet grid is still a grid worth watching.”\nGrid Dispatch · flavor\nHerald record ↗\n\nCity event · Epoch 2\n\nGreen wave\n\nCopper Yard · Severity 100%\n\n“A surplus has been authorized. Try not to get used to it.”\nGrid Dispatch · flavor\nHerald record ↗",
+  "standings": "1\nTeam farm\nGhost Quarter\n96.8\nH/s\n2\n0x887b…A88C\nStack Heights\n80.08\nH/s\n3\n0x6743…0978\nGhost Quarter\n70.56\nH/s\n4\n0x70b2…24C1\nDockside\n38\nH/s\n5\n0xB787…dEFE\nGhost Quarter\n36\nH/s\n6\n0x5DEF…91B5\nDockside\n32.8\nH/s\n7\n0x701B…4922\nOld Circuit\n32.8\nH/s\n8\n0x4eA3…D281\nGhost Quarter\n32\nH/s\n9\n0xDeD6…e6C6\nRelay Point\n18\nH/s\n10\n0x1395…10c9\nStack Heights\n12\nH/s\n11\n0x5b95…0D06\nOld Circuit\n9.85\nH/s",
+  "peek": "Stack Heights\n0x887b…A88C\n80.08 H/s · Level 3\nRead-only · live farm",
+  "sourceState": {
+    "status": "City connected",
+    "live": "The city, still alive.\n\nNo wallet needed to watch the grid.\n\nSaved readings · refreshing\nUpdated 03:12 PM\nReward pool\n18,602,604\nPool balance in BLACKOUT tokens · ≈ 0.1953 ETH\nEpoch 5\n04:20:15\nUntil the next epoch\nPack price\n0.0017 ETH\n148,009.51 BLACKOUT · 3% price protection\nCity terminal\n37 packs opened\n\nPack purchases & reveals · latest 20\n\n+\n0x0B51…C342 bought 1 pack\n#89268760\n↗\n0x5b95…0D06 revealed 5 packs\nGPU\nCommon\nFPGA\nCommon\nPower Supply\nEpic\nGPU\nRare\nPower Supply\nRare\nMotherboard\nCommon\nGPU\nCommon\nBattery\nCommon\nMotherboard\nCommon\nFPGA\nRare\nASIC\nCommon\nGPU\nRare\nPower Supply\nRare\nGPU\nCommon\nRouter\nRare\nBest: Epic\n#89265659\n+\n0x5b95…0D06 bought 5 packs\n#89263810\n↗\n0x4eA3…D281 revealed 3 packs\nFPGA\nCommon\nGPU\nCommon\nGPU\nEpic\nFPGA\nCommon\nSolar Panel\nEpic\nFPGA\nEpic\nGPU\nRare\nSurge Protector\nCommon\nLiquid Cooling\nEpic\nBest: Epic\n#89222727\n+\n0x4eA3…D281 bought 3 packs\n#89222653\n↗\n0x4eA3…D281 revealed 1 pack\nFan\nCommon\nFan\nCommon\nGPU\nCommon\nBest: Common\n#89220964\n+\n0x4eA3…D281 bought 1 pack\n#89220616\n+\n0x4eA3…D281 bought 3 packs\n#89219442\n↗\nTeam farm revealed 1 pack\nMotherboard\nCommon\nFan\nRare\nLiquid Cooling\nCommon\nBest: Rare\n#89207106\n↗\n0xB787…dEFE revealed 1 pack\nGPU\nCommon\nFPGA\nCommon\nASIC\nCommon\nBest: Common\n#89172375\n+\n0xB787…dEFE bought 1 pack\n#89172219\n↗\nTeam farm revealed 1 pack\nLiquid Cooling\nCommon\nFPGA\nRare\nSurge Protector\nCommon\nBest: Rare\n#89082824\n↗\nTeam farm revealed 1 pack\nSolar Panel\nCommon\nFan\nCommon\nFan\nCommon\nBest: Common\n#89082576\n+\nTeam farm bought 2 packs\n#89082435\n↗\nTeam farm revealed 1 pack\nASIC\nCommon\nRouter\nRare\nSolar Panel\nCommon\nBest: Rare\n#88994854\n+\nTeam farm bought 5 packs\n#88994657\n↗\n0x1395…10c9 revealed 1 pack\nSolar Panel\nCommon\nSurge Protector\nEpic\nPower Supply\nCommon\nBest: Epic\n#88938782\n+\n0x1395…10c9 bought 1 pack\n#88938320\n↗\n0x887b…A88C revealed 1 pack\nSolar Panel\nRare\nASIC\nCommon\nGPU\nRare\nBest: Rare\n#88818072\n↗\n0x887b…A88C revealed 1 pack\nFPGA\nCommon\nFan\nLegendary\nServer Rack\nEpic\nBest: Legendary\n#88817758\nOpen your next pack\n↗\nPowering the city\n11 farms\n\nTop 10 by hashrate · epoch 5\n\n01\nTeam farm\nGhost Quarter\n96.8\nH/s\n02\n0x887b…A88C\nStack Heights\n80.08\nH/s\n03\n0x6743…0978\nGhost Quarter\n70.56\nH/s\n04\n0x70b2…24C1\nDockside\n38\nH/s\n05\n0xB787…dEFE\nGhost Quarter\n36\nH/s\n06\n0x5DEF…91B5\nDockside\n32.8\nH/s\n07\n0x701B…4922\nOld Circuit\n32.8\nH/s\n08\n0x4eA3…D281\nGhost Quarter\n32\nH/s\n09\n0xDeD6…e6C6\nRelay Point\n18\nH/s\n10\n0x1395…10c9\nStack Heights\n12\nH/s\nView all standings\n↗",
+    "fonts": true
+  },
+  "shots": [
+    "artifacts/screenshots/ux-home-375.webp",
+    "artifacts/screenshots/ux-home-1440.webp",
+    "artifacts/screenshots/ux-home-live-375.webp",
+    "artifacts/screenshots/ux-home-live-1440.webp",
+    "artifacts/screenshots/ux-dispatch-375.webp",
+    "artifacts/screenshots/ux-dispatch-1440.webp",
+    "artifacts/screenshots/ux-leaderboard-375.webp",
+    "artifacts/screenshots/ux-leaderboard-1440.webp"
+  ],
+  "transport": "Contributor read-only RPC, browser routing only; public endpoint remains in export."
+}

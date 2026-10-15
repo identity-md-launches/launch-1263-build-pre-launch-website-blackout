@@ -1,14 +1,14 @@
 # Explicit artifact path budget
 
-The ignore-file changes admit these review deliverables. They do not ignore source, locked dependencies, proofs, runtime assets, or the production export. Maximum total review artifact allocation: **4,700,000 bytes**; the entire Git submission still must remain below **8,388,608 bytes**.
+This UX revision admits the paths below through `.gitignore`. Maximum review-artifact allocation is **5,500,000 bytes**. This is a raw-file ceiling, not permission to exceed the **8,388,608-byte complete Git submission bundle** limit. The final temporary bundle measurement is recorded in `artifacts/v14/bundle-trial.json`.
 
 | Paths | Maximum bytes | Purpose |
 | --- | ---: | --- |
-| `artifacts/PATH-BUDGET.md`, `artifacts/validation.md` | 60,000 | Implementation review, actual commands and limitations |
-| `artifacts/screenshots/*.webp` | 3,100,000 | Every page at 375 and 1440, plus connected state evidence |
-| `artifacts/recordings/*.webm` | 1,250,000 | Single and bulk opening for all five rarities; local dev-only mock mode |
-| `artifacts/v11/*.json`, `artifacts/v12/*.json`, `artifacts/v13/*.json` | 215,000 | Retained historical evidence plus current compact test, live-read, performance and delivery results |
+| `artifacts/PATH-BUDGET.md`, `artifacts/validation.md` | 80,000 | Budget, current validation, six-domain review and limitations |
+| `artifacts/PR.md` | 20,000 | Reviewable PR description and screenshot links |
+| `artifacts/screenshots/*.webp` | 3,800,000 | Retained evidence plus Home, wallet, Invite and Leaderboard at 375/1440; live dispatch/telemetry details |
+| `artifacts/recordings/*.webm` | 1,250,000 | Retained single/bulk opening recordings for all five rarities |
+| `artifacts/v11/*.json`, `artifacts/v12/*.json`, `artifacts/v13/*.json`, `artifacts/v14/*.json` | 300,000 | Historical evidence and this revision's compact check results |
+| `**/.playwright-mcp/` | 0 submitted | Disposable browser-tool traces; excluded at every nesting level |
 
-Generated dependencies, package caches, browser downloads, video intermediates and test scratch remain outside Git at all nesting levels. Existing runtime/proof assets remain intact. Screenshots superseded by the current revision can be replaced in place; current videos must not be dropped to reduce size.
-
-The gameplay revision explicitly admits `artifacts/v13/*.json` (within the 215,000-byte shared JSON budget) and `artifacts/screenshots/gameplay-*.webp` (within the 3,100,000-byte screenshot budget). `artifacts/PR.md` has a separate 10,000-byte limit for the review description and screenshot links. These allocations total 4,635,000 bytes, below the 4,700,000-byte artifact ceiling. No new cache or dependency paths are admitted.
+Allocated total: **5,450,000 bytes**. Source, manifests, lockfiles, Merkle proofs and complete runtime assets remain deliverables. No dependency, registry archive, browser download or cache is admitted. Existing recursive node_modules/package-cache exclusions remain. Temporary tests live in `test/scratch/`, which is removed before submission. No required recordings or runtime/proof assets are dropped for size.

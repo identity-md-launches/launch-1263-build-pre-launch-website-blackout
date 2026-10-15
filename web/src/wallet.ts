@@ -1,3 +1,5 @@
+import { patchHTML } from './dom';
+import { savedInviter } from './referrals';
 import { createConfig, getAccount, getConnectors, connect, disconnect, reconnect, watchAccount, watchConnectors, getConnectorClient } from '@wagmi/core';
 import { injected, coinbaseWallet } from '@wagmi/connectors';
 import { decodeFunctionData, getAddress, type Address, type Hex } from 'viem';
@@ -26,16 +28,21 @@ export const OPEN_IN=[
  {id:'phantom',name:'Phantom',href:(url:string)=>`https://phantom.app/ul/browse/${encodeURIComponent(url)}?ref=${encodeURIComponent(new URL(url).origin)}`},
 ];
 function mobileWithoutProvider() {return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)&&!getConnectors(walletConfig).some(c=>c.type==='injected'&&c.id!=='injected')&&!(window as Window&{ethereum?:unknown}).ethereum;}
-function renderWallets() {
+let accountRenderer:(()=>string)|null=null;
+export function setAccountRenderer(render:()=>string){accountRenderer=render;}
+export function renderWallets() {
  if(connecting)return;
  const connectors=getConnectors(walletConfig),named=connectors.some(c=>c.type==='injected'&&c.id!=='injected'),mobile=mobileWithoutProvider();
  const listed=[...connectors.filter(c=>c.type==='injected'),...connectors.filter(c=>c.type!=='injected')].filter(c=>!(named&&c.id==='injected')).filter(c=>!mobile||c.type!=='injected');
  const current=account();
  const rows=sheet().querySelector('#wallet-rows')!;
+ sheet().classList.toggle('account-sheet',current.isConnected);sheet().querySelector('#wallet-title')!.textContent=current.isConnected?'Your account':'Connect a wallet';
+ sheet().querySelector('[data-close-wallet]')!.setAttribute('aria-label',current.isConnected?'Close account panel':'Close wallet picker');
  if(current.isConnected) {
-  rows.innerHTML=`<p class="full-address">${esc(getAddress(current.address!))}</p><p>Robinhood Chain · 4663</p>${current.chainId!==chain.id?'<button class="button" data-switch>Switch to Robinhood Chain</button>':''}<button class="button" data-disconnect>Disconnect</button>`;
+  patchHTML(rows,`${current.chainId!==chain.id?'<button class="button" data-switch>Switch to Robinhood Chain</button>':''}${accountRenderer?.()??''}`);
+
  } else {
-  rows.innerHTML=(mobile?OPEN_IN.map(w=>`<a class="wallet-row" href="${esc(w.href(location.href))}"><img src="${icon(w.id)}" width="28" height="28" alt="">Open in ${w.name}<span aria-hidden="true">↗</span></a>`).join(''):'')+listed.map(c=>{
+  rows.innerHTML=(savedInviter()?`<p class="connect-inviter">Invited by <strong title="${esc(savedInviter()!)}">${short(savedInviter()!)}</strong><small>Your rewards stay yours. They earn +5% on top.</small></p>`:'')+(mobile?OPEN_IN.map(w=>`<a class="wallet-row" href="${esc(w.href(location.href))}"><img src="${icon(w.id)}" width="28" height="28" alt="">Open in ${w.name}<span aria-hidden="true">↗</span></a>`).join(''):'')+listed.map(c=>{
    const label=c.id==='injected'?'Browser wallet':c.id==='coinbaseWalletSDK'?'Coinbase Smart Wallet':c.name;
    const image=c.icon&&/^data:image\//.test(c.icon)?c.icon:c.id==='coinbaseWalletSDK'?coinbaseIcon:genericIcon;
    return `<button class="wallet-row" data-connector="${esc(c.uid)}"><img src="${esc(image)}" width="28" height="28" alt=""><span>${esc(label)}</span></button>`;
@@ -52,7 +59,7 @@ function updateHeader() {
 }
 export function openWallet() {
  trigger=document.activeElement as HTMLElement;
- renderWallets();sheet().querySelector('#wallet-note')!.textContent='';sheet().showModal();
+ renderWallets();sheet().querySelector('#wallet-note')!.textContent='';sheet().showModal();document.querySelector('#connect')!.setAttribute('aria-expanded','true');
 }
 export async function switchNetwork() {
  const p=await provider(), target=`0x${chain.id.toString(16)}`;
@@ -68,10 +75,11 @@ export async function switchNetwork() {
  account().connector?.emitter.emit('change',{chainId:chain.id});updateHeader();
 }
 export function setupWallet() {
+ document.querySelector('#connect')!.setAttribute('aria-haspopup','dialog');
  document.querySelector('#connect')!.addEventListener('click',()=>{if(account().isConnected&&account().chainId!==chain.id){void switchNetwork().catch(e=>setTx({label:'Switch network',state:'error',detail:errorMessage(e)}));}else openWallet();});
  sheet().querySelector('[data-close-wallet]')!.addEventListener('click',()=>sheet().close());
  sheet().addEventListener('click',e=>{if(e.target===sheet()){const r=sheet().getBoundingClientRect();if((e as MouseEvent).clientX<r.left||(e as MouseEvent).clientX>r.right||(e as MouseEvent).clientY<r.top||(e as MouseEvent).clientY>r.bottom)sheet().close();}});
- sheet().addEventListener('close',()=>trigger?.focus());
+ sheet().addEventListener('close',()=>{document.querySelector('#connect')!.setAttribute('aria-expanded','false');trigger?.focus();});
  sheet().addEventListener('click',async e=>{
   const target=(e.target as Element).closest<HTMLElement>('[data-connector],[data-disconnect],[data-switch]');if(!target||connecting)return;
   connecting=true;sheet().querySelectorAll<HTMLButtonElement>('.wallet-row').forEach(b=>b.disabled=true);
@@ -107,6 +115,7 @@ export function assertWallet(expected?:Address) {
 }
 let beforeFarmAction:((from:Address)=>Promise<void>)|null=null;
 export function setBeforeFarmAction(fn:(from:Address)=>Promise<void>){beforeFarmAction=fn;}
+export async function prepareFarmAction(from:Address){if(beforeFarmAction)await beforeFarmAction(from);assertWallet(from);}
 export async function send(name:ContractName,fn:string,args:readonly unknown[]=[],label=fn,value=0n):Promise<Hex> {
  const from=assertWallet();
  if(beforeFarmAction&&fn!=='setReferrer'&&name!=='Token')await beforeFarmAction(from);

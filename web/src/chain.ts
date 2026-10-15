@@ -14,13 +14,15 @@ function waitForVisiblePage(){
  });
  return visiblePage;
 }
-// Race independent reads. A rejected endpoint never wins; no serial timeout or
-// automatic retry cycle can hold up the next UI update. Wallet writes use the
-// player's provider, never this transport.
+// Public reads use only the supported endpoint with bounded timeouts/backoff.
+// Keep the transport's failure isolation for archive reads and wallet simulations.
+// Wallet writes use the player's provider, never this transport.
 export const rpcTransport = ():Transport => options => {
  let archiveTurn=Promise.resolve(),nextArchiveRead=0;
  const paceArchive=async()=>{const previous=archiveTurn;let release!:()=>void;archiveTurn=new Promise<void>(resolve=>release=resolve);await previous;const wait=Math.max(0,nextArchiveRead-Date.now());if(wait)await new Promise(resolve=>setTimeout(resolve,wait));nextArchiveRead=Date.now()+600;release();};
- const endpoints=RPC_URLS.map(url=>({url,transport:http(url,{batch:{batchSize:url===RPC_URLS[1]?3:40,wait:10},retryCount:0,timeout:4000})(options),failures:0,retryAt:0}));
+ // Deployless calls include bytecode. Keep JSON batches small enough for the
+ // provider's request-body limit even when several farms load together.
+ const endpoints=RPC_URLS.map(url=>({url,transport:http(url,{batch:{batchSize:4,wait:10},retryCount:0,timeout:4000})(options),failures:0,retryAt:0}));
  return createTransport({key:'blackout-race',name:'Robinhood concurrent RPC',type:'custom',retryCount:0,
   request: (async (args,requestOptions)=>{
    await waitForVisiblePage();
@@ -28,8 +30,7 @@ export const rpcTransport = ():Transport => options => {
    // a provider’s expensive log-method quota. The 4s timeout starts per request.
    if(args.method==='eth_getLogs')await paceArchive();
    try{
-    // dRPC rejects historical logs even below its advertised range cap.
-    // Only the official archive endpoint supports this method without a key.
+    // The configured official endpoint also serves bounded archive log ranges.
     const capable=args.method==='eth_getLogs'?endpoints.slice(0,1):endpoints;
     const ready=capable.filter(e=>!rejectedEndpoints.has(e.url)&&Date.now()>=e.retryAt);
     if(!ready.length)throw new Error('RPC reconnecting; waiting for backoff');
@@ -49,7 +50,7 @@ export const rpcTransport = ():Transport => options => {
 };
 // Deployless Multicall3 requires no guessed deployment address or on-chain deployment.
 const readClient = () => createPublicClient({ chain, transport: rpcTransport(),
- batch: { multicall: { deployless: true, batchSize: 4096, wait: 20 } }, pollingInterval: POLL_MS });
+ batch: { multicall: { deployless: true, batchSize: 2048, wait: 20 } }, pollingInterval: POLL_MS });
 export const client = readClient();
 // Providers can serve current state while pruning older state. Historical
 // failures back off independently so reveal history cannot block current reads

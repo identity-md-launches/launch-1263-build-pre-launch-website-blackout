@@ -35,9 +35,9 @@ export function initAtmosphere(canAnimate:()=>boolean,gridEvent?:()=>readonly [n
    window.setTimeout(()=>{district?.classList.remove('blackout-wave');sky.classList.remove('lightning-active');},2200);
    n++;
   }
-  timer=window.setTimeout(run,9000+(n%3)*1000);
+  timer=window.setTimeout(run,90000+(n%3)*15000);
  };
- timer=window.setTimeout(run,9500);
+ timer=window.setTimeout(run,105000);
  window.addEventListener('pagehide',()=>window.clearTimeout(timer));
  window.addEventListener('scroll',()=>{
   if(scrollFrame)return;
