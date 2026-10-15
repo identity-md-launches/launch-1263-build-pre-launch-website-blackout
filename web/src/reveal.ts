@@ -1,11 +1,11 @@
 import { type Hex, type Address } from 'viem';
 import { revealReceipt } from './upstream-reveal.js';
-import { client, addresses, nativeBlock, contractErrorName, errorMessage } from './chain';
+import { client, addresses, nativeBlock, errorMessage } from './chain';
 import { account, assertWallet, confirmHash, provider, setTx } from './wallet';
 import { loadReceipt, type Receipt } from './data';
 // Upstream reveal.js owns the wait/re-arm/resolve loop. This bridge adds transaction
 // simulation, checked wallet identity, public-RPC reads and cancellation between prompts.
-export async function reveal(receipt:Receipt,signal:AbortSignal) {
+export async function reveal(receipt:Receipt,signal:AbortSignal,count=1) {
  const from=assertWallet(), contract=addresses[receipt.kind==='paid'?'PackSale':'StarterClaim'];
  const p=await provider();
  const check=()=>{if(signal.aborted)throw Error('Reveal stopped. Your receipt stays on chain; return to reveal later.');assertWallet(from);};
@@ -33,17 +33,16 @@ export async function reveal(receipt:Receipt,signal:AbortSignal) {
  const progress=before>receipt.target+256n&&!receipt.captured?'Re-arming, wait a moment':'Revealing...';
  setTx({label:'Reveal pack',state:'signature',detail:progress,account:from});
  try {
-  const outcome=await revealReceipt({provider:bridge,contract,receipt:receipt.id.toString(),starter:receipt.kind==='starter',captured:receipt.captured,count:1,pollMs:15000,onStatus:(detail:string)=>{
+  const outcome=await revealReceipt({provider:bridge,contract,receipt:receipt.id.toString(),starter:receipt.kind==='starter',captured:receipt.captured,count,pollMs:2000,onStatus:(detail:string)=>{
    document.dispatchEvent(new CustomEvent('revealprogress',{detail}));
   }});
   if(outcome==='already-opened'){check();return 'already-opened' as const;}
  } catch(error) {
   // Another tab or keeper may have resolved the receipt since our initial read.
-  // Only suppress InvalidValue when the chain confirms every pack was opened.
-  if(contractErrorName(error)==='InvalidValue') {
-   const current=await loadReceipt(receipt.kind,receipt.id);
-   if(current.resolved){check();return 'already-opened' as const;}
-  }
+  // Providers can wrap or omit revert bytes, so chain state is authoritative
+  // after any failed attempt; unreadable or unfinished receipts still surface the error.
+  const current=await loadReceipt(receipt.kind,receipt.id).catch(()=>null);
+  if(current?.resolved){check();return 'already-opened' as const;}
   throw Error(errorMessage(error,{action:'resolve',contract:receipt.kind==='paid'?'PackSale':'StarterClaim'}));
  }
  check();

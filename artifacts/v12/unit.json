@@ -1,0 +1,12 @@
+{
+  "checkedAt": "2026-10-15T09:51:35.079Z",
+  "passed": [
+    "Exact integer mining formula, six-hour division, partial epoch, tariff, audit floor and added-hash denominator",
+    "Projection band ordering, pool-driven emission decay, scheduled drip, zero farm, level-dependent pack odds and unreachable payback",
+    "Inventory full blocks one/three-item actions; Epic 3, Legendary 5, Mythic 10; locked rooms and duplicate kinds",
+    "All 41 ABI custom errors decoded from nested bytes into actionable copy; rejection and raw RPC sanitization",
+    "Provider log cap enforced before requests, no gaps or duplicate chunks",
+    "Healthy RPCs race; 4-second per-endpoint timeout; outage backoff suppresses retries; archive logs use a shared paced queue and capable endpoint only",
+    "Production export excludes the development mock module and controls"
+  ]
+}

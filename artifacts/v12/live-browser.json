@@ -1,0 +1,189 @@
+{
+  "checkedAt": "2026-10-15T09:44:59.729Z",
+  "pages": [
+    {
+      "route": "home",
+      "width": 375,
+      "overflow": 0,
+      "title": "BLACKOUT"
+    },
+    {
+      "route": "packs",
+      "width": 375,
+      "overflow": 0,
+      "title": "Open packs"
+    },
+    {
+      "route": "farm",
+      "width": 375,
+      "overflow": 0,
+      "title": "Peek at the top farm"
+    },
+    {
+      "route": "rewards",
+      "width": 375,
+      "overflow": 0,
+      "title": "Make your hash count."
+    },
+    {
+      "route": "leaderboard",
+      "width": 375,
+      "overflow": 0,
+      "title": "City leaders"
+    },
+    {
+      "route": "city",
+      "width": 375,
+      "overflow": 0,
+      "title": "The city"
+    },
+    {
+      "route": "season",
+      "width": 375,
+      "overflow": 0,
+      "title": "Season"
+    },
+    {
+      "route": "billboards",
+      "width": 375,
+      "overflow": 0,
+      "title": "Billboards"
+    },
+    {
+      "route": "more",
+      "width": 375,
+      "overflow": 0,
+      "title": "Explore the city"
+    },
+    {
+      "route": "docs",
+      "width": 375,
+      "overflow": 0,
+      "title": "Field guide"
+    },
+    {
+      "route": "contracts",
+      "width": 375,
+      "overflow": 0,
+      "title": "Contracts"
+    },
+    {
+      "route": "wallet",
+      "width": 375,
+      "overflow": 0,
+      "title": "Make your hash count."
+    },
+    {
+      "route": "home",
+      "width": 1440,
+      "overflow": 0,
+      "title": "BLACKOUT"
+    },
+    {
+      "route": "packs",
+      "width": 1440,
+      "overflow": 0,
+      "title": "Open packs"
+    },
+    {
+      "route": "farm",
+      "width": 1440,
+      "overflow": 0,
+      "title": "Peek at the top farm"
+    },
+    {
+      "route": "rewards",
+      "width": 1440,
+      "overflow": 0,
+      "title": "Make your hash count."
+    },
+    {
+      "route": "leaderboard",
+      "width": 1440,
+      "overflow": 0,
+      "title": "City leaders"
+    },
+    {
+      "route": "city",
+      "width": 1440,
+      "overflow": 0,
+      "title": "The city"
+    },
+    {
+      "route": "season",
+      "width": 1440,
+      "overflow": 0,
+      "title": "Season"
+    },
+    {
+      "route": "billboards",
+      "width": 1440,
+      "overflow": 0,
+      "title": "Billboards"
+    },
+    {
+      "route": "more",
+      "width": 1440,
+      "overflow": 0,
+      "title": "Explore the city"
+    },
+    {
+      "route": "docs",
+      "width": 1440,
+      "overflow": 0,
+      "title": "Field guide"
+    },
+    {
+      "route": "contracts",
+      "width": 1440,
+      "overflow": 0,
+      "title": "Contracts"
+    },
+    {
+      "route": "wallet",
+      "width": 1440,
+      "overflow": 0,
+      "title": "Make your hash count."
+    }
+  ],
+  "consoleErrors": [],
+  "failedResponses": [],
+  "screenshots": [
+    "artifacts/screenshots/home-375.webp",
+    "artifacts/screenshots/packs-375.webp",
+    "artifacts/screenshots/farm-375.webp",
+    "artifacts/screenshots/rewards-375.webp",
+    "artifacts/screenshots/leaderboard-375.webp",
+    "artifacts/screenshots/city-375.webp",
+    "artifacts/screenshots/season-375.webp",
+    "artifacts/screenshots/billboards-375.webp",
+    "artifacts/screenshots/more-375.webp",
+    "artifacts/screenshots/docs-375.webp",
+    "artifacts/screenshots/contracts-375.webp",
+    "artifacts/screenshots/wallet-375.webp",
+    "artifacts/screenshots/home-1440.webp",
+    "artifacts/screenshots/packs-1440.webp",
+    "artifacts/screenshots/farm-1440.webp",
+    "artifacts/screenshots/rewards-1440.webp",
+    "artifacts/screenshots/leaderboard-1440.webp",
+    "artifacts/screenshots/city-1440.webp",
+    "artifacts/screenshots/season-1440.webp",
+    "artifacts/screenshots/billboards-1440.webp",
+    "artifacts/screenshots/more-1440.webp",
+    "artifacts/screenshots/docs-1440.webp",
+    "artifacts/screenshots/contracts-1440.webp",
+    "artifacts/screenshots/wallet-1440.webp",
+    "artifacts/screenshots/home-first-390.webp"
+  ],
+  "checks": [
+    "375px pack purchase visible and opens wallet picker",
+    "Visitor calculator changes live estimate; 1/7/30 day chart controls work",
+    "Live reveal rows include 3, 3, 3, 3 item chips, with sprites and rarity labels",
+    "390px first screen shows product and Buy a pack",
+    "Production query cannot enable dev mock mode",
+    "Zero console errors and zero HTTP 4xx/5xx responses across normal live visits"
+  ],
+  "limitations": [
+    "Live public reads only; wallet transactions use separate controlled fixtures. No physical phone or screen-reader session."
+  ]
+}

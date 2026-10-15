@@ -1,11 +1,11 @@
 import { decodeEventLog, type Address, type Hex } from 'viem';
 import { ABI, addresses, client, read, contractErrorName } from './chain';
-import { KINDS, type Item } from './data';
+import { type Item } from './data';
 import { GAME_DEPLOYMENT_BLOCK } from './config';
 import { newLogScan, scanLogRanges } from './logs';
 import { cached, remember } from './cache';
-export type Activity={key:string;block:bigint;index:number;hash:Hex;text:string;kind?:'purchase'|'reveal';rarity?:number};
-export type Leaderboard={epoch:bigint;farms:{wallet:Address;hash:bigint;district:number}[];districts:bigint[];total:number};
+export type Activity={key:string;block:bigint;index:number;hash:Hex;text:string;kind?:'purchase'|'reveal';rarity?:number;items?:{kind:number;rarity:number}[]};
+export type Leaderboard={epoch:bigint;farms:{wallet:Address;hash:bigint;district:number;best?:{kind:number;rarity:number}[]}[];districts:bigint[];total:number};
 const short=(s:string)=>`${s.slice(0,6)}…${s.slice(-4)}`;
 type EventIndex={head:bigint;floor:bigint;events:Activity[]};
 const saved=cached<EventIndex>('pack-event-index');
@@ -14,7 +14,7 @@ let floor=saved?.floor??null;
 // Kind and rarity are immutable; durability/overclock are not cached here. Burned items omit their detail.
 const metadata=new Map<string,Promise<Pick<Item,'kind'|'rarity'>|null>>();
 let cursor:bigint|null=saved?.head??null;
-const scan=newLogScan();scan.span=100000n;
+const scan=newLogScan();scan.span=10000n;
 let pending:Promise<Activity[]>|null=null;
 export function loadActivity():Promise<Activity[]>{
  if(!pending)pending=scanActivity().finally(()=>{pending=null;});
@@ -33,11 +33,11 @@ async function scanActivity():Promise<Activity[]>{
  // Receipt and item calls for independent events share viem's multicall/JSON-RPC batches.
  const parsed=await Promise.all(recent.map(async(log):Promise<Activity|null>=>{
   const hash=log.transactionHash!,block=log.blockNumber!,index=log.logIndex??0,key=`${hash}:${index}`;
-  const cached=decoded.get(key);if(cached)return {...cached,block,index};
+  const cached=decoded.get(key);if(cached&&(cached.kind==='purchase'||cached.items))return {...cached,block,index};
   let event:{eventName:string;args:Record<string,unknown>};
   try{event=decodeEventLog({abi:Object.values(ABI).flat(),data:log.data,topics:log.topics}) as unknown as typeof event;}
   catch{return null;}
-  const a=event.args;let text='',rarity:number|undefined;
+  const a=event.args;let text='',rarity:number|undefined;let revealedItems:{kind:number;rarity:number}[]|undefined;
   const kind=event.eventName==='PackCommitted'?'purchase':'reveal';
   if(kind==='purchase')text=`${short(String(a.player))} bought ${a.count} pack${a.count===1n?'':'s'}`;
   else if(event.eventName==='PackOpened'){
@@ -57,11 +57,12 @@ async function scanActivity():Promise<Activity[]>{
     if(!metadata.has(mk))metadata.set(mk,read<Item>('FarmItems','data',[itemId]).then(({kind,rarity})=>({kind,rarity})).catch(e=>{if(contractErrorName(e)==='InvalidValue')return null;metadata.delete(mk);throw e;}));
     return metadata.get(mk)!;
    }));
-   const best=items.filter((item):item is Pick<Item,'kind'|'rarity'>=>item!==null).sort((a,b)=>b.rarity-a.rarity)[0];
+   revealedItems=items.filter((item):item is Pick<Item,'kind'|'rarity'>=>item!==null);
+   const best=[...revealedItems].sort((a,b)=>b.rarity-a.rarity)[0];
    rarity=best?.rarity;
-   text=`${short(String(receipt[0]))} revealed ${a.count} pack${a.count===1n?'':'s'}${best?` · ${KINDS[best.kind]}`:''}`;
+   text=`${short(String(receipt[0]))} revealed ${a.count} pack${a.count===1n?'':'s'}`;
   }
-  return text?{key,block,index,hash,text,kind,rarity}:null;
+  return text?{key,block,index,hash,text,kind,rarity,items:revealedItems}:null;
  }));
  // Commit each decoded range atomically. A later failure retains this progress;
  // retries rescan the overlap, replacing any events removed by a shallow reorg.
@@ -89,5 +90,9 @@ export async function loadLeaderboard(epoch:bigint):Promise<Leaderboard>{
   farms.push(...await Promise.all(players.map(async wallet=>{const [hash,district]=await Promise.all([read<bigint>('FarmRewards','farmWeight',[wallet,epoch]),read<bigint>('FarmCore','district',[wallet])]);return {wallet,hash,district:Number(district)};})));
  }
  const districts=await Promise.all(Array.from({length:8},(_,i)=>read<bigint>('FarmRewards','districtActiveHash',[BigInt(i)])));
- return {epoch,farms:farms.filter(f=>f.hash>0n).sort((a,b)=>a.hash===b.hash?a.wallet.localeCompare(b.wallet):a.hash>b.hash?-1:1).slice(0,20),districts,total:Number(count)};
+ const leaders=farms.filter(f=>f.hash>0n).sort((a,b)=>a.hash===b.hash?a.wallet.localeCompare(b.wallet):a.hash>b.hash?-1:1).slice(0,20);
+ await Promise.all(leaders.map(async farm=>{
+  try{const ids=await read<bigint[]>('FarmItems','itemsByOwner',[farm.wallet,0n,100n]);const items=await Promise.all(ids.map(id=>read<Item>('FarmItems','data',[id])));farm.best=items.sort((a,b)=>b.rarity-a.rarity).slice(0,3).map(({kind,rarity})=>({kind,rarity}));}catch{/* A preview is optional; standings remain valid. */}
+ }));
+ return {epoch,farms:leaders,districts,total:Number(count)};
 }

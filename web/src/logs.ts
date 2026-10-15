@@ -29,6 +29,7 @@ export async function scanLogRanges<T>(
  readRange: (range: LogRange) => Promise<T>,
  commit: (value: T, range: LogRange) => void | Promise<void>,
 ) {
+ scan.span=scan.span>10_000n?10_000n:scan.span;
  let width=1;
  for (let next = fromBlock; next <= head;) {
   const ranges:LogRange[]=[];

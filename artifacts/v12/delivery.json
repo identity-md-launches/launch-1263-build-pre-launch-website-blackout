@@ -1,0 +1,85 @@
+{
+  "checkedAt": "2026-10-15T09:57:04.495Z",
+  "limitBytes": 8388608,
+  "currentFileBytes": 11892636,
+  "fileCount": 295,
+  "groups": {
+    ".gitignore": 655,
+    "CHANGELOG.md": 7985,
+    "DESIGN.md": 10924,
+    "NOTICE.md": 2106,
+    "README.md": 11697,
+    "artifacts": 3880991,
+    "assets": 1363,
+    "dist": 3811658,
+    "docs.md": 8336,
+    "index.html": 18535,
+    "licenses": 22641,
+    "package-lock.json": 57112,
+    "package.json": 715,
+    "public": 2257949,
+    "reports": 337724,
+    "scripts": 79219,
+    "src": 236577,
+    "tests": 48513,
+    "tsconfig.json": 341,
+    "vite.config.mjs": 135,
+    "vitest.config.mjs": 255,
+    "web": 1097205
+  },
+  "productionBytes": 3811658,
+  "relativeLocalReferencesChecked": 13,
+  "protectedPathsUnchanged": true,
+  "artifactBytes": 3880991,
+  "artifactBudget": 4194304,
+  "budgets": [
+    {
+      "name": "review documents",
+      "limit": 35000,
+      "bytes": 19457
+    },
+    {
+      "name": "screenshots",
+      "limit": 2700000,
+      "bytes": 2597428
+    },
+    {
+      "name": "recordings",
+      "limit": 1250000,
+      "bytes": 1196595
+    },
+    {
+      "name": "JSON evidence",
+      "limit": 209304,
+      "bytes": 67511
+    }
+  ],
+  "submodules": 0,
+  "dependencyAndCacheDirectoriesIncluded": 0,
+  "distSha256": {
+    "dist/app-icon.png": "1b2e50dbb5dfe1a30d3c2ef49eb40e59720e18e0063b23db036c86d3fdfa3ebb",
+    "dist/assets/blackout-rooftop.jpg": "c4479847b81951b9cb8db7b8f12ae9f31cfe20ad7f615fda09727c4f6c7e6b1f",
+    "dist/assets/blackout-rooftop.webp": "02fa3cceaf54b2fa3bb3b2de76abe649df5eebd6fb73c9af5db66f9fef21258a",
+    "dist/assets/ccip-CLuw1PPV.js": "7b4061de7dbe22ad7e3a210989522ab6a46f21027a248ffbf04b235adb906ecf",
+    "dist/assets/hooks.module-DE9oX6xH.js": "18290b66f5736ddfcd375526f88fd55c2ecf072d6feee11d3554a78df4a3594f",
+    "dist/assets/index--oNKFIBE.js": "5121e658f88e42ed78c0584778a1b391f4e4d1a82854dee93479e43ca09a0822",
+    "dist/assets/index-DSMWapGr.js": "9d1884303e2516e4aa88af8fcff59a3d126d752fe09e12cca9025df983d0724f",
+    "dist/assets/index-DU87-Yxi.js": "8d592601889eb99bc357841c7224314c729ba9e0431d27d3c5e76b20963adb5c",
+    "dist/assets/main-BAE96wns.js": "8193a95f94c039134a6d75a51c8c369d7b62cc5dfab91f5e4d2e365cf0585800",
+    "dist/assets/main-FoTqX-FB.css": "483ca83e9e02a29c6f6d15e80d73ddd73a381006b124db25939631245f84e864",
+    "dist/assets/mono-latin.woff2": "08949f728dc52d528e69b1667d15c89a5686a4ee9a296ff90983985f99c380f7",
+    "dist/assets/mono-semibold-latin.woff2": "0d1f0b8d0722224e32e9f28261bdc86c79115be73444ae5eceb73976a1bcdf83",
+    "dist/assets/pixel-latin.woff2": "5bd44fee71c38c481d5b546bf29a65b6a6e69dd4ab89acd8de2d49baeebb8317",
+    "dist/favicon.svg": "3e60b94bd10ab70525729657f552eb6f983685eff3f66ad788437d3b0e8dcf82",
+    "dist/free-tree.json": "071ac63a8147ee97998983c6b7326239aead890b600bdabd82d1fdcb34b6167e",
+    "dist/index.html": "4632807be069c4dd2813c0b3f97abfc2280c28983a15c7f404f0f9a0573f3e1b",
+    "dist/manifest.webmanifest": "c812ab0ddc5745209fc079503bc14ce4f3600ec2d3149c5ae45f841845983af0",
+    "dist/og.png": "94dd5e88fe0616a01c6258436782c4e0e4c4a306b0f01a78342cdae2f023781e",
+    "dist/starter-tree.json": "8d6ee4c8a8c5bf8003fb163aac845f64759801543d9bd017ee5be1e4b3ab8951",
+    "dist/wallets/coinbase.svg": "09a20db3c6359a771a15b33d150a832773210c30705921c9eeb2c522854d2a40",
+    "dist/wallets/metamask.svg": "892c7dfab8c4ca5682878dda3f42f55a75195d7d365e4adb0832845f3a0a2135",
+    "dist/wallets/phantom.svg": "f841f8112e131259a2e5123177950099c79487e61e77971f4e193e6c374419eb",
+    "dist/wallets/rabby.svg": "dcae4de88ebfa10cffa1fe28df13d7c8c0b40736ef2b704f1f2fc348e777e443"
+  },
+  "note": "Current tracked and nonignored candidate files; deleted or replaced paths excluded. Complete current-file temporary Git bundle is measured separately in bundle-trial.json. Final publisher metadata is outside this worker."
+}

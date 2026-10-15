@@ -14,11 +14,26 @@ function waitForVisiblePage(){
 // automatic retry cycle can hold up the next UI update. Wallet writes use the
 // player's provider, never this transport.
 export const rpcTransport = ():Transport => options => {
- const endpoints=RPC_URLS.map(url=>http(url,{batch:{batchSize:url===RPC_URLS[1]?3:40,wait:10},retryCount:0,timeout:4000})(options));
+ let archiveTurn=Promise.resolve(),nextArchiveRead=0;
+ const paceArchive=async()=>{const previous=archiveTurn;let release!:()=>void;archiveTurn=new Promise<void>(resolve=>release=resolve);await previous;const wait=Math.max(0,nextArchiveRead-Date.now());if(wait)await new Promise(resolve=>setTimeout(resolve,wait));nextArchiveRead=Date.now()+600;release();};
+ const endpoints=RPC_URLS.map(url=>({transport:http(url,{batch:{batchSize:url===RPC_URLS[1]?3:40,wait:10},retryCount:0,timeout:4000})(options),failures:0,retryAt:0}));
  return createTransport({key:'blackout-race',name:'Robinhood concurrent RPC',type:'custom',retryCount:0,
   request: (async (args,requestOptions)=>{
    await waitForVisiblePage();
-   try{return await Promise.any(endpoints.map(endpoint=>endpoint.request(args,requestOptions)));}
+   // Historical scans share a paced queue, so independent indexers cannot burst
+   // a provider’s expensive log-method quota. The 4s timeout starts per request.
+   if(args.method==='eth_getLogs')await paceArchive();
+   try{
+    // dRPC rejects historical logs even below its advertised range cap.
+    // Only the official archive endpoint supports this method without a key.
+    const capable=args.method==='eth_getLogs'?endpoints.slice(0,1):endpoints;
+    const ready=capable.filter(e=>Date.now()>=e.retryAt);
+    if(!ready.length)throw new Error('RPC reconnecting; waiting for backoff');
+    return await Promise.any(ready.map(async endpoint=>{
+     try{const result=await endpoint.transport.request(args,requestOptions);endpoint.failures=0;endpoint.retryAt=0;return result;}
+     catch(error){if(!/revert/i.test(String(error))){endpoint.failures++;endpoint.retryAt=Date.now()+Math.min(120000,15000*2**(endpoint.failures-1));}throw error;}
+    }));
+   }
    catch(error){
     // Preserve viem's original contract error (including revert data) for the
     // existing error mapper and transaction simulations.

@@ -23,9 +23,9 @@ const actionHints:Record<string,string>={
  openPack:'Choose 1–10 packs and check that the sale is open.',
  resolve:'This pack is not ready to open, or was already opened. Refresh your packs.',
  claim:'The reward amount changed. Refresh your rewards before claiming.',
- claimFree:'This free pack has already been claimed or its claim window has closed.',
+ claimFree:'This legacy receipt has already been claimed or its window has closed.',
  repair:'This hardware is unavailable for repair. Refresh its ownership and health.',
- scrap:'Remove the item first. Starter hardware also needs one paid pack before scrapping.',
+ scrap:'Remove the item first. Legacy hardware also needs one paid pack before scrapping.',
  lock:'Choose an available lock term and meet the displayed minimum amount.',
  unlock:'Your locked tokens are not ready to withdraw yet.',
  sync:'Your farm cannot be updated yet. Check that mining has started and refresh the farm.',
@@ -68,13 +68,13 @@ export function errorMessage(error:unknown,context:ErrorContext={}):string {
  if(name){
   if(context.reason&&['InvalidValue','TooEarly','InsufficientBalance'].includes(name))return context.reason;
   if(name==='NotConfigured'&&['resolve','captureEntropy'].includes(context.action||''))return 'The pack’s reveal seed is not available yet. Wait for the reveal block; an expired window can be re-armed here.';
-  if(name==='NotConfigured'&&context.action==='claimFree')return 'The free pack list has not been enabled by the game yet.';
+  if(name==='NotConfigured'&&context.action==='claimFree')return 'This legacy claim is unavailable.';
   if(name==='NotConfigured'&&['buyWithETH','openPack'].includes(context.action||''))return 'Pack sales are waiting for game setup and reward funding to finish. Check the sale status before trying again.';
   if(name==='TooEarly'&&context.contract==='FarmCore')return 'Your farm cannot change while the mining epoch is closed. Wait for the next epoch to open, then refresh.';
   if(name==='InsufficientBalance'&&context.action==='scrap')return 'The scrap payout is below the minimum you reviewed. Refresh the item’s scrap value and try again.';
-  if(name==='InvalidValue'&&context.contract==='StarterClaim'&&context.action==='claim')return 'This starter claim is not valid for the selected snapshot token. Refresh your eligible packs.';
+  if(name==='InvalidValue'&&context.contract==='StarterClaim'&&context.action==='claim')return 'This legacy claim is not valid for the selected snapshot token. Refresh your receipts.';
   if(name==='InsufficientBalance'&&context.action==='buyWithETH')return 'The swap returned too little BLACKOUT for the pack price. Refresh the ETH quote and try again.';
-  if(name==='TooEarly'&&context.action==='claimFree')return 'The free pack claim window is closed.';
+  if(name==='TooEarly'&&context.action==='claimFree')return 'This legacy claim window is closed.';
   if(name==='TooEarly'&&context.action==='unlock')return 'Your lock term has not ended. Wait for the displayed unlock time.';
   if(name==='FeatureDisabled'&&['lock','lobby','bidBillboard'].includes(context.action||''))return `${context.action==='lock'?'District staking':context.action==='lobby'?'District lobbying':'Billboard bidding'} has not been enabled by the city yet.`;
   if(name==='InvalidValue'&&context.action&&actionHints[context.action])return actionHints[context.action];

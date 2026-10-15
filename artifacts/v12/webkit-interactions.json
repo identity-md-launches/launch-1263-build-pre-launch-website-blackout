@@ -1,0 +1,34 @@
+{
+  "checkedAt": "2026-10-15T09:51:03.840Z",
+  "passed": [
+    "Bright ETH purchase opens named wallet picker; removed offers absent; connected HUD appears",
+    "Claim tax/net preview, actual claim, mined history, epoch drilldown and 1/7/30 day charts",
+    "Tap hardware then slot, simulated placement, unplace and visible Mythic level gate",
+    "Inventory full blocks unplace and claim up front; quoted exact approval expands by five",
+    "Place all fills only valid slots, skips duplicate kinds and full rooms, and simulates every queued placement",
+    "ETH buy stays atomic; bulk resolve uses one call for 3 packs; confirmed-only rip, nine 3D flips, summary and resolved receipt reconciliation",
+    "Separate receipts queue sequential simulations; Scrap commons previews irreversible destruction and leaves other rarities intact",
+    "Single reveal resolves exactly one pack, individual card flip works, and a concurrent resolution is reconciled without a duplicate write",
+    "Failed simulation sends no transaction; custom error becomes human guidance with recovery controls",
+    "All 12 routes retain the connected HUD and reflow at 320, 375, 390 and 1440; removed copy absent",
+    "Populated Farm, Rewards and Packs pass automated axe checks; no application exceptions"
+  ],
+  "errors": [],
+  "axe": [
+    {
+      "route": "farm",
+      "violations": []
+    },
+    {
+      "route": "rewards",
+      "violations": []
+    },
+    {
+      "route": "packs",
+      "violations": []
+    }
+  ],
+  "limitations": [
+    "Fixture signatures only; no real funds used. Physical haptics and external wallet apps untested."
+  ]
+}

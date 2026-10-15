@@ -1,0 +1,57 @@
+{
+  "checkedAt": "2026-10-15T09:52:30.207Z",
+  "lighthouseVersion": "13.5.0",
+  "browserVersion": "141.0.7390.37",
+  "score": 87,
+  "metrics": {
+    "first-contentful-paint": {
+      "value": 1110.345,
+      "display": "1.1 s",
+      "score": 0.99
+    },
+    "largest-contentful-paint": {
+      "value": 1410.8629999999998,
+      "display": "1.4 s",
+      "score": 1
+    },
+    "speed-index": {
+      "value": 2059.556665212858,
+      "display": "2.1 s",
+      "score": 0.99
+    },
+    "total-blocking-time": {
+      "value": 474.5,
+      "display": "470 ms",
+      "score": 0.6
+    },
+    "cumulative-layout-shift": {
+      "value": 0.0621962332928311,
+      "display": "0.062",
+      "score": 0.97
+    }
+  },
+  "settings": {
+    "formFactor": "mobile",
+    "throttlingMethod": "simulate",
+    "throttling": {
+      "rttMs": 150,
+      "throughputKbps": 1638.4,
+      "requestLatencyMs": 562.5,
+      "downloadThroughputKbps": 1474.5600000000002,
+      "uploadThroughputKbps": 675,
+      "cpuSlowdownMultiplier": 4
+    },
+    "screenEmulation": {
+      "mobile": true,
+      "width": 412,
+      "height": 823,
+      "deviceScaleFactor": 1.75,
+      "disabled": false
+    }
+  },
+  "runtimeError": null,
+  "runWarnings": [
+    "The page loaded too slowly to finish within the time limit. Results may be incomplete."
+  ],
+  "server": "Local static export at /preview/, no compression, live RPCs; default mobile simulated throttling. Cold browser storage. No fixture data."
+}

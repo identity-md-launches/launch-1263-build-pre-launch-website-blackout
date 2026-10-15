@@ -1,33 +1,33 @@
 {
-  "checkedAt": "2026-10-15T07:39:20.269Z",
-  "lighthouseVersion": "12.8.2",
+  "checkedAt": "2026-10-15T09:52:30.207Z",
+  "lighthouseVersion": "13.5.0",
   "browserVersion": "141.0.7390.37",
-  "score": 86,
+  "score": 87,
   "metrics": {
     "first-contentful-paint": {
-      "value": 1060.3629999999998,
+      "value": 1110.345,
       "display": "1.1 s",
-      "score": 1
+      "score": 0.99
     },
     "largest-contentful-paint": {
-      "value": 1361.1149999999998,
+      "value": 1410.8629999999998,
       "display": "1.4 s",
       "score": 1
     },
     "speed-index": {
-      "value": 2339.799668354065,
-      "display": "2.3 s",
-      "score": 0.98
+      "value": 2059.556665212858,
+      "display": "2.1 s",
+      "score": 0.99
     },
     "total-blocking-time": {
-      "value": 559.0000000000007,
-      "display": "560 ms",
-      "score": 0.53
+      "value": 474.5,
+      "display": "470 ms",
+      "score": 0.6
     },
     "cumulative-layout-shift": {
-      "value": 0.03109811664641555,
-      "display": "0.031",
-      "score": 1
+      "value": 0.0621962332928311,
+      "display": "0.062",
+      "score": 0.97
     }
   },
   "settings": {
@@ -50,6 +50,8 @@
     }
   },
   "runtimeError": null,
-  "runWarnings": [],
+  "runWarnings": [
+    "The page loaded too slowly to finish within the time limit. Results may be incomplete."
+  ],
   "server": "Local static export at /preview/, no compression, live RPCs; default mobile simulated throttling. Cold browser storage. No fixture data."
 }

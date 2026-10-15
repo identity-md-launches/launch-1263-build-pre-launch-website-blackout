@@ -1,0 +1,65 @@
+{
+  "checkedAt": "2026-10-15T09:56:04.696Z",
+  "recordings": [
+    {
+      "rarity": "common",
+      "packs": 1,
+      "path": "artifacts/recordings/common-single.webm",
+      "mode": "Vite DEV only; synthetic items and economy; no wallet or chain writes"
+    },
+    {
+      "rarity": "common",
+      "packs": 3,
+      "path": "artifacts/recordings/common-bulk.webm",
+      "mode": "Vite DEV only; synthetic items and economy; no wallet or chain writes"
+    },
+    {
+      "rarity": "rare",
+      "packs": 1,
+      "path": "artifacts/recordings/rare-single.webm",
+      "mode": "Vite DEV only; synthetic items and economy; no wallet or chain writes"
+    },
+    {
+      "rarity": "rare",
+      "packs": 3,
+      "path": "artifacts/recordings/rare-bulk.webm",
+      "mode": "Vite DEV only; synthetic items and economy; no wallet or chain writes"
+    },
+    {
+      "rarity": "epic",
+      "packs": 1,
+      "path": "artifacts/recordings/epic-single.webm",
+      "mode": "Vite DEV only; synthetic items and economy; no wallet or chain writes"
+    },
+    {
+      "rarity": "epic",
+      "packs": 3,
+      "path": "artifacts/recordings/epic-bulk.webm",
+      "mode": "Vite DEV only; synthetic items and economy; no wallet or chain writes"
+    },
+    {
+      "rarity": "legendary",
+      "packs": 1,
+      "path": "artifacts/recordings/legendary-single.webm",
+      "mode": "Vite DEV only; synthetic items and economy; no wallet or chain writes"
+    },
+    {
+      "rarity": "legendary",
+      "packs": 3,
+      "path": "artifacts/recordings/legendary-bulk.webm",
+      "mode": "Vite DEV only; synthetic items and economy; no wallet or chain writes"
+    },
+    {
+      "rarity": "mythic",
+      "packs": 1,
+      "path": "artifacts/recordings/mythic-single.webm",
+      "mode": "Vite DEV only; synthetic items and economy; no wallet or chain writes"
+    },
+    {
+      "rarity": "mythic",
+      "packs": 3,
+      "path": "artifacts/recordings/mythic-bulk.webm",
+      "mode": "Vite DEV only; synthetic items and economy; no wallet or chain writes"
+    }
+  ]
+}

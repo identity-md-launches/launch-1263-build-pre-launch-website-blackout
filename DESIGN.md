@@ -1,65 +1,90 @@
 # BLACKOUT design system
 
-The implemented direction is a quiet interface over a dark pixel city: a full-height rooftop illustration, a large pixel wordmark, one yellow primary action and cyan public telemetry. The Dispatcher and server rack remain on the right of the image. This document describes the shipped source, not a proposed design.
+## Overview
 
-## Source and structure
+BLACKOUT is a wallet-connected mining game. The visual anchor is its existing night-time pixel city: a rooftop hero, hardware sprites and building cross-sections. Yellow identifies the next primary action; cyan makes mining data easy to find. Rewards prioritizes the player's claimable amount, then history and explicitly labeled estimates. Marketing sections retain the city's voice; transaction reviews state amounts and consequences plainly.
 
-`src/landing.ts` owns the Home content; `web/src/shell.ts` owns the header. Their first screen is also pre-rendered into `index.html` by `web/tools/v11-prerender.ts`. `web/src/critical.css` provides the initial shell styles, minified and inlined by the same pre-render tool so first paint needs no additional stylesheet request. `web/src/bootstrap.ts` preserves the hero, adds the lower landing content and initializes the game after the preloaded hero decodes and paints, with a bounded wait and immediate loading on a game action. Keep critical hero/header rules synchronized with `web/src/premium.css` when editing them.
+The active cascade is `src/style.css`, `web/src/live.css`, `web/src/premium.css`, then **`web/src/polish.css`**. The latter owns the HUD, earnings panels and new pack experience. `src/landing.ts` owns Home. `web/src/rewards-view.ts`, `views.ts` and `player-views.ts` render game pages; `public-views.ts` renders public telemetry. `main.ts` binds routes, reads and interactions. `shell.ts` and `critical.css` supply the header/hero shell pre-rendered into `index.html`. Update that shell with `v11-check.mjs prerender` when its source changes.
 
-The final cascade is the shared `src/style.css`, retained game controls in `web/src/live.css`, then `web/src/premium.css`. `web/src/views.ts` renders Packs, Farm and secondary game views; `player-views.ts` renders personal Rewards and onboarding. `public-views.ts` is shared by Home and Rewards. All navigation uses hashes for static hosting. Existing game and hardware SVG sprites are retained locally.
+## Colors
 
-## Color tokens
+Canonical hexadecimal tokens are in `premium.css:2–6`, with rarity/error tokens retained in `src/style.css:7–12`.
 
-| Role | Implemented value | Usage |
+| Token | Value | Role |
 | --- | --- | --- |
-| Background | `#070A14` | Page, header after scroll, dark image placeholder |
-| Panel | `#0E1324` | Public tiles, terminal, rooms, dialogs |
-| Raised / hover | `#131B30` / `#19253E` | Secondary controls and surfaces |
-| Panel border | `#1E2A4A` | Quiet 1px dividers; not relied on to identify controls |
-| Control border | `#566580` | Inputs and secondary controls; header Connect uses `#64738F` |
-| Text | `#EEF2FA` | Primary readable content |
-| Muted | `#A3B0C9` | Descriptions, metadata, timestamps |
-| Live cyan | `#39E6FF` | Data, status dots, focus and subtle glows |
-| Action yellow | `#FFE600` | Filled primary actions, black text and hard black shadow |
-| Rarity magenta | `#FF3DF2` | Epic cards and rare highlights |
-| Danger | `#FF869C` | Errors and destructive actions |
+| `--bg` | `#070a14` | Page, dark scene ground |
+| `--surface` | `#0e1324` | Claim, estimate, terminal and game panels |
+| `--surface-raised` / `--hover` | `#131b30` / `#19253e` | Controls and interaction surfaces |
+| `--border` | `#1e2a4a` | Quiet panel separators |
+| `--border-control` | `#566580` | Visible input/secondary control edges |
+| `--text` | `#eef2fa` | Main text |
+| `--muted` | `#a3b0c9` | Supporting copy, units and metadata |
+| `--accent` / `--focus` | `#39e6ff` | Live numbers, selection and keyboard focus |
+| `--highlight` | `#ffe600` | Primary action with dark text |
+| `--danger` | `#ff869c` | Errors and irreversible actions |
 
-Rarity colors are Common `#BDC8DD`, Rare cyan, Epic magenta, Legendary yellow (the requested rarity exception to primary-action yellow), and Mythic a slowly cycling rainbow. Text labels always name the rarity. A static pale purple labels Mythic feed entries. Status also includes words; no result is conveyed by color alone. The hero adds a left-to-right dark gradient plus top/bottom shade. On small screens the shade is stronger behind the text.
+Rarity uses Common `#b9c6db`, Rare `#39e6ff`, Epic `#ff7aef`, Legendary `#ffe600` and Mythic `#c3a3ff` labels with rainbow effects. These final `--rarity-*` tokens in `polish.css` override the earlier rarity aliases; original artwork retains its magenta accents. Rarity is always named as text. District badges use a colored square plus the district name; color never substitutes for a label. Capacity notices use `#302916` with `#ffedaa` text. The HUD uses an opaque-enough `#0c1423f7` backdrop and `#33465e` divider.
 
-## Typography and spacing
+The projection band's cyan fill is translucent over the panel, with a solid cyan central line and dashed gray bounds. Numeric pessimistic/current/optimistic values accompany the visual. Automated contrast results and unmeasured image/gradient text are recorded in validation; this document does not infer a contrast ratio from the palette.
 
-Local **Press Start 2P** (`Pixel`, weight 400) is used for the wordmark, H1 and H2. System sans-serif is used for prose and controls. Local **IBM Plex Mono** (`Mono`, weights 400 and 600) is used for numeric values, addresses, the terminal and timers. Font licenses remain in `licenses/`.
+## Typography
 
-The shared type scale is 14px small/label, 16px body, 20px title, 32px display and up to 72px wordmark. The hero wordmark interpolates with viewport width, reaching about 32px on a 375px phone. A compact header wordmark uses 12px below 359px, keeping the total to six size roles. Headings use normal case except the BLACKOUT brand; there are no small tracked-capital eyebrow labels. Body line height is 1.6; pixel headings use 1.5–1.8 where multiple lines occur. The hero tagline uses 1.3. Numbers are tabular and amounts wrap when necessary.
+Local Press Start 2P (`Pixel`, weight 400) is used for the brand and major headings. System sans-serif is used for prose, controls and reading-heavy text. Local IBM Plex Mono (`Mono`, weights 400/600) is used for amounts, clocks, hash, addresses and terminal metadata. Files are in `public/assets/`; licenses remain in `licenses/`. The build preserves their local runtime URLs.
 
-Spacing follows a 4px base: 4, 8, 12, 16, 24, 32, 48 and 80px. Desktop content is at most 1248px with 48px side gutters, reduced to 32px at the intermediate breakpoint and **16px on phones**. Primary sections use 64–80px vertical air; phone sections use 40–48px. Panels use 24–32px padding, generally 20–24px on phones. Square edges and 1px panel borders preserve the pixel character without making every element glow.
+The six size roles are compact 12px, small 14px (`--font-small`), body 16px (`--font-body`), title 20px (`--font-title`), display 32px (`--font-display`) and wordmark up to 72px (`--font-logo`). The hero scales fluidly with viewport width. Phone HUDs and reveal-card annotations use the compact 12px role. SVG chart axis labels use 14px. These density exceptions are in `polish.css`.
+
+Body line height is 1.6, field-guide prose 1.75, and multi-line pixel headings 1.5–1.8. Content has natural letter spacing. Amounts use tabular numbers and wrap rather than clipping. Explanatory chart text is bounded to 90 characters per line; guide prose uses 70ch. Brand, token/currency symbols and the requested Mythic title retain uppercase. There are no decorative tracked-capital kickers.
+
+## Layout
+
+The shared `.wrap` is at most 1248px, with 48px side gutters on desktop, 32px below 1000px and 16px below 760px. Spacing follows the existing 4px base with 8/12/16/24/32/48/80px intervals. Panels use 24–32px padding, dropping to 20–24px on phones. The main page heading precedes its primary panel without an extra marketing hero.
+
+The connected HUD is sticky below the measured top chrome. It uses six columns on wide screens and three columns/two rows below 1100px. It stays present on every route. Its measured height is exposed through `--hud-height` so anchored content can avoid the fixed chrome.
+
+Rewards uses a two-column claim/history overview, a full-width projection and a payback row. Below 760px, these stack; the period buttons share one row and the projection legend becomes three readable rows. Packs pairs a large pack/purchase panel with drop odds at desktop width, stacking on phones. The 240×280px foil component remains prominent while the ETH action fits on the first 375px screen. The pack heading also adapts below 1100px.
+
+Farm rooms retain six slots; phone slots use two columns. Inventory has its capacity meter and filters above the grid. Reveal cards use a three-card fan on desktop and two columns on phones, centering the last card in a single pack. Bulk uses a responsive grid inside a scrollable native dialog. The document does not acquire horizontal scrolling; the existing hardware carousel is an intentional labeled horizontal region.
+
+At 760px the header becomes a 44px burger plus wallet control. At 359px brand sizing and action spacing tighten. The existing enlarged-text `reflow-mode` allows header/hero content to grow. Actual production reflow was checked at 320, 375, 390 and 1440px; physical phone performance remains a stated limitation.
+
+## Elevation & Depth
+
+Most surfaces use a tonal change and a quiet border. Yellow buttons retain a hard 4px pixel shadow and a 2px pressed offset. Hover glow belongs to actionable controls and rarity hardware; it does not surround every panel. Room beams, conduit lines, fans and sprite LEDs provide depth inside the building scene.
+
+Native dialogs use the browser top layer and a dim backdrop. Pack opening adds perspective, backface visibility, a foil sheen, breathing light, sparks and a brief CRT settling overlay. A confirmed rip produces one fading white flash, chromatic edge separation, particles and rarity-scaled shake. Common is restrained, Rare adds a ring, Epic adds a magenta streak/longer flip, Legendary adds rays/coins/bass, and Mythic adds a rainbow glitch/title.
+
+Effects use short CSS transforms/opacity transitions and bounded particle counts. Numeric interpolation uses requestAnimationFrame for 650ms only when readings change. The reward-pool sparkline records this browser's real recent readings and says so in its accessible label. No fabricated history is drawn.
+
+## Shapes
+
+Square panels, controls and cards match the pixel artwork. Thin borders mark ordinary panels; rooms use thicker structural beams. Card rarity frames are 2px. Medal shapes use a clipped pointed base; district markers are small squares. Circular geometry is reserved for the Rare pulse and status indicators. The foil's cracks are a clipped decorative shape and appear only after confirmed results.
 
 ## Components
 
-**Hero.** A local `<picture>` uses WebP with the supplied original JPG as fallback. The image has explicit dimensions, `object-fit: cover`, `object-position: right center` and `image-rendering: pixelated`. The section uses `100svh` with a 640px desktop / 700px phone minimum to protect readable content on short screens. The first screen contains BLACKOUT, the exact tagline, a plain explanation of the mining game, Buy a pack and Claim free pack. The primary links to Packs; the ghost button keeps the existing separate free-pack service. Decorative window pixels, transformer sparks and drifting smog sit in a clipped scene. The overlay has 4% scanline opacity.
+| Pattern / source | Use and states |
+| --- | --- |
+| Header, `shell.ts`, `main.ts` | Brand home link, game navigation and one Connect control. Mobile menu exposes `aria-expanded`; route selection and Escape close it |
+| `.button`, `premium.css` / `polish.css` | Yellow primary, bordered secondary, text control and danger action. Bright disconnected ETH purchase opens Connect. Disabled writes retain visible reasons |
+| `miningHud`, `rewards-view.ts` | Semantic definition lists, six player readings, numeric animation and second-by-second epoch clock. Hidden without a connection; explicit reading state before farm data |
+| `rewardsView` / `paybackView` | Claimable, exact simulated tax/net, tax-aging timeline, historical epoch buttons, calculator, band and assumptions. No rewards/history produces an honest empty state |
+| `capacityNotice` / `inventoryMeter` | Used/capacity, space required, Scrap link and costed +5 expansion. Fresh chain checks repeat before relevant writes |
+| `farmPage`, `views.ts` | Rooms as night-time floors, sprite inventory, per-item/per-room estimates, level gates and invalid slot reasons. Drag/drop and tap/select share `placementReason` |
+| `installDialog`, `main.ts` | Labeled item/slot selectors; disabled slot options explain locks, occupancy and duplicate kinds. Fresh simulation precedes wallet signing |
+| `publicDashboard`, `public-views.ts` | Pool/price/epoch tiles, actual multi-item reveal chips, shortened linked addresses, district badges, item previews and medals. Saved/live/reconnecting status is explicit |
+| `packArt`, `pack-opening.ts` | Cursor tilt, neutral waiting pack, confirmed rarity cracks, tap/hold rip, real 3D faces/backs, individual/cascade flips and summary actions |
+| Transaction review, `main.ts` / `wallet.ts` | Exact amount, gas/approval consequences, signature/pending/confirmed/reverted states, explorer hash, decoded errors and recovery controls |
 
-**Navigation.** The desktop header has the logo, five game links and Connect. It is transparent over Home and solid after scrolling; other pages use a solid sticky header. At 760px and below, a labeled 44px burger opens a vertical menu with `aria-expanded`. Route selection or Escape closes it. The old global connection and mining-step bars and bottom tabs are removed. Secondary pages remain reachable through the footer's Explore the city link. A small footer dot, descriptive connection status and Refresh replace the large status bar.
+Dialogs are named, keyboard-accessible, close with Escape where cancellation is safe and restore focus. Decorative sprites/effects are hidden from assistive technology; meaningful controls have names. Epoch bars are a labeled group of buttons, not interactive descendants of an image. Forms use persistent labels and nearby validation. Changing number cells are not individually assertive live regions.
 
-**Buttons and forms.** Yellow primary buttons have black text, square corners, a 4px black shadow and a small pressed offset. Ghost/secondary controls have visible borders. Touch controls are at least 44px; primary actions are at least 48px. Inputs have persistent labels and nearby validation. The pack stepper remains 1–10. Advanced slippage uses a native disclosure. Disabled transaction actions preserve the existing wallet, network, registry and eligibility gates. Keyboard focus uses a cyan outline with a 4px offset.
+Sound is off by default and controlled by a labeled toggle. `prefers-reduced-motion` and Pause city stop ambient motion; flips become immediate while preserving their face/back states and all actions. Haptics and audio are optional. Forced-colors styles retain borders, readable card faces and selected controls. The requested rare flashes are single fading events rather than a looping strobe.
 
-**Public dashboard.** Three large cyan-number tiles show the reward pool, epoch/countdown and ETH pack quote. A shared status labels live versus saved data and its timestamp. Below, the scrollable terminal shows the newest twenty purchases/reveals with shortened addresses, explicit rarity and transaction links. A neighboring panel shows the top ten farms and total farms; the terminal header carries packs opened. At 760px these panels and tiles form one vertical column. The terminal remains a keyboard-focusable region and preserves its scroll position during refresh. Public history never depends on Connect.
+## Do's and Don'ts
 
-**Farm.** The disconnected page explains the farm and presents a clearly labeled room illustration with sprites, not a fictitious account. A connected farm uses building-floor cross-sections with conduits, wall fans, floor beams and six rack slots. Items use the retained hardware sprite system. Fans turn only for a mining room. Selection/placement, desktop dragging, filters, repair, scrap and room purchases retain their existing behavior. The three-step guide appears only on Farm for a connected account with no placed hardware.
+- Start a new page with `.wrap.live-page`, `heading()` and the shared button/field styles. Add it through hash routing and retain the global HUD.
+- Use yellow for the next primary action and cyan for telemetry. Name rarity, district and status even when color is present.
+- Use `tokens()` for display, exact units for transaction reviews, and `data-number` for readings that should interpolate. Never animate an invented balance.
+- Keep fees, gates and irreversible consequences beside their action. Do not use disabled opacity to erase explanatory text.
+- Use the existing sprites/fonts and spacing roles. Keep decorative clipping inside the scene, away from content and focus rings.
+- Keep preview caches separate from fresh authorization/simulation. Mock results belong only in the DEV module and clearly labeled artifacts.
 
-**Packs and reveal.** The idle pack tilts and glows on hover-capable devices. Reveal triggers one brief shake and white flash, then three item cards fly up and flip with 0.3-second staggered delays. Borders and glows reflect rarity; Mythic continues a slow rainbow. Refreshes do not replay the entry animation. Sound defaults off and has a labeled toggle on Packs and in the footer. Exact ETH spend, price protection, secondary token payment, starter claims and receipt state remain readable beside their controls.
-
-**Personal panels and dialogs.** Rewards shows public data before the personal claim panel. Farm, inventory and claim actions are unlocked by a wallet. Native dialogs trap focus, close on Escape and restore trigger focus. Pending transaction hashes and explorer links remain visible in the confirmation dialog. Errors use plain recovery guidance and retain retry controls. Read-only week selection and public content remain available during network outages.
-
-## Responsive behavior and accessibility
-
-At 1000px the header gap and gutters tighten. At 760px navigation collapses, grids stack and the Farm welcome text precedes the illustrative building. At 359px the compact header and hero button sizing preserve the product and main action. There is no document-level horizontal overflow at tested widths 320, 375, 390, 768 and 1440px. The hardware carousel is intentionally a labeled horizontal scroller; the document itself does not scroll sideways.
-
-At enlarged root text, `reflow-mode` releases fixed hero height, wraps the header and slots and permits larger vertical content. Decorative smog is clipped to the artwork independently, so it cannot create horizontal overflow while content grows. The layout also includes forced-colors control borders, semantic landmarks, a skip link, named controls, labeled meters, error/status live regions and visible focus. Full addresses and exact amounts remain available where decisions depend on them.
-
-`prefers-reduced-motion` and the manual Pause city control stop ambient animation, card transforms, spinning fans and smooth scrolling. Reduced-motion reveals show their final cards immediately. The white flash is one fading event, not a repeating strobe. Decorative art and particles are hidden from assistive technology; informative sprite/slot labels remain.
-
-## Review and maintenance
-
-The pinned Better Interface guide informed accessibility, layout, writing, typography, colors and UI during implementation. [artifacts/validation.md](artifacts/validation.md) records each domain, concrete findings and fixes, actual browser/test results and limitations. Automated checks are not a WCAG certification; screen readers, physical devices and external wallet onboarding remain untested. Screenshots show actual rendered export states, with fixture-only personal flows identified separately.
-
-Keep source and runtime assets complete, use relative URLs, and regenerate the hero shell when its source changes. Do not cache authorization decisions or transaction simulations. The artifact path budget is explicit in `artifacts/PATH-BUDGET.md`. The 1200×630 social image derives from the supplied rooftop and can be regenerated with `web/tools/v11-og.mjs` against a built export; optimize its PNG before rebuilding.
+See [artifacts/validation.md](artifacts/validation.md) for the six-domain review, concrete fixes, measured checks and remaining limitations.

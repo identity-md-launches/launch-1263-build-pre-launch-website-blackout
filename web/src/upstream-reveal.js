@@ -23,7 +23,7 @@ export async function revealReceipt({provider, contract, receipt, count = 1, sta
       wanted = state[3] + BigInt(count);
     }
     const current = await nativeBlock();
-    if (current <= state[1]) { onStatus(rearming ? 'Re-arming, wait a moment' : 'Revealing...'); await pause(); continue; }
+    if (current <= state[1]) { onStatus(`The city is rolling the dice · ${state[1] - current + 1n} native blocks until entropy`); await pause(); continue; }
     if (current > state[1] + 256n && !(starter ? captured : state[7])) rearming = true;
     onStatus(rearming ? 'Re-arming, wait a moment' : 'Revealing...');
     const data = '0x' + (starter ? '4f896d4f' : 'd1691a6f') + word(receipt) + (starter ? '' : word(wanted - state[3]));

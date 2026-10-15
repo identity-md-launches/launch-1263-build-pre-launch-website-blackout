@@ -23,8 +23,8 @@ export async function loadHome() {
  return { epochStart,event,block: block.number, timestamp: Number(block.timestamp), fetchedAt: Date.now(), epoch, epochEnd, endowed, available, lockedEndowment, spot, tax, taxLeft, launchTime, ready, paused, opensAt, phases, notices, grid, native: currentNative };
 }
 export async function loadFarm(wallet: Address) {
- const [hasFarm,level,xp,district,balance,ethBalance,pending,capacity,ownedCount,paidPacks,daily,lastSettled,settledEpoch,yieldPerHash,scrapAllowance,autoRepair, currentEpoch, ageCap] = await Promise.all([
-  read<boolean>('FarmCore','hasFarm',[wallet]),read<bigint>('FarmCore','level',[wallet]),read<bigint>('FarmCore','xp',[wallet]),read<bigint>('FarmCore','district',[wallet]),read<bigint>('Token','balanceOf',[wallet]),client.getBalance({address:wallet}),read<bigint>('FarmRewards','pending',[wallet]),read<bigint>('FarmItems','capacity',[wallet]),read<bigint>('FarmItems','ownedCount',[wallet]),read<bigint>('FarmCore','paidPacks',[wallet]),read<bigint>('Economy','farmDaily',[wallet]),read<bigint>('FarmRewards','lastSettled',[wallet]),read<bigint>('FarmRewards','settledEpoch'),read<bigint>('FarmRewards','lastYieldPerHash'),read<bigint>('FarmRewards','scrapAllowance'),read<number>('FarmCore','autoRepairThreshold',[wallet]),read<bigint>('FarmRewards','epoch'),read<bigint>('FarmCore','maxLevelByAge',[wallet]),
+ const [hasFarm,level,xp,district,balance,ethBalance,pending,capacity,ownedCount,paidPacks,daily,lastSettled,settledEpoch,yieldPerHash,scrapAllowance,autoRepair, currentEpoch, ageCap, inventory, expansions] = await Promise.all([
+  read<boolean>('FarmCore','hasFarm',[wallet]),read<bigint>('FarmCore','level',[wallet]),read<bigint>('FarmCore','xp',[wallet]),read<bigint>('FarmCore','district',[wallet]),read<bigint>('Token','balanceOf',[wallet]),client.getBalance({address:wallet}),read<bigint>('FarmRewards','pending',[wallet]),read<bigint>('FarmItems','capacity',[wallet]),read<bigint>('FarmItems','ownedCount',[wallet]),read<bigint>('FarmCore','paidPacks',[wallet]),read<bigint>('Economy','farmDaily',[wallet]),read<bigint>('FarmRewards','lastSettled',[wallet]),read<bigint>('FarmRewards','settledEpoch'),read<bigint>('FarmRewards','lastYieldPerHash'),read<bigint>('FarmRewards','scrapAllowance'),read<number>('FarmCore','autoRepairThreshold',[wallet]),read<bigint>('FarmRewards','epoch'),read<bigint>('FarmCore','maxLevelByAge',[wallet]),read<bigint>('FarmItems','inventory',[wallet]),read<bigint>('FarmItems','expansions',[wallet]),
  ]);
  const ids:bigint[]=[];
  for(let offset=0n;offset<ownedCount;offset+=100n) ids.push(...await read<bigint[]>('FarmItems','itemsByOwner',[wallet,offset,100n]));
@@ -44,7 +44,7 @@ export async function loadFarm(wallet: Address) {
   read<{rewardPerHash:bigint;tariff:bigint;kind:number;district:number}>('FarmRewards','epochData',[lastSettled]),read<bigint>('FarmRewards','entrySeconds',[currentEpoch,wallet]),
  ]);
  const lastEarnings=miningEstimate(lastShare,lastEpoch,Number(district));
- return {entrySeconds,hash,lastEarnings,ageCap,wallet,hasFarm,level,xp,district,balance,ethBalance,pending,capacity,ownedCount,paidPacks,daily,lastSettled,settledEpoch,items,rooms,claimNet,claimError,yieldPerHash,scrapAllowance,autoRepair};
+ return {inventory,expansions,expansionPrice:daily*(expansions+1n)*(expansions+1n),entrySeconds,hash,lastEarnings,ageCap,wallet,hasFarm,level,xp,district,balance,ethBalance,pending,capacity,ownedCount,paidPacks,daily,lastSettled,settledEpoch,items,rooms,claimNet,claimError,yieldPerHash,scrapAllowance,autoRepair};
 }
 export async function loadReceipt(kind:Receipt['kind'],id:bigint):Promise<Receipt> {
  if(kind==='paid') {

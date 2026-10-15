@@ -1,68 +1,139 @@
-# BLACKOUT redesign validation
+# BLACKOUT final-polish validation
 
-This report describes the delivered static export and checks performed on 15 October 2026. Source and all required runtime assets are included. No deployment, PR publication, private key use or signed live transaction was performed. The existing contract configuration, ABIs, wallet/transaction modules, both proof trees, dependency manifests, lockfiles and build configuration are preserved.
+This report covers the delivered source and static export for playblackout.xyz. It separates live chain reads, controlled wallet fixtures and synthetic visual rehearsals. No real funds were signed, no contract was deployed and no publishing command was run. Earlier `artifacts/v11/` and `reports/` are historical unless a command below explicitly produced a current result.
 
-## Actual checks
+## Review at a glance
 
-| Check | Command / method | Result |
+| Area | Result |
+| --- | --- |
+| Product and primary action at 390px | Yes: BLACKOUT, mining-game description and Buy a pack on the first screen |
+| Required pages | All 12 routes retained; every route captured at 375px and 1440px |
+| Mobile overflow | None in production route sweep; connected fixture routes also checked at 320/375/390/1440 |
+| Lighthouse mobile | 87; FCP 1.1s, LCP 1.4s, speed index 2.1s, TBT 470ms, CLS 0.062. Background-read load-time warning disclosed below |
+| Production build / typecheck | Passed using unchanged existing manifest, lockfile and build configuration |
+| Live public visit | All 24 route/width combinations passed; no console exceptions/errors or HTTP 4xx/5xx in the final sweep |
+| Transaction behavior | Chromium and WebKit fixture results in `v12/*-interactions.json`; real wallet signing not exercised |
+| Custom errors | All 41 ABI custom errors decode to human messages; failed simulations send no transaction |
+| Pack visual evidence | Ten DEV-only recordings: single and bulk for Common/Rare/Epic/Legendary/Mythic |
+| Better Interface | All six domains reviewed with source and browser checks; findings/fixes below |
+| Pinned taste probe | 15/16: only canonical BLACKOUT/ETH currency casing flagged, below the first screen |
+| Share metadata | Title, favicon, description, og:title and local og:image present |
+| Submission | Source, unchanged lockfiles, full dist, complete proofs and budgeted evidence; no dependency/cache directories or submodules |
+
+The visual idea remains a night-time pixel mining city, with a restrained interface and brighter light around hardware and earnings.
+
+## Scope and acceptance coverage
+
+| Requested behavior | Implementation / evidence |
+| --- | --- |
+| Remove promotional pack UI and token launch content | Removed landing actions/sections, Packs offers and corresponding guide/FAQ copy. No separate offer route is exported. Existing contracts and proofs retained. Production routes scanned for removed terms |
+| Keep hero, live stats, terminal, leaders, hardware | Existing rooftop and sections retained; terminal now shows every mint's sprite/name/rarity. Live sweep observed four reveal rows with three chips each |
+| Sticky connected Mining HUD everywhere | `rewards-view.ts:12`, `main.ts:102`, `polish.css:5`; all routes checked in both browser fixtures |
+| Earnings, history, projections and payback | Claimable/tax/net, mined/claimed totals, last-20 history slots, interactive 1/7/30-day band, weighted pack payback; visitor calculator tested against live readings |
+| Real on-chain formula and decay | Bigint mining allocation and tariff arithmetic verified against pinned FarmRewards source. Decay is through pool depletion; the contract does not automatically decay its governance-set emission rate. Assumptions disclosed beside chart |
+| Pack tilt, waiting, confirmed rip, 3D cards and rarity effects | `pack-opening.ts` and `polish.css`; DEV recordings use the production presentation module. No rarity cracks before confirmed/mock-known results. Sound off, optional haptics, reduced-motion fallback |
+| Bulk open, progress, rarest last, summary and shortcuts | Up to eight per receipt per `resolve`; other receipts queue. Tests inspect actual simulated/wallet calldata, place only valid slots and preserve non-common items when scrapping |
+| Farm room building, sprite motion and placement | Existing cross-section retained; live top farm for visitors, earnings for rooms/items, capacity meter, desktop drag/tap placement, disabled slot reasons and rarity level labels |
+| Fix disconnected Buy and leader addresses | Bright primary opens named wallet picker; token payment secondary. Short addresses link to complete explorer records; badges, previews and top-three medals present |
+| RPC reliability | Removed failing provider; race normal reads with 4s timeout; archive ranges ≤10k, shared pacing and exponential cooldown. Unit and live browser evidence |
+| Error/capacity/resolved-pack handling | All custom errors mapped; inventory full blocks reveal, unplace and claims; Scrap/Expand with costs; fresh chain checks before writes; resolved receipts hidden/reconciled |
+| Global motion | Existing smog/windows/sparks plus rare lightning, count-up readings, clocks, real pool sparkline, pressed buttons, page arrival and pause/reduced-motion controls |
+| Static delivery | Relative assets verified under `/preview/`; runtime assets/proofs intact; DEV module absent from production bundle and query cannot enable it |
+
+Hardware contribution estimates are allocations within the current room, not independent on-chain payouts. Projection scenarios hold equipment and average competitor hash constant. Claim tax, gas, future governance, wear, purchases, events and referrals are excluded from projections and explicitly listed. Pack payback assumes valid placement and full output; it is not guaranteed. Exact current claim tax is obtained from caller-aware simulation.
+
+## Commands and actual results
+
+Run the app commands after `node web/tools/run.mjs install`. Dependencies and validation tooling were installed outside the repository. No manifest or lockfile was changed.
+
+| Command | Actual coverage/result |
+| --- | --- |
+| `node web/tools/run.mjs typecheck` | Passed; also performed by the production build |
+| `node web/tools/v11-check.mjs prerender` | Regenerated the initial hero/header after removing retired actions |
+| `node web/tools/run.mjs build` | Passed online; ABI digest, 2,011 Merkle proofs, historical snapshot and both live roots verified; current dist emitted |
+| `node web/tools/v12-check.mjs unit` | Seven groups: integer formula/partial epochs/tariff, projection/drip/payback, capacity/gates, 41 errors, contiguous bounded log scans, timeout/race/backoff/pacing, production DEV exclusion |
+| `node web/tools/v12-check.mjs browser` | Chromium: named wallet connect, claim preview/claim/history, chart periods, placement/unplace, full inventory/expansion, ETH purchase, batched and queued reveals, place all, scrap commons, partial/concurrent receipts, decoded simulation failure, all-route HUD/reflow, axe |
+| `BLACKOUT_TEST_ENGINE=webkit node web/tools/v12-check.mjs browser` | Same interaction scenarios in WebKit. This machine used a matching external WebKit runtime and supporting libraries; these do not ship |
+| `node web/tools/v12-check.mjs live` | Actual production export against actual chain: all 12 routes × 2 widths, visitor calculator, wallet prompt, feed chips, first-screen action, no production mock, no console/HTTP errors |
+| `node web/tools/v12-check.mjs record` | Five rarities × single/bulk; verifies every card flips and no application exception. WebM recordings compressed without dropping any requested scenario |
+| `node web/tools/v11-performance.mjs --detail` with external Lighthouse | Mobile simulated-throttling result in `v12/lighthouse-mobile.json`; performance metrics below |
+| `node .imd/reads/skills/design-critic/scripts/taste.mjs --out test/scratch/taste` | 15/16; compact output retained in `v12/taste.json`. Probe input itself is not part of delivery |
+| `node web/tools/v12-delivery.mjs` | Relative local references, required metadata/assets, protected paths, proof identity, no caches/archives/symlinks/submodules and artifact budget |
+| `node web/tools/v12-bundle.mjs` | Complete temporary current-file Git bundle plus conservative available base-pack allowance; source `.git` untouched. Actual bytes in `v12/bundle-trial.json` |
+
+Lighthouse 13.5.0 used Chromium 141 with the default mobile profile, 4× CPU simulation and cold storage against the production export. The measured score was **87**. It emitted “The page loaded too slowly to finish within the time limit. Results may be incomplete.” Long-running background archive reads kept the load active; this warning is retained in the JSON, and the score is not presented as a complete page-load certification. First paint and primary actions were separately observed in browser tests.
+
+The production build emits nonfatal notices for retained font URLs and dependency pure annotations. Export reference checks and browser requests verify the fonts/assets exist. These notices are not browser console errors.
+
+### Failures found and repaired
+
+1. **Archive-provider mismatch:** dRPC returned HTTP 400 for historical logs despite small ranges. PublicNode had returned 403. `web/src/config.ts:4` now retains two working ordinary-read providers; `chain.ts:29` sends log reads only to the capable archive endpoint. Normal reads continue to race.
+2. **Archive rate-limit bursts:** independent log scanners could combine eight expensive queries in a rapid batch. The official server's 429 response also supplied duplicate CORS headers, which browsers rejected. `chain.ts:18–25` now shares a paced 600ms log queue. The repaired live sweep has zero such errors. Future shared-IP quotas are outside frontend control.
+3. **Invalid definition-list content:** HUD and earnings notes were direct `<small>` children of grouped `<dl>` rows. `rewards-view.ts:16,31` now nests notes in `<dd>`. Axe's definition-list finding is resolved.
+4. **Interactive history marked as an image:** `.epoch-bars` contained buttons under `role="img"`. `rewards-view.ts:31` now uses a labeled group, resolving the nested-interactive finding while preserving keyboard drilldown.
+5. **Gated item label contrast:** inherited `.65` opacity reduced metadata to a measured 4.32:1. `polish.css:36` now dims only the sprite, keeping gate/name text readable. Populated Farm axe checks pass.
+6. **Phone purchase placement:** the large pack pushed the purchase below the first screen. `polish.css:30` tightens the phone heading/padding and keeps supporting price explanation below the purchase. Actual 375px button bounds pass the first-screen assertion.
+7. **Delayed receipt indexing:** a purchase could be confirmed before its event appeared in `getLogs`. `main.ts:274` reads PackCommitted directly from the confirmed transaction receipt and freezes those receipt IDs for the opening control.
+8. **Concurrent resolution:** providers can wrap/omit simulation revert data. `reveal.ts:45` re-reads the receipt after every failed reveal attempt and accepts only chain-confirmed completion; unresolved/unreadable state still surfaces an error. The race test verifies no duplicate write.
+9. **Invalid-slot explanation and stale capacity:** `main.ts:230` includes disabled slot options with reasons, and `requireInventorySpace` refreshes capacity before relevant writes. Bulk checks total required space before resolving any pack.
+10. **Dev preview removed during refresh:** the rehearsal control was initially placed inside the route container. `pack-lab.ts:10` mounts outside that replaced content. Production tree-shaking and query behavior are tested separately.
+
+## Better Interface review: six domains
+
+| Domain | Source review | Browser review, findings and coverage |
 | --- | --- | --- |
-| Production build | `node web/tools/run.mjs build` | Passed. Vite 7.1.7; 2,880 modules. Verified ABI digest, 2,000 NFT proofs, 11 free proofs, 17 reversed transfers and both live claim roots. Third-party `/*#__PURE__*/` annotation warnings were harmless and removed by Rollup. |
-| Typecheck | `node web/tools/run.mjs typecheck` | Passed independently; also runs in every production build. |
-| Contract/game units | `node web/tools/v10-check.mjs unit` | 7 groups passed, including all 41 decoded contract errors, player gates and ETH price/limit arithmetic. [Results](v11/unit-results.json). |
-| Adaptive log discovery | `node web/tools/v10-check.mjs logs` | 3 groups passed: inclusive adaptive ranges, learned provider limits, no skipped unreadable blocks, receipt checkpoint resume, event deduplication and reorg removal. |
-| RPC race/cache | `node web/tools/v11-check.mjs reliability` | 4 groups passed. All three providers started together. First good response: 64 ms. All hanging endpoints failed in 4,013 ms, one timeout window. Revert data and bigint display cache preserved; corrupt/disabled storage handled. [Results](v11/reliability.json). |
-| Live contracts, read-only | `node web/tools/v11-check.mjs live` | **85 distinct read methods passed** in 3,253 ms. All three RPCs reported chain 4663. All 14 modules, token/market/desk/router and both roots matched. Read actual public pool, price, epoch, 20 recent events, 8 farms, 24 opened packs, a farm with 15 items and four room records, paid receipt, starter/free claim state, City, Season and Billboards. Disabled lobby returned expected FeatureDisabled. [Results](v11/live-reads.json). |
-| Full transaction fixtures | `FIXTURE_ONLY=1 FLOW_ONLY=1 BLACKOUT_TEST_ENGINE=chromium node web/tools/v10-check.mjs`, then `webkit` | 48 groups per browser. [Chromium](v11/chromium-flows.json), [WebKit](v11/webkit-flows.json). No fixture can broadcast to a live chain. |
-| Effects / retained-state fixtures | `FIXTURE_ONLY=1 JUICY_ONLY=1 BLACKOUT_TEST_ENGINE=chromium node web/tools/v10-check.mjs`, then `webkit` | **4 groups passed per browser.** [Chromium](v11/chromium-effects.json), [WebKit](v11/webkit-effects.json): reveal rarity/animation, sound, reduced motion, ticking mining clock, drag placement across refresh, retained claim preview/eligibility on outage, secondary pages and paused hidden-tab polling. |
-| Responsive/accessibility browser pass | `node web/tools/v11-browser.mjs` | **17 groups passed**, zero local resource failures or application script errors. All retained routes at 320/375/390/768/1440; five primary pages at 200% root text; keyboard/Escape/focus; mobile wallet choices; axe on four public pages in each browser; reduced motion. Chromium preserved actual cached values through an offline reload and kept Connect responsive. WebKit live-network limitation below. [Results](v11/browser.json). |
-| Slow-module startup | `node web/tools/v11-startup.mjs` | **6 groups passed**, three per browser. Held the game module download; menu state, early Connect and Buy a pack all survived initialization. [Results](v11/startup.json). |
-| Pinned design probe | `IMD_PLAYWRIGHT=/tmp/blackout-web-toolchain/node_modules/playwright/index.mjs PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browsers node .imd/reads/skills/design-critic/scripts/taste.mjs --out test/scratch/taste` | **15/16**. Layout, targets, measured contrast, tracking, hierarchy, type scale/families, copy, repetition, motion, render and share metadata pass. One reviewed casing exception: the genuine `BLACKOUT` / `ETH` currency label. [Compact result](v11/taste.json). |
-| Mobile performance | `PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browsers node web/tools/v11-performance.mjs` | Lighthouse 12.8.2, default mobile simulated throttling, cold storage, local uncompressed static export at a subpath and live RPCs. **Three final cold runs: 88, 86, 86; median 86, minimum 86.** FCP 1.1 s and LCP 1.4 s in all three. [Run summary and export hash](v11/performance-summary.json), [last run](v11/lighthouse-mobile.json). |
-| Delivery integrity / bytes | `node web/tools/v11-delivery.mjs`; `node web/tools/bundle-trial.mjs` | Passed: 238 current files, about **8.23 MB raw**, **3.76 MB production export**. Complete temporary Git bundle: **about 2.27 MB**; plus available base packs: **about 4.79 MB**, below 8,388,608. Protected paths, relative asset references, complete proofs/export, dependency/cache exclusion, no submodules and the explicit artifact budget checked. [Integrity](v11/delivery.json), [complete temporary bundle trial](v11/bundle-trial.json). |
+| Accessibility | Landmarks/skip link, labels, native dialogs, named fields/progress, non-color rarity/gate labels, keyboard alternatives, reduced motion and forced colors | Chromium/WebKit connected Farm/Rewards/Packs axe; corrected definition lists, interactive chart semantics and gated contrast. Taste probe found no measured text contrast failures. Real screen reader and physical switch input not exercised |
+| Layout | `.wrap`, minmax grids, measured sticky chrome, card/grid overflow, slot picker, controlled dialog scrolling | All 12 routes at 375/1440 live and 320/375/390/1440 connected; no document overflow. 390 first screen visually inspected. Fixed purchase vertical placement; images intentionally clip only inside artwork |
+| Writing | Product/action first, plain transaction amounts, claim aging, inventory recovery, exact estimate labels and assumptions | Removed obsolete offer/launch/demo copy; compact roadmap replaces eight tiles. Buttons use actions. Probe's only casing exception is the required BLACKOUT/ETH ticker label below the fold |
+| Typography | Local Pixel headings, system prose, Mono data; six size roles; wrapping/exact review amounts; natural tracking | Probe finds three families/two weights, no content tracking issue, no repeated slogan stack and a 14-word first-screen prose budget. Compact annotations standardized to 12px |
+| Colors | Shared tokens, cyan data, yellow primary, rarity labels and named district badges | Axe contrast issue repaired. Probe passed measured solid-background text; 39 image/gradient text boxes were not automatically measurable. Manual scene review performed without claiming unmeasured ratios |
+| UI | Visible purchase/connect, all receipt states, fresh simulations, tax/net review, capacity blocks, atomic ETH buy, queued resolution, irreversible scrap review | Both browser fixtures exercise primary flows, failures and recovery; live visitor calculator/navigation tested. Effects are optional; no spinner during entropy wait. Physical haptics/audio quality and real wallet-app onboarding untested |
 
-Playwright used Chromium 141.0.7390.37 and WebKit 26.0. The machine's browser tool failed to launch Chrome because its crashpad handler required a database; direct Playwright provided the rendered checks. Browsers and temporary WebKit shared libraries were installed outside the repository. `BLACKOUT_WEBKIT_PATH` selected that temporary runtime; it is not shipped. Lighthouse was installed outside the repository with `npm install --prefix /tmp/blackout-lighthouse --no-save lighthouse@12.8.2`; its runner imports that location by default or uses `BLACKOUT_LIGHTHOUSE`.
+The guide's workflow and core principles were applied during implementation, then checked against source and rendered pages. The requested pixel aesthetic and canonical brand/currency spelling take precedence over the probe's isolated casing preference. No repeated/first-screen probe failure remains. Ten small secondary links are below the comfortable 44px target, but satisfy the probe's 24px-or-spacing criterion; primary controls meet the larger target. Automated checks are not a WCAG certification.
 
-Full flow fixtures assert EIP-6963 discovery and chain add/switch; registry mismatch gating; single `buyWithETH` with exact recipient, ETH value and protected limits; allowance-aware token purchase; slippage validation; wallet rejection/pending/revert handling; reveal waiting, partial/expired/rearmed/already-opened/concurrent receipts; starter/free Merkle eligibility and deadlines; placement/repair/scrap/room actions; reward claims; week selection; all supplied explorer links; RPC fallback and hidden-tab polling. These test the preserved transaction behavior without spending funds. Fixture balances and items never enter the production app or public screenshots.
+## Screenshots
 
-## Screenshots for PR review
+These are full-page captures of the actual production export with live public reads, not design mockups. The 390 first screen is [captured separately](screenshots/home-first-390.webp).
 
-These are actual Chromium renders of the production export, using real public chain reads and no connected wallet. Widths are CSS pixels; mobile height is 812 and desktop height is 1,000. Reduced motion makes the captures stable. WebP conversion keeps review evidence within the explicit 750 KiB artifact allowance.
-
-| Page | 375px | 1440px |
+| Route | 375px | 1440px |
 | --- | --- | --- |
 | Home | [Mobile](screenshots/home-375.webp) | [Desktop](screenshots/home-1440.webp) |
 | Packs | [Mobile](screenshots/packs-375.webp) | [Desktop](screenshots/packs-1440.webp) |
-| Farm | [Mobile](screenshots/farm-375.webp) | [Desktop](screenshots/farm-1440.webp) |
-| Rewards | [Mobile](screenshots/rewards-375.webp) | [Desktop](screenshots/rewards-1440.webp) |
+| Farm, actual #1 | [Mobile](screenshots/farm-375.webp) | [Desktop](screenshots/farm-1440.webp) |
+| Rewards calculator | [Mobile](screenshots/rewards-375.webp) | [Desktop](screenshots/rewards-1440.webp) |
+| Leaderboard | [Mobile](screenshots/leaderboard-375.webp) | [Desktop](screenshots/leaderboard-1440.webp) |
+| City | [Mobile](screenshots/city-375.webp) | [Desktop](screenshots/city-1440.webp) |
+| Season | [Mobile](screenshots/season-375.webp) | [Desktop](screenshots/season-1440.webp) |
+| Billboards | [Mobile](screenshots/billboards-375.webp) | [Desktop](screenshots/billboards-1440.webp) |
+| More | [Mobile](screenshots/more-375.webp) | [Desktop](screenshots/more-1440.webp) |
+| Docs | [Mobile](screenshots/docs-375.webp) | [Desktop](screenshots/docs-1440.webp) |
+| Contracts | [Mobile](screenshots/contracts-375.webp) | [Desktop](screenshots/contracts-1440.webp) |
+| Wallet alias | [Mobile](screenshots/wallet-375.webp) | [Desktop](screenshots/wallet-1440.webp) |
 
-Additional views: [Home public dashboard](screenshots/home-public-1440.webp), [connected Farm fixture at 375](screenshots/farm-connected-fixture-375.webp), [connected Farm fixture at 1440](screenshots/farm-connected-fixture-1440.webp), [reveal fixture at 390](screenshots/pack-reveal-fixture-390.webp). **The last three use controlled test state**, not live account ownership. They show the personal building/rarity UI without a real signature. The pinned probe's 390px first-screen image was also inspected: BLACKOUT, the game description, Buy a pack and Claim free pack are visible, with the Dispatcher and server rack on screen.
+Additional connected views use the explicitly controlled transaction fixture, not live player balances:
 
-## Better Interface: six-domain review
-
-The pinned Better Interface reference was read before implementation: contents/workflow, core principles of accessibility, layout, writing, typography, colors and UI, and the design-documentation section. The brief's explicit visual direction remains authoritative. `DESIGN.md` documents implemented values and behavior from the final source.
-
-| Domain | Source / rendered coverage | Findings and corrections |
+| Page | 375px | 1440px |
 | --- | --- | --- |
-| Accessibility | `web/src/shell.ts:1`, `web/src/main.ts:44`, `web/src/public-views.ts:12`, `web/src/premium.css:78`; keyboard, native dialogs, axe and reduced-motion checks in both browsers | New stat notes initially sat outside a valid `<dt>/<dd>` grouping. Moved them into a second `<dd>`; axe now passes. All rarity and status colors have text equivalents. Continuous animations stop with reduced motion or Pause city. Control boundary contrast was raised from 2.95:1 to 3.14:1. No screen-reader or physical-device claim is made. |
-| Layout | `src/landing.ts:6`, `web/src/premium.css:26`, `:43`, `:68`, `:87`; screenshots and overflow checks across five widths, 200% root text | Removed inherited centered hero text, opaque header backing and mobile-hidden free CTA. Kept 16px phone gutters and both hero actions in the first screen. Clipped decorative smog inside the scene after it caused horizontal overflow with enlarged text. The new semantic stat-note `<dd>` initially inherited the number's grid row on mobile; explicitly assigned row 3 and rechecked the rendered stats. Fixed WebKit ResizeObserver feedback by scheduling geometry writes in a guarded animation frame. |
-| Writing | `src/landing.ts:6`, `web/src/public-views.ts:9`, `web/src/views.ts:36`; first-screen copy and all public states | Exact requested brand/tagline/actions retained, with one plain game-description line. Removed redundant numbered eyebrow labels. Loading, saved and unavailable readings are explicit; no fake purchases, farms or rewards. Room art is labeled as an illustration before connection. Genuine token symbols remain uppercase despite the probe's house-style flag. |
-| Typography | `web/src/premium.css:2`, `:10`, `:29`, `:43`; computed font measurements in probe | Pixel headings, system prose and mono numeric data; two weights and no excess tracking. Probe found 3 families, 4 recurring sizes at desktop and 3 on mobile, within the six-role scale. Root-text enlargement reflows; no prose is forced into display pixels. |
-| Colors | `web/src/premium.css:2`, `:13`, `:43`, `:51`; solid-token calculation and axe/probe | Applied the requested navy, yellow, cyan and magenta values. Quiet panel borders are distinct from interactive boundaries. Calculated primary text 15.60:1, body/panel 16.46:1, muted/panel 8.45:1, cyan/panel 12.25:1, magenta/panel 6.33:1. [Method and pairs](v11/contrast.json). Text over complex artwork is outside those solid-color measurements. |
-| UI | `web/src/main.ts:89`, `:379`, `web/src/views.ts:36`, `:40`, `:62`; fixtures plus rendered interaction checks | Public data now appears without Connect. Personal actions retain wallet/chain/registry gates. Removed global onboarding/status bars; onboarding is only inside an empty connected Farm. Preserved every route through header/footer/More. Terminal refresh preserves scroll/focus. Added burger/Escape behavior, pack tilt/staggered reveal, mining fans and accessible sound/motion toggles. No transaction method or proof was replaced. |
+| Farm | [Fixture mobile](screenshots/farm-connected-fixture-375.webp) | [Fixture desktop](screenshots/farm-connected-fixture-1440.webp) |
+| Rewards | [Fixture mobile](screenshots/rewards-connected-fixture-375.webp) | [Fixture desktop](screenshots/rewards-connected-fixture-1440.webp) |
+| Packs | [Fixture mobile](screenshots/packs-connected-fixture-375.webp) | [Fixture desktop](screenshots/packs-connected-fixture-1440.webp) |
 
-## Performance and reliability work
+## Pack recordings
 
-Initial cold runs ranged from 68 to 90 while first paint could still contend with the full game stylesheet. The export now includes the hero/header HTML and minified critical CSS inline, preserves that DOM during initialization, and starts background game initialization after observing the actual hero paint. Browsers without paint observations use a rendered-frame fallback; a 1.5-second deadline keeps initialization bounded and an early game action starts it immediately. The initial and final header geometries match. This removes a separate first-screen CSS request and protects the hero from background initialization work.
+Each clip uses DEV-only rehearsal with a visible synthetic-result label. Single shows three individual flips; bulk shows three packs/nine cards, a cascade and the summary. All use the same pack presentation code as the real reveal. No wallet or real transaction is involved. WebM evidence is encoded at 20fps to meet the submission size budget; this is not a measurement of runtime frame rate.
 
-The hero is preloaded, has fixed dimensions and a 35,288-byte WebP; the original 93,016-byte JPG remains as fallback. Obsolete demo-only CSS was removed while retaining live components and sprite/rarity classes. The corrected final export scored **88** on its first cold mobile run (FCP 1.1 s, LCP 1.4 s, speed index 2.4 s, TBT 460 ms, CLS 0.062). The next two isolated runs each scored **86**, for a final range of **86–88** and median **86** on the same export. All three remain in [performance-summary.json](v11/performance-summary.json). The unchanged wallet SDK still contributes background blocking time.
+| Best rarity | Single pack | Bulk opening |
+| --- | --- | --- |
+| Common | [Recording](recordings/common-single.webm) | [Recording](recordings/common-bulk.webm) |
+| Rare | [Recording](recordings/rare-single.webm) | [Recording](recordings/rare-bulk.webm) |
+| Epic | [Recording](recordings/epic-single.webm) | [Recording](recordings/epic-bulk.webm) |
+| Legendary | [Recording](recordings/legendary-single.webm) | [Recording](recordings/legendary-bulk.webm) |
+| Mythic | [Recording](recordings/mythic-single.webm) | [Recording](recordings/mythic-bulk.webm) |
 
-Read transport changes are limited to concurrency and timeout behavior. All providers start for each read, a valid first result wins, and transport retries do not multiply the four-second window. Display snapshots are optional and do not affect registry authorization, fresh purchase quotes or transaction simulation. Public history scanning was changed to process larger successful ranges adaptively after an early live attempt hit 429 rate limits. The final live run passed. Deep historical archive access and provider capacity can still vary; completed scan checkpoints and previously displayed values are retained.
+## Limitations
 
-## Remaining limits
-
-- Live checks use public reads and expected read reverts; no real purchase, reveal, placement or claim was signed. Write behavior is checked with ABI-preserving fixtures.
-- Chromium loaded live data and passed cached offline reload. The temporary WebKit runtime reported native access-control errors from external providers and did not obtain a live snapshot for its reload test. Its wallet, transaction, layout, axe and recovery checks use controlled responses. This is recorded, not counted as a successful live WebKit cache check.
-- Lighthouse is a local lab measurement with simulated mobile throttling, not a real-phone or production-host guarantee. Browser caches, RPC latency and hosting behavior affect later measurements.
-- Axe and the design probe do not establish full accessibility conformance. Native browser zoom, screen readers, physical phones, external wallet onboarding/signing and every text-over-art contrast region remain untested. Root-text enlargement and browser viewport reflow were tested.
-- The social image and local asset references are verified, but external crawlers and the separate `/freepack` service were not republished or end-to-end tested here.
-- The supplied checkout can contain unavailable historical Git objects. The bundle trial measures the complete current-file snapshot and available base pack bytes without changing the source `.git`; unavailable history and final publisher metadata are outside the worker's measurement.
+- Live verification is read-only. Signatures, simulations, receipt races and destructive actions use controlled providers; no real wallet signing or irreversible chain state was exercised.
+- Real phone GPUs, mobile wallet browsers, haptics, audio playback quality and assistive technology were not measured. Effects use bounded CSS/rAF work and reduced motion, but a universal 60fps claim on midrange phones is not established by a desktop browser recording.
+- An external RPC/price service can fail or throttle. The repaired final normal-visit sweep was error-free; that is an observation, not an availability guarantee. One archive endpoint supports the required historical logs without a key; this method cannot honestly race a second incompatible endpoint.
+- Historical reads and leader enumeration grow with the chain. Caching, bounded chunks, paced requests and progressive feed updates reduce bursts; no backend indexer was introduced. Scrapped item metadata may be unavailable, so unavailable historical details are omitted rather than invented.
+- The complete current-file bundle is measured. The supplied checkout lacks historical objects, so unseen history and the publisher's final metadata cannot be certified. No Git submodule or generated dependency/cache is delivered.

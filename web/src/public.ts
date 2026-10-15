@@ -38,7 +38,7 @@ export async function loadPublicPrice():Promise<PublicPrice>{
 const starterIndex=cached<{head:bigint;entries:[string,bigint][]}>('starter-count');
 let starterHead=starterIndex?.head??null;
 const starterEntries=new Map<string,bigint>(starterIndex?.entries??[]);
-const starterScan=newLogScan();starterScan.span=100000n;
+const starterScan=newLogScan();starterScan.span=10000n;
 async function starterCount(){
  const head=await client.getBlockNumber();
  const start=starterHead===null?GAME_DEPLOYMENT_BLOCK:starterHead-16n>GAME_DEPLOYMENT_BLOCK?starterHead-16n:GAME_DEPLOYMENT_BLOCK;

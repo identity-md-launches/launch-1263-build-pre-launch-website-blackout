@@ -1,11 +1,12 @@
 # Explicit artifact path budget
 
-The new root `.gitignore` admits only these review artifacts over the inherited local `artifacts/` exclusion. Total artifact budget: **768,000 bytes (750 KiB)**.
+The ignore-file changes admit these review deliverables. They do not ignore source, locked dependencies, proofs, runtime assets, or the production export. Maximum total review artifact allocation: **4,194,304 bytes (4 MiB)**; the entire Git submission still must remain below **8,388,608 bytes**.
 
 | Paths | Maximum bytes | Purpose |
 | --- | ---: | --- |
-| `artifacts/PATH-BUDGET.md`, `artifacts/validation.md` | 30,000 | Scope, review and actual check results |
-| `artifacts/screenshots/*.webp` | 640,000 | Required Home, Packs, Farm and Rewards screenshots at 375 and 1440; supporting states |
-| `artifacts/v11/*.json` | 98,000 | Compact live, browser, performance, interaction, integrity and byte evidence |
+| `artifacts/PATH-BUDGET.md`, `artifacts/validation.md` | 35,000 | Implementation review, actual commands and limitations |
+| `artifacts/screenshots/*.webp` | 2,700,000 | Every page at 375 and 1440, plus connected state evidence |
+| `artifacts/recordings/*.webm` | 1,250,000 | Single and bulk opening for all five rarities; local dev-only mock mode |
+| `artifacts/v11/*.json`, `artifacts/v12/*.json` | 209,304 | Retained historical evidence plus current compact test, live-read, performance and delivery results |
 
-Dependency/cache directories are ignored at every nesting level. No manifest, lockfile, runtime asset, proof, source directory or static export is excluded. Earlier generated PNG screenshots and the verbose v9 taste dump are superseded by this revision’s screenshots and review, and removed to keep the complete submission below 8 MiB. Historical textual reports remain as historical records; their removed screenshot links are not evidence for this revision.
+Generated dependencies, package caches, browser downloads, video intermediates and test scratch remain outside Git at all nesting levels. Existing runtime/proof assets remain intact. Screenshots superseded by the current revision can be replaced in place; current videos must not be dropped to reduce size.
