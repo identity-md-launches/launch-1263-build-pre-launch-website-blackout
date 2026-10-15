@@ -1,8 +1,64 @@
-# BLACKOUT final-polish validation
+# BLACKOUT gameplay update validation
 
-## Current review revision
+## Current gameplay revision — 2026-10-15
 
-**Scope:** the five reopened findings only. All five were reproduced against the unchanged accepted source/export before editing. The existing wallet, contract addresses/ABIs, transaction flows, routes, dependencies and build configuration are retained. `.imd-responses.json` answers every finding. The earlier delivery report below is historical where a current result differs. During live rechecking, both providers rejected pruned historical state; using the shared transport initially put ordinary reads into backoff. The final source gives historical reads their own transport instance, preserving current quotes and simulations. The regression fixture now reproduces this RPC-level failure, rather than only a failed inner multicall.
+The delivered source and relative-URL static export add exact farm optimization, combo hints, referrals, Today, installed-item leaderboard previews and RPC error handling to the existing site. Contract addresses, ABI, proof files, existing manifests/lockfiles and build configuration are unchanged. No chain deployment, real wallet signature, publication or remote PR creation was performed. [PR-ready description and screenshots](PR.md) accompany this submission. Reports below this section are historical.
+
+### Contract behavior and useful validation
+
+Rules were read from FarmCore, FarmEngine, FarmItems, FarmRewards and Params at deployment-source commit `77c962e6fce9652ee93dff2037b1a09e7a66bd04`, including Economy, Enhancement, ItemMath and EconomyMath dependencies. The existing ABI digest and live registry checks pass. Runtime Params are resolved through Core; current bonuses, upper bounds, enhancement table, room unlocks, level, capacity, health tiers, repair quotes and reward inputs come from views. Fixed constants without getters are identified in `farm-math.ts` and `referrals.ts`.
+
+The exact worker optimizes productive hash. It separately mirrors the full-health/maximum-bonus allocation envelope and checks both outputs with Engine eth_calls. Integer division order, highest rarity set, mutually exclusive compute combos, theft, dead-item masks and enhancement caps are covered. Reachable placements satisfy gates/ownership/distinct kinds/room unlocks, and every transaction prefix fits inventory. A shortest-path fallback permits temporary placements when needed. Current-room slots remain stable; replacements use the outgoing kind’s slot to avoid crossing dependencies when inventory has only one free space. A targeted regression proves two such replacements take four transactions. Future token income is an estimate using live next-epoch competing allocation, pool/emission/tariff and boost, not a guarantee that maximum hash maximizes net tokens.
+
+Referral tests cover malformed/zero/self/missing/existing inviters, accepted older farms, closed windows and younger inviters. Since serial and referralClosed have no getter, the actual setReferrer simulation is authoritative, including its implicit settlement. Event tests join ReferrerSet with subsequent Active settlements and verify the exact 5% gross credit. Today tests cover tax/net claim review, repair plus cable totals, exact approval, sequential repairs, pack opening, opt-in notifications, threshold deduplication and required sync before health-dependent quotes.
+
+| Command actually run | Result |
+| --- | --- |
+| `node web/tools/run.mjs install` | Passed using the existing lockfile; dependencies installed outside the repository |
+| `node web/tools/run.mjs typecheck` | Passed after final application edits |
+| `node web/tools/run.mjs build` | Passed after final application edits; 2,011 Merkle proofs, ABI identity and live roots checked; regenerated `dist/` |
+| `node web/tools/v13-check.mjs unit` | Seven groups pass, including 65 seeded farms compared with an independent exhaustive assignment oracle, legal move prefixes, temporary minimal moves, integer math, referrals, Today and endpoint/log errors. [Report](v13/unit.json) |
+| `node web/tools/v13-check.mjs live` | Actual read-only chain parity: 18 candidate arrays, 72 room previews, both theft predicates and the optimized allocation of a real 23-item farm. Registry checks pass. [Block, wallet, Params and outputs](v13/live.json) |
+| `PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browsers node web/tools/v13-check.mjs browser` | 13 Chromium interaction groups pass. Includes accepted referral before placement, populated referral credits, repair/claim/open-all, notifications, failed simulation and a stopped sequence after its first confirmed move. Zero page exceptions; zero axe violations across Farm, Packs, Leaderboard and Rewards. German browser locale preserves dot decimals. [Report](v13/chromium-browser.json) |
+| `PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browsers node web/tools/v13-check.mjs capture` | Six curated screenshots, first-screen Optimize at 375/390/1440, Escape/focus return and visible keyboard focus pass. [Measurements](v13/screenshots.json) |
+| `node web/tools/v12-check.mjs unit` | Seven existing regression groups pass: economics, projection, placement/capacity, custom errors, log limits, RPC backoff and DEV exclusion. [Current rerun, separate from historical reports](v13/previous-regression.json) |
+| Pinned `taste.mjs --out test/scratch/taste` with external Playwright | 15/16 pass. Only existing BLACKOUT/ETH casing is flagged; retained as product/token names. No missing local assets, page script errors, overflow, target, typography, measured contrast or reduced-motion failure. [Probe output](v13/taste.json) |
+| `node web/tools/v13-delivery.mjs` | Source/export integrity, relative asset URLs, metadata, unchanged protected paths, required historical evidence and explicit artifact budgets checked. [Report](v13/delivery.json) |
+| `node web/tools/v13-bundle.mjs` | Complete accepted + revised trees packed in a temporary Git repository; verified bundle is below 8 MiB. Exact bytes and the unavailable-history limitation are in [bundle report](v13/bundle-trial.json) |
+
+Installed-hardware leaderboard snapshots use a new cache namespace, so an old inventory-based preview cannot be relabeled as installed after an upgrade.
+
+The existing build emits nonfatal local-font URL and third-party annotation notices. The asset verifier and rendered export confirm the font/runtime files exist. An early live parity attempt timed out at the configured four-second RPC limit; the subsequent full run passed. No dependency archive, node_modules, package cache or submodule is included.
+
+### Better Interface review
+
+The pinned Better Interface workflow and all six core domains were applied during implementation, then reviewed against the final source and production export. The pinned critic ran at 320/390/1440. Additional connected-state Chromium checks ran at 320/375/390/1440, with reduced motion. Screenshots were visually inspected, including Home at 390: BLACKOUT, its product description and Buy a pack are visible. Connected Farm at 390 shows Your farm and Optimize at y≈446–494 in an 844px viewport.
+
+| Domain | Coverage, finding and final result |
+| --- | --- |
+| Accessibility | Native named dialogs, buttons, disclosures, meters/progress, status/error regions and explicit notification opt-in. `main.ts:222` and `gameplay.ts:37`: disabling the initiating button before async search lost return focus; now the original trigger is passed explicitly and its stable ID survives refresh. Capture verifies Escape closes and focus returns. Four-route axe has zero violations. Manual assistive-device coverage remains limited |
+| Layout | `gameplay.css:7`: a long mobile move list originally pushed Cancel outside the visible dialog. The body now scrolls inside a 90dvh dialog with both footer actions always visible. Today changes four → two columns; HUD disclosure becomes one column on phones. All checked widths have no document overflow. Existing city, pages and art are retained |
+| Writing | `gameplay-views.ts:17`: near misses identify the actual owned hardware, including items in another room, gates and full-room replacement needs. `gameplay.ts:75`: completed settlement requires sync before repair quotes; failures retain confirmed step counts. Referral copy states who receives the bonus and that the visitor loses nothing. Income estimates disclose current assumptions and next-epoch placement timing |
+| Typography | Existing local Pixel/System/Mono families and six roles retained. Gain uses the existing display/title tokens. Explicit en-US number formatting keeps dots in decimals under the de-DE browser test. No new fonts, decorative kickers or tracking. Probe passes type family/size checks |
+| Colors | `gameplay.css:1` reuses surface/border/accent/muted tokens. Health, rarity, combo/protection and transaction states have text labels. Automated probe reports all measured text passing 4.5:1 (3:1 large); 39 image/gradient text boxes are unmeasured. Axe also passes the populated gameplay views; no unmeasured contrast claim is made |
+| UI | `gameplay.ts:20`: slow historical pack scans originally held up Today; they now load independently while reward/repair controls become ready. Search has progress/cancel, exact review, per-step simulation/confirmation and decoded stopped state. Claim/repair/open-all and eligible/ineligible referral flows pass. `chain.ts:6` avoids treating contract Unauthorized reverts as provider authorization failures; HTTP denial is quarantined across clients. Multi-item health transitions share one notice |
+
+Final implementation tokens, typography, components, responsive behavior and reuse points are documented in [DESIGN.md](../DESIGN.md). There are no unfixed first-screen or repeated layout failures found in this review. The single casing exception preserves the existing product identity under the requested “keep everything else as is” scope.
+
+### Evidence and limitations
+
+- Current screenshots are `screenshots/gameplay-farm-{375,390,1440}.webp`, `gameplay-optimize-{375,1440}.webp` and `gameplay-combos-1440.webp`. These show clearly documented synthetic populated wallet data, not a claimed player balance. Existing historical screenshots and all ten required rarity recordings remain intact.
+- The optimizer is exact and cancellable, with exponential worst-case cost. A 24-item/four-room synthetic benchmark completed in about 2.93 seconds after symmetry pruning (740,582 visited nodes); this is one local fixture, not a maximum-inventory performance guarantee. Per-card gain is explicitly the best current legal empty slot, while Optimize can rearrange all hardware.
+- Private cable state is inferred by verified room outputs for optimization and transaction simulation for repair eligibility. Unknown reads remain labeled/disabled rather than guessed. Rules and state can change between transactions; simulations stop the sequence, but confirmed moves cannot be rolled back as a group. The repair method has no on-chain maximum-price argument; quotes are rechecked and approval is limited, while transaction inclusion remains subject to chain state changes.
+- No real signatures/funds, physical wallet phone flow, browser-native notification delivery, screen-reader or native zoom session was tested. Notification API behavior is covered with a controlled browser implementation. Chromium production rendering works; WebKit could not launch because its runtime libraries were unavailable. The supplied browser tool also failed startup, so working external Playwright supplied rendered validation. No new Lighthouse run was made.
+- The live test proves sampled engine parity and registry wiring, not exhaustive on-chain state coverage or future provider availability. Random candidate arrays deliberately test Engine math independently of placement legality; legality is checked by the unit oracle and simulated application. Referral event history can take longer on a cold cache and earnings are gross credits before withdrawal tax.
+- The source checkout has missing historical Git objects. Size validation imports both complete accepted/current file trees and preserves shared objects; unavailable history and publisher metadata cannot be measured here. No upload or PR publication is claimed.
+
+---
+
+## Historical five-finding review
+
+**Scope:** the five reopened findings only. All five were reproduced against the unchanged accepted source/export before editing. The existing wallet, contract addresses/ABIs, transaction flows, routes, dependencies and build configuration are retained. The original response sidecar is not present in this checkout; the linked historical regression reports retain the evidence. The earlier delivery report below is historical where a current result differs. During live rechecking, both providers rejected pruned historical state; using the shared transport initially put ordinary reads into backoff. The final source gives historical reads their own transport instance, preserving current quotes and simulations. The regression fixture now reproduces this RPC-level failure, rather than only a failed inner multicall.
 
 ### Reproduction and fixes
 

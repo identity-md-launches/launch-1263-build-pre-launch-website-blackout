@@ -1,0 +1,13 @@
+{
+  "checkedAt": "2026-10-15T12:45:35.739Z",
+  "passes": [
+    "Engine integer math: mutually exclusive compute combos, rarity, full tags, health, enhancements, theft, zero-health masks and cap",
+    "65 seeded exhaustive-oracle farms: exact optimum, gates, unique kinds, ownership, capacity and legal transaction prefixes",
+    "Minimal moves retain slots, solve one-space swaps, and use the shortest temporary placement with full inventory",
+    "Referral address and view prechecks reject self, zero, malformed, missing farm and existing referrer",
+    "Today sums item+cable quotes, counts unresolved packs and deduplicates threshold notifications",
+    "Logs adapt to provider range limits without gaps; authorization and rate limits do not cause split storms",
+    "HTTP 403 endpoint is dropped across clients; healthy fallback continues without repeated rejected requests"
+  ],
+  "randomFarms": 65
+}

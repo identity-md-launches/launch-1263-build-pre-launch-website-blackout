@@ -1,0 +1,172 @@
+{
+  "checkedAt": "2026-10-15T12:46:54.929Z",
+  "block": "89235322",
+  "wallet": "0x6d51cBE774aeAe4dd40bCA2560E9bc2695A0d007",
+  "items": 23,
+  "params": {
+    "current": {
+      "FullSetBps": "1500",
+      "ComputePairBps": "1000",
+      "TripleCoreBps": "2000",
+      "AirflowBps": "500",
+      "ElectricityPairBps": "1500",
+      "OffgridBps": "2000",
+      "RareSetBps": "500",
+      "EpicSetBps": "1000",
+      "LegendarySetBps": "2000",
+      "MythicSetBps": "3000",
+      "SetCapBps": "10000"
+    },
+    "maximum": {
+      "FullSetBps": "1500",
+      "ComputePairBps": "1000",
+      "TripleCoreBps": "2000",
+      "AirflowBps": "500",
+      "ElectricityPairBps": "1500",
+      "OffgridBps": "2000",
+      "RareSetBps": "500",
+      "EpicSetBps": "1000",
+      "LegendarySetBps": "2000",
+      "MythicSetBps": "3000",
+      "SetCapBps": "10000"
+    },
+    "enhancement": {
+      "0": "0"
+    },
+    "epoch": "4",
+    "theft": false,
+    "block": "89235322"
+  },
+  "results": [
+    {
+      "trial": 0,
+      "theft": true,
+      "allocation": "231600",
+      "productive": "214800"
+    },
+    {
+      "trial": 1,
+      "theft": false,
+      "allocation": "170480",
+      "productive": "170480"
+    },
+    {
+      "trial": 2,
+      "theft": true,
+      "allocation": "122080",
+      "productive": "122080"
+    },
+    {
+      "trial": 3,
+      "theft": false,
+      "allocation": "172320",
+      "productive": "172320"
+    },
+    {
+      "trial": 4,
+      "theft": true,
+      "allocation": "260840",
+      "productive": "260840"
+    },
+    {
+      "trial": 5,
+      "theft": false,
+      "allocation": "154400",
+      "productive": "154400"
+    },
+    {
+      "trial": 6,
+      "theft": true,
+      "allocation": "233280",
+      "productive": "216480"
+    },
+    {
+      "trial": 7,
+      "theft": false,
+      "allocation": "208400",
+      "productive": "208400"
+    },
+    {
+      "trial": 8,
+      "theft": true,
+      "allocation": "238320",
+      "productive": "214400"
+    },
+    {
+      "trial": 9,
+      "theft": false,
+      "allocation": "181440",
+      "productive": "181440"
+    },
+    {
+      "trial": 10,
+      "theft": true,
+      "allocation": "229240",
+      "productive": "229240"
+    },
+    {
+      "trial": 11,
+      "theft": false,
+      "allocation": "262660",
+      "productive": "262660"
+    },
+    {
+      "trial": 12,
+      "theft": true,
+      "allocation": "229920",
+      "productive": "223920"
+    },
+    {
+      "trial": 13,
+      "theft": false,
+      "allocation": "230280",
+      "productive": "230280"
+    },
+    {
+      "trial": 14,
+      "theft": true,
+      "allocation": "197780",
+      "productive": "197780"
+    },
+    {
+      "trial": 15,
+      "theft": false,
+      "allocation": "249420",
+      "productive": "249420"
+    },
+    {
+      "trial": 16,
+      "theft": true,
+      "allocation": "154400",
+      "productive": "154400"
+    },
+    {
+      "trial": 17,
+      "theft": false,
+      "allocation": "217600",
+      "productive": "217600"
+    },
+    {
+      "optimizer": {
+        "moves": 10,
+        "visited": 49,
+        "before": {
+          "productive": "96800",
+          "power": "96800",
+          "raw": "96800",
+          "allocation": "96800"
+        },
+        "after": {
+          "productive": "230500",
+          "power": "230500",
+          "raw": "230500",
+          "allocation": "230500"
+        }
+      },
+      "referrer": "0x0000000000000000000000000000000000000000"
+    }
+  ],
+  "limitations": [
+    "Read-only calls; no wallet signatures or real-money transactions. Random candidates test engine math independently of placement legality."
+  ]
+}

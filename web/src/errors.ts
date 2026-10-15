@@ -16,6 +16,8 @@ export function contractErrorName(error: unknown): string | undefined {
  }
 }
 const actionHints:Record<string,string>={
+ setReferrer:'This inviter must have an older farm. An inviter can only be set once, before your first mining settlement.',
+ repairCable:'Your cable no longer needs repair. Refresh the farm.',
  place:'This hardware cannot go in that slot. Check its level, room type limit and whether the slot is still empty.',
  unplace:'That slot no longer contains this hardware. Refresh your farm.',
  buyRoom:'This room needs the displayed farm age or level, and must not already be owned.',

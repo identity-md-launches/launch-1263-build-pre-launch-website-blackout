@@ -1,0 +1,40 @@
+{
+  "checkedAt": "2026-10-15T12:56:36.178Z",
+  "passed": [
+    "Landing captures inviter; Farm shows Today tax, repairs, packs, swarm letter and best-slot hash gain",
+    "Optimize verifies Engine, previews gain/moves, offers eligible referral before first action, then applies minimal placement",
+    "Repair all previews combined item+cable cost, exact allowance, sequential repair and repairCable",
+    "Today claim shows withdrawal tax/net before signing and claims the displayed amount",
+    "Personal referral link, ready X/Telegram sharing, inviter attribution and indexed empty referee list",
+    "ReferrerSet referees join Active settlement logs with exact 5% gross credits",
+    "Notifications require opt-in and notify once for reward/health transitions across polling",
+    "Today Open all resolves an owned receipt and opens the confirmed hardware reveal",
+    "Legendary/Mythic gates stay visible; failed step simulation stops the optimizer with decoded reason and no write",
+    "Mid-sequence failure retains the confirmed first move, stops before the failed second move and displays progress",
+    "Farm reflows at 320/375/390/1440; primary action in first mobile screen; four routes pass axe and installed leaderboard previews",
+    "Closed referral window and younger inviter fail simulation and suppress the offer",
+    "Optimizer and repair review require catch-up before quoting health-dependent changes"
+  ],
+  "errors": [],
+  "axe": [
+    {
+      "route": "farm",
+      "violations": []
+    },
+    {
+      "route": "packs",
+      "violations": []
+    },
+    {
+      "route": "leaderboard",
+      "violations": []
+    },
+    {
+      "route": "rewards",
+      "violations": []
+    }
+  ],
+  "limitations": [
+    "Synthetic wallet/RPC fixtures; no funds, real signatures, physical phones or screen reader session."
+  ]
+}

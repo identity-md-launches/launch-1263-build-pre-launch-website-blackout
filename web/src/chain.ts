@@ -1,5 +1,9 @@
 import { createPublicClient, createTransport, http, type Abi, type Address, type Hex, type Transport, type EIP1193RequestFn, encodeFunctionData, decodeFunctionResult } from 'viem';
 import abis from './abi.json';
+import { isLogRangeError } from './logs';
+// Session quarantine is shared by regular, archive and wallet read clients.
+const rejectedEndpoints=new Set<string>();
+export function deniedEndpoint(error:unknown){let e=error as {status?:number;cause?:unknown};const seen=new Set();while(e&&!seen.has(e)){seen.add(e);if(e.status===400||e.status===401||e.status===403)return true;e=e.cause as typeof e;}return /personal token|access denied|forbidden|(?:http|status)[^\n]*401/i.test(String(error));}
 import { chain, RPC_URLS, POLL_MS, contracts, roles, type ContractName, ROOTS } from './config';
 let visiblePage:Promise<void>|null=null;
 function waitForVisiblePage(){
@@ -16,7 +20,7 @@ function waitForVisiblePage(){
 export const rpcTransport = ():Transport => options => {
  let archiveTurn=Promise.resolve(),nextArchiveRead=0;
  const paceArchive=async()=>{const previous=archiveTurn;let release!:()=>void;archiveTurn=new Promise<void>(resolve=>release=resolve);await previous;const wait=Math.max(0,nextArchiveRead-Date.now());if(wait)await new Promise(resolve=>setTimeout(resolve,wait));nextArchiveRead=Date.now()+600;release();};
- const endpoints=RPC_URLS.map(url=>({transport:http(url,{batch:{batchSize:url===RPC_URLS[1]?3:40,wait:10},retryCount:0,timeout:4000})(options),failures:0,retryAt:0}));
+ const endpoints=RPC_URLS.map(url=>({url,transport:http(url,{batch:{batchSize:url===RPC_URLS[1]?3:40,wait:10},retryCount:0,timeout:4000})(options),failures:0,retryAt:0}));
  return createTransport({key:'blackout-race',name:'Robinhood concurrent RPC',type:'custom',retryCount:0,
   request: (async (args,requestOptions)=>{
    await waitForVisiblePage();
@@ -27,11 +31,11 @@ export const rpcTransport = ():Transport => options => {
     // dRPC rejects historical logs even below its advertised range cap.
     // Only the official archive endpoint supports this method without a key.
     const capable=args.method==='eth_getLogs'?endpoints.slice(0,1):endpoints;
-    const ready=capable.filter(e=>Date.now()>=e.retryAt);
+    const ready=capable.filter(e=>!rejectedEndpoints.has(e.url)&&Date.now()>=e.retryAt);
     if(!ready.length)throw new Error('RPC reconnecting; waiting for backoff');
     return await Promise.any(ready.map(async endpoint=>{
      try{const result=await endpoint.transport.request(args,requestOptions);endpoint.failures=0;endpoint.retryAt=0;return result;}
-     catch(error){if(!/revert/i.test(String(error))){endpoint.failures++;endpoint.retryAt=Date.now()+Math.min(120000,15000*2**(endpoint.failures-1));}throw error;}
+     catch(error){const range=args.method==='eth_getLogs'&&isLogRangeError(error);if(!range&&deniedEndpoint(error))rejectedEndpoints.add(endpoint.url);if(!range&&!/revert/i.test(String(error))){endpoint.failures++;endpoint.retryAt=Date.now()+Math.min(120000,15000*2**(endpoint.failures-1));}throw error;}
     }));
    }
    catch(error){

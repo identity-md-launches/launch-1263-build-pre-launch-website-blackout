@@ -13,8 +13,9 @@ export function isLogRangeError(error: unknown): boolean {
   // viem's HTTP layer may discard a non-2xx JSON body and expose only the
   // status ("Bad Request"/"Forbidden"). These are the fallback providers'
   // range-rejection statuses. Stop at one block; 429/5xx never split.
-  if (e.status === 400 || e.status === 403 || e.status === 413) return true;
-  if (/ranges? (?:over|too|exceed)|block range|range (?:limit|is too)|too many (?:logs|results)|response (?:size|is too large)|query returned more|archive requests require a personal token/i.test(`${e.message || ''} ${e.details || ''}`)) return true;
+  if (e.status === 413) return true;
+  if (/personal token|forbidden|unauthorized|access denied/i.test(`${e.message || ''} ${e.details || ''}`)) return false;
+  if (/ranges? (?:over|too|exceed)|block range|range (?:limit|is too)|too many (?:logs|results)|response (?:size|is too large)|query returned more/i.test(`${e.message || ''} ${e.details || ''}`)) return true;
   current = e.cause;
  }
  return false;

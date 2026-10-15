@@ -1,22 +1,41 @@
 # BLACKOUT
 
-A pixel-art mining game on **Robinhood Chain (4663)**, at https://playblackout.xyz. This revision keeps the rooftop, live city data, terminal, hardware and game routes while adding personal earnings, a persistent Mining HUD, interactive pack reveals and queued bulk opening. Retired promotional offers and token-launch sections are removed.
+A pixel-art mining game on **Robinhood Chain (4663)**, at https://playblackout.xyz. This revision adds contract-verified farm optimization, room combo hints, referrals and a Today block to the existing live site. The rooftop, art, routes, earnings views and pack experience are retained.
 
 The static hosting deliverable is **[dist/index.html](dist/index.html)** and its complete local assets. Routes use hashes and asset URLs are relative, including at a gateway subpath. No contracts were deployed, tokens replaced or real transactions signed. Existing contract addresses, ABIs, proof files, manifests, lockfiles and build configuration remain intact.
 
-## Review revision
+## Gameplay update
 
-All five reported findings were reproduced and fixed without changing the wallet, contracts, routes, manifests or lockfiles. Reveal history reads the reveal block, rejects deleted zero-holder records and discards the old display cache. Projection growth uses only competing farms. Epoch history has 44px targets with local scrolling, dragging previews invalid slots immediately, and public/Farm epoch clocks show seconds.
+Farm now starts with **Optimize farm** and **Today**. Today also opens from the Mining HUD on every connected route. Claim shows the simulated tax and net first; Repair all reviews item and cable costs; Open all uses the existing receipt queue; supply drops have their own collection action. Pack-history scans run separately so they cannot hold up reward and repair controls. Notifications require an explicit click and browser permission, run only while this page is open, and deduplicate epoch/reward/health events. Several newly worn items share one health alert. There is no overclock action; the on-chain `overclock` data field is retained only as the enhancement level used in scoring.
 
-The current build, typecheck, seven unit groups, eleven broader Chromium interaction groups and eleven focused revision checks pass. The pinned design probe remains 15/16, with only the retained BLACKOUT/ETH casing exception. WebKit could not launch for this revision; its earlier result below is historical. An initial live sweep exposed historical-state errors poisoning ordinary RPC backoff; separate historical-client backoff fixed that regression. The final strict sweep reaches live connected state but stops at an existing Packs button-position threshold at 375×812. The final 24-route/width live capture completes in connected state with no console/HTTP errors or page overflow. Current results and limitations are recorded at the start of [artifacts/validation.md](artifacts/validation.md), and every reviewer finding is answered in [.imd-responses.json](.imd-responses.json).
+The optimizer runs an exact branch-and-bound search in a cancellable Web Worker. It enforces current room unlocks, six slots, one kind per room, ownership, enhancement locks, rarity gates and inventory capacity at every transaction prefix. It includes every hash/power/protection combo and the highest qualifying rarity set. Equal-hash plans prefer lower power, then fewer transactions. Items staying in their room keep their slots and replacements match outgoing kinds; the sequence planner uses direct minimal moves or a shortest-path search for temporary placements when inventory is full. Search time is exponential in the worst case; the UI never silently returns a timed-out heuristic as the best plan.
 
-Run the focused regression suite after rebuilding (Playwright Chromium must be installed):
+`farm-math.ts` follows the deployed FarmEngine integer order. `farm-rules.ts` resolves Params through `FarmCore.params()`, reads current values and upper bounds, and reads enhancement bonuses from `Enhancement.table`. Productive room hash uses current health/bonuses; `allocationHash` uses full health and maximum allowed bonuses. The private theft deadline has no getter: its active/inactive predicate is inferred from authoritative `roomStats`, then checked through Engine previews. Fixed Solidity constants without getters (kinds/tags, base hash, rarity gates and the 5% referral credit) are mirrored from the pinned source, never substituted for available views.
+
+Every proposed layout is checked against `FarmEngine.allocationHash` and all four `FarmEngine.preview` calls before review and again before application. The review lists the hash change, percentage, approximate net mining change per epoch and every move. The token estimate uses live pool/emission/tariff, next-epoch competing allocation and stake boost; it excludes future wear, events, governance changes, referral income, claim tax and gas. Maximizing hash does not guarantee the largest token yield. Each move is simulated and confirmed separately; a failed step stops the queue and retains confirmed steps. A settled but unsynced farm must sync before optimization or repair quotes. Cross-session placement changes and changed rules invalidate a plan.
+
+Room hints display active bonuses, near misses, owned items in other rooms, full-room replacement notes and rarity locks. Inventory's “H/s if placed best” means the best legal currently empty slot; Optimize can additionally rearrange rooms. Leaderboard previews now read installed slots, never inventory. Numbers use a dot decimal separator even under a German browser locale.
+
+Every connected farm has a copyable `https://playblackout.xyz/?ref=<address>` link and ready X/Telegram shares. A valid landing inviter is saved locally. Before the first eligible farm action, an optional review explains “the inviter earns +5% on top of your mining, and you lose nothing.” Public views reject self/missing/existing referrals; `eth_call` checks the older-farm and first-settlement rules because the contract exposes no serial/closed getter. Closed or younger-inviter cases show no offer. The Invite panel attributes the inviter and loads referees from `ReferrerSet`, their current allocation weight, and cumulative gross referral credits from subsequent `Active` events. History is checkpointed and can take time on a cold cache.
+
+Contract source reviewed: [FarmCore, FarmEngine, FarmItems, FarmRewards and Params at the pinned deployment commit](https://github.com/identity-md-launches/launch-1729-blackout-l4-job-b/tree/77c962e6fce9652ee93dff2037b1a09e7a66bd04/src), plus their Economy/Enhancement/math dependencies. Runtime addresses and ABI provenance remain in the existing `web/src/config.ts` and `web/data/abi-provenance.json`. No new deployment is used.
+
+Current checks: production build and typecheck pass; optimizer/referral/Today unit groups pass; Chromium interaction checks and four-route axe pass; live read-only parity passes for 18 candidate arrays, 72 room previews and an optimized real farm. The pinned design probe is 15/16; only the retained BLACKOUT/ETH casing is flagged. [PR description and 375/1440 screenshots](artifacts/PR.md), [actual validation and limitations](artifacts/validation.md), and [design system](DESIGN.md) accompany the export. WebKit could not start; no real signatures, physical-phone or screen-reader session was performed.
+
+After installing the unchanged toolchain and Playwright Chromium, run:
 
 ```sh
-PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browsers node web/tools/revision-check.mjs
+node web/tools/run.mjs typecheck
+node web/tools/run.mjs build
+node web/tools/v13-check.mjs unit
+node web/tools/v13-check.mjs live
+PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browsers node web/tools/v13-check.mjs browser
+PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browsers node web/tools/v13-check.mjs capture
+node web/tools/v13-delivery.mjs
+node web/tools/v13-bundle.mjs
 ```
 
-`--before` asserts the reported defects and is intended only for the original accepted export/source, before applying this revision. Fixtures are explicitly synthetic, use no keys and never ship in the production bundle.
+`capture` follows `browser` to leave the curated screenshots in the submission. Browser/capture tools use Sharp installed externally at `/tmp/blackout-validation` as shown below; fixtures live only under `web/tools` and do not enter `dist`. All review records for this update are in `artifacts/v13/`; older reports below describe earlier revisions.
 
 ## Install, preview and rebuild
 
@@ -54,7 +73,7 @@ node web/tools/run.mjs build
 | --- | --- |
 | `#/` / `#/home` | Living rooftop, Buy a pack, See earnings, live pool/epoch/price, terminal with every revealed item, top farms, hardware cards, slim roadmap |
 | `#/packs` | Bright ETH purchase opens Connect when disconnected; 1–10 packs; secondary BLACKOUT payment; individual and bulk receipt resolution; 3D reveal and placement/scrap shortcuts |
-| `#/farm` | Visitors peek at the actual #1 farm. Players manage rooms, drag or tap hardware into slots, see earnings and level gates, repair, scrap, expand inventory and sync |
+| `#/farm` | Visitors peek at the actual #1 farm. Players optimize/review room placement, use Today and Invite, inspect combos, drag or tap hardware, repair, scrap, expand and sync |
 | `#/rewards` | Claimable and tax preview, mining/claim history, last 20 settled epochs, 1/7/30-day estimates and pack payback; visitors get a live calculator |
 | `#/leaderboard` | Hash rankings, shortened addresses with explorer links, district badges, item previews and top-three medals |
 | `#/city` | Grid events, district standings, existing stake/unlock/lobby controls when enabled |
@@ -86,13 +105,13 @@ Pack payback uses today's one-pack token quote and the actual weighted drop odds
 
 Buying creates an on-chain receipt. The confirmed purchase receipt is read directly, so delayed log indexing does not lose a newly purchased pack. Opening waits on **native ArbSys blocks**, handles the existing entropy window and rearming, then shows only confirmed hardware. Tap or hold to rip; flip individual cards or Flip all. Bulk reveal sorts rarest last. Sound defaults off, haptics are optional and reduced motion preserves every control and result.
 
-`Open all (N)` reconciles ownership and resolution from chain, checks total inventory space, and resolves up to eight packs per paid receipt per call. Separate receipts queue wallet confirmations with one progress bar. Contract methods do not permit arbitrary receipt batching. Place all queues valid slots; unplace, reveal and claims check capacity. Expansion quotes the actual quadratic cost and uses the existing `expand(true)` call. Scrapping requires an explicit irreversible-action review.
+`Open all (N)` reconciles ownership and resolution from chain, checks total inventory space, and resolves up to eight packs per paid receipt per call. Separate receipts queue wallet confirmations with one progress bar. Contract methods do not permit arbitrary receipt batching. Place all queues valid slots; unplace, reveal and supply-drop collection check capacity. Claiming mining credits does not require inventory space. Expansion quotes the actual quadratic cost and uses the existing `expand(true)` call. Scrapping requires an explicit irreversible-action review.
 
 Legacy receipts remain recoverable, and the original contracts/proof assets remain available; the site offers no new promotional claims. All 41 custom ABI errors map to human messages, with retry/farm recovery controls. A concurrent resolution is reconciled instead of sending a duplicate transaction.
 
 ## RPC behavior
 
-Ordinary reads race the official Robinhood RPC and dRPC, each with a **4-second** timeout and no automatic transport retry. Reveal-block reads use a separate client with the same transport settings: pruned historical state backs off independently and cannot disable current reads or simulations. The failing PublicNode endpoint is removed. Endpoint errors trigger exponential cooldowns from 15 to 120 seconds. Writes always use the wallet.
+Ordinary reads race the official Robinhood RPC and dRPC, each with a **4-second** timeout and no automatic transport retry. Reveal-block reads use a separate client with the same transport settings: pruned historical state backs off independently and cannot disable current reads or simulations. The failing PublicNode endpoint is removed. HTTP 400/401/403 authorization failures quarantine the endpoint across read clients for this page session; contract reverts and explicit log-range failures do not. Other endpoint errors trigger exponential cooldowns from 15 to 120 seconds. Writes always use the wallet.
 
 Historical logs use the official archive endpoint: dRPC rejects those ranges even below its advertised cap. Ranges are at most 10,000 blocks, adaptively shrink on range errors, retain checkpoints and overlap 16 blocks for reorgs. All indexers share a 600ms pacing queue to avoid archive quota bursts. Cold historical totals can take longer than the primary live numbers; the terminal publishes decoded ranges incrementally. These limits are also tested. No backend, indexer credential or vendored registry is required.
 
@@ -124,4 +143,18 @@ node web/tools/v12-bundle.mjs
 
 `PLAYWRIGHT_BROWSERS_PATH` selects external browser binaries. `BLACKOUT_FFMPEG` selects the Playwright FFmpeg executable for compact WebM evidence; `BLACKOUT_VISUAL_TOOLS` selects an external package manifest with Sharp. WebKit supports `BLACKOUT_PLAYWRIGHT_PATH` and `BLACKOUT_WEBKIT_PATH` when a matching runtime is installed elsewhere. The pinned taste probe is assignment input, so only its compact results ship.
 
-Generated dependencies/caches stay outside Git at every nesting level. [Artifact budgets](artifacts/PATH-BUDGET.md) retain all requested screenshots and recordings. A standalone Git bundle containing both the complete accepted tree and complete revised tree is measured (shared objects and deltas are counted once) in `artifacts/v12/bundle-trial.json`, without modifying this checkout's `.git`. The provided shallow/partial history omits some historical objects; publisher metadata and unavailable history are outside that measurement. No publishing command or PR creation was run.
+Generated dependencies/caches stay outside Git at every nesting level. [Artifact budgets](artifacts/PATH-BUDGET.md) retain all requested screenshots and recordings. A standalone Git bundle containing both the complete accepted tree and complete revised tree is measured (shared objects and deltas are counted once) in `artifacts/v13/bundle-trial.json`, without modifying this checkout's `.git`. The provided shallow/partial history omits some historical objects; publisher metadata and unavailable history are outside that measurement. No publishing command or PR creation was run.
+
+## Earlier five-finding review
+
+In the prior revision, all five reported findings were reproduced and fixed without changing the wallet, contracts, routes, manifests or lockfiles. Reveal history reads the reveal block, rejects deleted zero-holder records and discards the old display cache. Projection growth uses only competing farms. Epoch history has 44px targets with local scrolling, dragging previews invalid slots immediately, and public/Farm epoch clocks show seconds.
+
+That revision’s build, typecheck, seven unit groups, eleven broader Chromium interaction groups and eleven focused revision checks pass. The pinned design probe remains 15/16, with only the retained BLACKOUT/ETH casing exception. WebKit could not launch for this revision; its earlier result below is historical. An initial live sweep exposed historical-state errors poisoning ordinary RPC backoff; separate historical-client backoff fixed that regression. The final strict sweep reaches live connected state but stops at an existing Packs button-position threshold at 375×812. The final 24-route/width live capture completes in connected state with no console/HTTP errors or page overflow. Current results and limitations are recorded at the start of [artifacts/validation.md](artifacts/validation.md), and prior reviewer evidence is retained in [the historical regression report](artifacts/v12/revision-chromium.json).
+
+Run the focused regression suite after rebuilding (Playwright Chromium must be installed):
+
+```sh
+PLAYWRIGHT_BROWSERS_PATH=/tmp/blackout-browsers node web/tools/revision-check.mjs
+```
+
+`--before` asserts the reported defects and is intended only for the original accepted export/source, before applying this revision. Fixtures are explicitly synthetic, use no keys and never ship in the production bundle.

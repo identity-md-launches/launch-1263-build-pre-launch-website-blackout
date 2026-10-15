@@ -8,6 +8,7 @@ export type Activity={key:string;block:bigint;index:number;hash:Hex;text:string;
 // Older snapshots may contain fabricated Common items from deleted records.
 export const ACTIVITY_CACHE_KEY='activity-v2';
 const EVENT_CACHE_KEY='pack-event-index-v2';
+export const LEADERBOARD_CACHE_KEY='leaderboard.installed.v13';
 export type Leaderboard={epoch:bigint;farms:{wallet:Address;hash:bigint;district:number;best?:{kind:number;rarity:number}[]}[];districts:bigint[];total:number};
 const short=(s:string)=>`${s.slice(0,6)}…${s.slice(-4)}`;
 type EventIndex={head:bigint;floor:bigint;events:Activity[]};
@@ -106,7 +107,7 @@ export async function loadLeaderboard(epoch:bigint):Promise<Leaderboard>{
  const districts=await Promise.all(Array.from({length:8},(_,i)=>read<bigint>('FarmRewards','districtActiveHash',[BigInt(i)])));
  const leaders=farms.filter(f=>f.hash>0n).sort((a,b)=>a.hash===b.hash?a.wallet.localeCompare(b.wallet):a.hash>b.hash?-1:1).slice(0,20);
  await Promise.all(leaders.map(async farm=>{
-  try{const ids=await read<bigint[]>('FarmItems','itemsByOwner',[farm.wallet,0n,100n]);const items=await Promise.all(ids.map(id=>read<Item>('FarmItems','data',[id])));farm.best=items.sort((a,b)=>b.rarity-a.rarity).slice(0,3).map(({kind,rarity})=>({kind,rarity}));}catch{/* A preview is optional; standings remain valid. */}
+  try{const slots=await Promise.all(Array.from({length:24},(_,slot)=>read<bigint>('FarmCore','itemAt',[farm.wallet,BigInt(Math.floor(slot/6)),BigInt(slot%6)])));const ids=slots.filter(id=>id!==0n);const items=await Promise.all(ids.map(id=>read<Item>('FarmItems','data',[id])));farm.best=items.filter(i=>i.equipped).sort((a,b)=>b.rarity-a.rarity).slice(0,3).map(({kind,rarity})=>({kind,rarity}));}catch{/* A preview is optional; standings remain valid. */}
  }));
  return {epoch,farms:leaders,districts,total:Number(count)};
 }

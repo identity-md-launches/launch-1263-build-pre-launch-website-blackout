@@ -1,0 +1,36 @@
+[
+  {
+    "width": 375,
+    "path": "artifacts/screenshots/gameplay-farm-375.webp",
+    "mainAction": {
+      "x": 16,
+      "y": 445.9375,
+      "width": 343,
+      "height": 48
+    }
+  },
+  {
+    "width": 390,
+    "path": "artifacts/screenshots/gameplay-farm-390.webp",
+    "mainAction": {
+      "x": 16,
+      "y": 445.9375,
+      "width": 358,
+      "height": 48
+    }
+  },
+  {
+    "width": 1440,
+    "path": "artifacts/screenshots/gameplay-farm-1440.webp",
+    "mainAction": {
+      "x": 1191.640625,
+      "y": 349.34375,
+      "width": 152.359375,
+      "height": 48
+    }
+  },
+  {
+    "keyboard": "Dialog Escape/Cancel and focus return checked; keyboard button focus style verified after closing review.",
+    "fixture": "Synthetic on-chain-shaped data; no signatures or real funds."
+  }
+]

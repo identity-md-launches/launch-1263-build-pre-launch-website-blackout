@@ -105,8 +105,12 @@ export function assertWallet(expected?:Address) {
  if(expected&&a.address.toLowerCase()!==expected.toLowerCase())throw Error('Wallet account changed. Review the action again.');
  return a.address;
 }
+let beforeFarmAction:((from:Address)=>Promise<void>)|null=null;
+export function setBeforeFarmAction(fn:(from:Address)=>Promise<void>){beforeFarmAction=fn;}
 export async function send(name:ContractName,fn:string,args:readonly unknown[]=[],label=fn,value=0n):Promise<Hex> {
  const from=assertWallet();
+ if(beforeFarmAction&&fn!=='setReferrer'&&name!=='Token')await beforeFarmAction(from);
+ assertWallet(from);
  setTx({label,state:'signature',detail:'Checking the transaction…',account:from});
  try {
   const simulation=await client.simulateContract({address:addresses[name],abi:ABI[name],functionName:fn,args,account:from,value});
@@ -124,10 +128,10 @@ export async function send(name:ContractName,fn:string,args:readonly unknown[]=[
   if(contractErrorName(error)==='TooEarly')try{
    if(name==='PackSale'&&['buyWithETH','openPack'].includes(fn)){
     const [paused,opens,block]=await Promise.all([read<boolean>('PackSale','paused'),read<bigint>('PackSale','opensAt'),client.getBlock()]);
-    reason=paused?'Pack purchases are paused by the city. Check back when the sale reopens.':block.timestamp<opens?`Pack purchases open ${new Date(Number(opens)*1000).toLocaleString()}.`:'Pack purchases are not open right now. Refresh the sale status.';
+    reason=paused?'Pack purchases are paused by the city. Check back when the sale reopens.':block.timestamp<opens?`Pack purchases open ${new Date(Number(opens)*1000).toLocaleString('en-US')}.`:'Pack purchases are not open right now. Refresh the sale status.';
    }else if(name==='StarterClaim'&&fn==='claim'){
     const [launch,block]=await Promise.all([read<bigint>('GameRegistry','launchTime'),client.getBlock()]);
-    reason=block.timestamp>=launch+16n*86400n?'The starter claim window has closed.':`Starter claims open ${new Date(Number(launch+172800n)*1000).toLocaleString()}, 48 hours after launch.`;
+    reason=block.timestamp>=launch+16n*86400n?'The starter claim window has closed.':`Starter claims open ${new Date(Number(launch+172800n)*1000).toLocaleString('en-US')}, 48 hours after launch.`;
    }
   }catch{/* Keep the decoded action guidance if the explanatory read also fails. */}
   if(tx?.state!=='pending'&&tx?.state!=='reverted')setTx({label,state:'error',detail:errorMessage(error,{action:fn,contract:name,reason}),account:from});throw error;

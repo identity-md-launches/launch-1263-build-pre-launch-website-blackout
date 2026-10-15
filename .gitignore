@@ -1,4 +1,4 @@
-# Explicit delivery budget: see artifacts/PATH-BUDGET.md (4 MiB total).
+# Explicit delivery budget: see artifacts/PATH-BUDGET.md (4,700,000 bytes total).
 # Runtime assets stay in public/ and dist/; these are never ignored.
 **/node_modules/
 **/.npm/
@@ -17,10 +17,16 @@ artifacts/screenshots/*
 !artifacts/v11/
 artifacts/v11/*
 !artifacts/v11/*.json
-# v12 evidence paths and explicit 4 MiB allocation: artifacts/PATH-BUDGET.md.
+# Retained v12 evidence within the allocation in artifacts/PATH-BUDGET.md.
 !artifacts/v12/
 artifacts/v12/*
 !artifacts/v12/*.json
 !artifacts/recordings/
 artifacts/recordings/*
 !artifacts/recordings/*.webm
+
+# Gameplay evidence: explicit path budget in artifacts/PATH-BUDGET.md.
+!artifacts/v13/
+artifacts/v13/*
+!artifacts/v13/*.json
+!artifacts/PR.md

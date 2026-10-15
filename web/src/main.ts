@@ -2,6 +2,8 @@ import '../../src/style.css';
 import './live.css';
 import './premium.css';
 import './polish.css';
+import './gameplay.css';
+import { setupGameplay, refreshGameplay, resetGameplay, hudToday } from './gameplay';
 import { cached, remember } from './cache';
 import { loadPublicPrice, loadPublicTotals, type PublicPrice, type PublicTotals } from './public';
 import { publicDashboard } from './public-views';
@@ -18,7 +20,7 @@ import { quoteEthPack, slippageBps } from './packs';
 import { docsPage } from './docs';
 import { esc, tokens, units, epochCountdown, featureCards, farmPage, packsPage, cityPage, seasonPage, boardsPage, contractsPage, type PackState, type CityState, type SeasonState, type Board } from './views';
 import { POLL_MS } from './config';
-import { loadActivity, loadLeaderboard, ACTIVITY_CACHE_KEY, type Activity, type Leaderboard } from './community';
+import { loadActivity, loadLeaderboard, ACTIVITY_CACHE_KEY, LEADERBOARD_CACHE_KEY, type Activity, type Leaderboard } from './community';
 import { onboarding, morePage, leaderboardPage, type Progress } from './player-views';
 import { placementReason, epochProgress, miningTime, LEVEL_GATES } from './player';
 import { refreshUsd, setSpot } from './money';
@@ -34,7 +36,7 @@ const $=<T extends HTMLElement=HTMLElement>(selector:string)=>document.querySele
 const route=()=>location.hash.replace(/^#\/?/,'').split('/')[0]||'home';
 let home:Home|null=cached<Home>('home'),farm:Farm|null=null,city:CityState|null=null,season:SeasonState|null=null,boards:Board[]|null=null,boardWeek=0n;
 let revealAnimationUntil=0;
-let selectedItem:bigint|null=null,progress:Progress|null=null,activities:Activity[]|null=cached<Activity[]>(ACTIVITY_CACHE_KEY),activityError=false,leaderboard:Leaderboard|null=cached<Leaderboard>('leaderboard');
+let selectedItem:bigint|null=null,progress:Progress|null=null,activities:Activity[]|null=cached<Activity[]>(ACTIVITY_CACHE_KEY),activityError=false,leaderboard:Leaderboard|null=cached<Leaderboard>(LEADERBOARD_CACHE_KEY);
 let publicPrice=cached<PublicPrice>('price'),publicTotals=cached<PublicTotals>('totals');
 let publicError=false,homeFresh=false;
 let poolTrail:number[]=cached<number[]>('pool-trail')??[];
@@ -100,7 +102,7 @@ function render(keepForms=false) {
  reflectMotion();reflectGrid();renderedRoute=current;updateControls();renderStatus();renderEarnings();animateNumbers();
 }
 function renderEarnings(){
- const hud=$('#mining-hud');hud.hidden=!account().isConnected;hud.innerHTML=miningHud(farm,home,economy);
+ const hud=$('#mining-hud');hud.hidden=!account().isConnected;const todayOpen=!!hud.querySelector<HTMLDetailsElement>('#hud-today')?.open;hud.innerHTML=miningHud(farm,home,economy)+hudToday();if(todayOpen)hud.querySelector<HTMLDetailsElement>('#hud-today')?.setAttribute('open','');
  document.body.classList.toggle('has-mining-hud',!hud.hidden);
  document.documentElement.style.setProperty('--hud-height',`${hud.hidden?0:hud.getBoundingClientRect().height}px`);
  const payback=document.getElementById('pack-payback');if(payback&&economy&&publicPrice)payback.innerHTML=paybackView(economy,publicPrice.tokens,farm?.level);
@@ -113,7 +115,7 @@ async function refreshPlayer(){
   const value=await loadFarm(wallet);if(wallet!==walletAddress())return;farm=value;remember(`farm.${wallet.toLowerCase()}`,value);
   progress={hasPack:value.paidPacks>0n||value.items.length>0,placed:value.items.some(i=>i.equipped),mining:value.hash>0n&&!!home&&chainTime(home)<Number(home.epochEnd)};
   if(['rewards','wallet'].includes(route())){try{const h=await loadEarningsHistory(value);if(wallet===walletAddress())history=h;}catch{pageError='Your earnings history is reconnecting. Try Refresh.';}}
-  renderEarnings();
+  void refreshGameplay(value,home);renderEarnings();
  }catch(e){pageError=errorMessage(e);}finally{playerLoading=null;}})();return playerLoading;
 }
 function renderPublic(){
@@ -217,8 +219,8 @@ async function refreshReceipts(wallet:Address) {
  catch(e){if(wallet===walletAddress())pack.receiptError=`Reconnecting to your packs. Your last update is still here.`;}
  if(route()==='packs')render(true);
 }
-function confirmAction(title:string,body:string,label:string,action:()=>Promise<void>) {
- returnFocus=document.activeElement as HTMLElement;
+function confirmAction(title:string,body:string,label:string,action:()=>Promise<void>,trigger?:HTMLElement|null) {
+ if(!$<HTMLDialogElement>('#action-dialog').open)returnFocus=trigger??document.activeElement as HTMLElement;
  $('#action-tx-status').hidden=true;$('#action-tx-status').innerHTML='';$('#action-title').textContent=title;$('#action-body').innerHTML=body;$('#confirm-action').textContent=label;$('#action-error').textContent='';chosenAction=action;
  $<HTMLDialogElement>('#action-dialog').showModal();$('#cancel-action').focus();
 }
@@ -363,7 +365,7 @@ document.addEventListener('click',async e=>{
   else if(el.hasAttribute('data-refresh-receipts')&&walletAddress())await refreshReceipts(walletAddress()!);
   else if(el.hasAttribute('data-motion-toggle')){motion=!motion;reflectMotion();}
   else if(el.hasAttribute('data-sound')){toggleSound();document.querySelectorAll<HTMLElement>('[data-sound]').forEach(b=>{b.textContent=`Sound ${soundEnabled()?'on':'off'}`;b.setAttribute('aria-pressed',String(soundEnabled()));});}
-  else if(el.hasAttribute('data-copy')){await navigator.clipboard.writeText(el.dataset.copy!);el.textContent='Copied';$('#copy-message').textContent='Contract address copied.';}
+  else if(el.hasAttribute('data-copy')){await navigator.clipboard.writeText(el.dataset.copy!);el.textContent='Copied';$('#copy-message').textContent='Copied to clipboard.';}
   else if(el.hasAttribute('data-dismiss-tx'))$('#tx-status').hidden=true;
   else if(el.hasAttribute('data-check-tx'))await refreshTransaction();
   else if(el.hasAttribute('data-stop-reveal')){revealController?.abort();$('#reveal-progress').textContent='Stopping after the current request. On-chain transactions cannot be cancelled here.';}
@@ -378,7 +380,7 @@ document.addEventListener('click',async e=>{
   else if(el.dataset.scrap){const id=BigInt(el.dataset.scrap),i=currentItem(id),minimum=scrapQuote(i,farm!),from=assertWallet();confirmAction('Permanently scrap hardware',`<p>Destroy ${KINDS[i.kind]} #${id}. This cannot be undone.</p><p>Minimum payout: <strong>${units(minimum)} BLACKOUT credits</strong>. Claim tax applies when withdrawing credits.${minimum===0n?' The current scrap allowance pays nothing; this discards the item without payment.':''}</p>`,'Permanently scrap',async()=>{assertWallet(from);await send('FarmCore','scrap',[id,minimum],'Scrap hardware');});}
   else if(el.dataset.buyRoom){const index=BigInt(el.dataset.buyRoom),from=assertWallet(),quote=await read<bigint>('Economy','roomQuote',[from,index]);confirmAction('Buy a mining room',`<p>Buy room ${index+1n} for <strong>${units(quote)} BLACKOUT</strong>, plus gas. Includes six empty slots.</p>`,'Approve & buy room',async()=>{assertWallet(from);await approve('FarmCore',quote);assertWallet(from);await send('FarmCore','buyRoom',[index,true],'Buy mining room');});}
   else if(el.hasAttribute('data-sync'))await transact(async()=>{await send('FarmCore','sync',[],'Sync farm');});
-  else if(el.hasAttribute('data-claim')&&farm){if(capacityReason(farm))throw Error(capacityReason(farm));const f=farm,from=assertWallet();if(f.claimNet===null)throw Error('Refresh the claim-tax preview first.');confirmAction('Claim mining rewards',`<p>Gross: ${units(f.pending)} BLACKOUT.<br>Estimated tax: ${units(f.pending-f.claimNet)}.<br>You receive approximately <strong>${units(f.claimNet)} BLACKOUT</strong>, before gas.</p><p class="small">The final tax is calculated on chain when your transaction is included.</p>`,'Claim rewards',async()=>{await requireInventorySpace(from);await send('FarmRewards','claim',[f.pending],'Claim rewards');});}
+  else if(el.hasAttribute('data-claim')&&farm){const f=farm,from=assertWallet();if(f.claimNet===null)throw Error('Refresh the claim-tax preview first.');confirmAction('Claim mining rewards',`<p>Gross: ${units(f.pending)} BLACKOUT.<br>Estimated tax: ${units(f.pending-f.claimNet)}.<br>You receive approximately <strong>${units(f.claimNet)} BLACKOUT</strong>, before gas.</p><p class="small">The final tax is calculated on chain when your transaction is included.</p>`,'Claim rewards',async()=>{assertWallet(from);await send('FarmRewards','claim',[f.pending],'Claim rewards');});}
   else if(el.hasAttribute('data-auto-off'))await transact(async()=>{await send('FarmCore','setAutoRepair',[false,8000],'Disable auto-repair');});
   else if(el.hasAttribute('data-refresh-quote'))await refreshQuote();
   else if(el.hasAttribute('data-pack-step')) {
@@ -442,7 +444,7 @@ window.addEventListener('hashchange',()=>{
 document.addEventListener('walletchange',()=>{
  const key=`${walletAddress()||''}:${account().chainId||''}`;if(key===lastWallet)return;lastWallet=key;generation++;
  if(!transactionBusy)$<HTMLDialogElement>('#action-dialog').close();
- farm=null;history=null;city=null;season=null;progress=null;selectedItem=null;pack.eligible=null;pack.receipts=null;pack.eligibilityError='';pack.receiptError='';pack.result=null;pack.activeReceipt=null;revealController?.abort();
+ resetGameplay();farm=null;history=null;city=null;season=null;progress=null;selectedItem=null;pack.eligible=null;pack.receipts=null;pack.eligibilityError='';pack.receiptError='';pack.result=null;pack.activeReceipt=null;revealController?.abort();
  if(renderedRoute){render(true);void refreshPlayer().then(()=>loadPage());}
 });
 document.addEventListener('walletbusy',()=>{updateControls();$<HTMLButtonElement>('#confirm-action').disabled=transactionBusy;$<HTMLButtonElement>('#cancel-action').disabled=transactionBusy;});
@@ -456,6 +458,7 @@ document.addEventListener('revealprogress',((e:CustomEvent<string>)=>{
 document.addEventListener('openownedpacks',((event:CustomEvent<{kind:Receipt['kind'];id:bigint}[]>)=>{void transact(()=>openOwned(event.detail?.length?event.detail:undefined));}) as EventListener);
 document.addEventListener('transactionend',()=>{updateControls();void refreshAll();});
 matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change',e=>{if(e.matches){motion=false;reflectMotion();}});
+setupGameplay({farm:()=>farm,home:()=>home,economy:()=>economy,confirm:confirmAction,render:()=>render(true),refresh:refreshAll,open:async()=>{await transact(()=>openOwned());}});
 render();document.body.classList.add('app-ready');setupWallet();initAtmosphere(()=>motion,()=>home?.event);
 // Enlarged text must be able to grow the header without covering the game.
 const syncTextLayout=()=>document.body.classList.toggle('reflow-mode',parseFloat(getComputedStyle(document.documentElement).fontSize)>20||innerWidth<320);
@@ -471,7 +474,7 @@ async function refreshCommunity(){
   await Promise.allSettled([
    (async()=>{try{activities=await loadActivity();remember(ACTIVITY_CACHE_KEY,activities);activityError=false;}catch{activityError=true;}renderPublic();})(),
    (async()=>{try{publicTotals=await loadPublicTotals();remember('totals',publicTotals);}catch{publicError=true;}renderPublic();})(),
-   (async()=>{if(!home)return;try{leaderboard=await loadLeaderboard(home.epoch);remember('leaderboard',leaderboard);}catch{publicError=true;}renderPublic();})(),
+   (async()=>{if(!home)return;try{leaderboard=await loadLeaderboard(home.epoch);remember(LEADERBOARD_CACHE_KEY,leaderboard);}catch{publicError=true;}renderPublic();})(),
   ]);
  }finally{communityBusy=false;renderStatus();}
 }
